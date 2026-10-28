@@ -12,10 +12,12 @@ scan() {
     grep -rnE --include='*.swift' "$pattern" "$@" 2>/dev/null || true
 }
 
-# 1. IslandCore imports only Foundation and Observation.
+# 1. IslandCore imports only Foundation and Observation; its test-support target may also import IslandCore.
 while IFS=: read -r file line text; do
     module=$(sed -E 's/^[[:space:]]*(@[A-Za-z_]+[[:space:]]+)*import[[:space:]]+((struct|class|enum|protocol|func|var|let|typealias)[[:space:]]+)?([A-Za-z_]+).*/\4/' <<<"$text")
-    [[ $module == Foundation || $module == Observation ]] || report "$file:$line: IslandCore may only import Foundation/Observation"
+    [[ $module == Foundation || $module == Observation ]] && continue
+    [[ $module == IslandCore && $file == Packages/IslandCore/Sources/IslandCoreTestSupport/* ]] && continue
+    report "$file:$line: IslandCore may only import Foundation/Observation"
 done < <(scan '^[[:space:]]*(@[A-Za-z_]+[[:space:]]+)*import[[:space:]]' Packages/IslandCore/Sources)
 
 # 2. IslandFeatures never imports IslandServices.
