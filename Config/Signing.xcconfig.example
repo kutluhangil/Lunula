@@ -1,0 +1,8 @@
+// Copy to Config/Signing.xcconfig (git-ignored) and fill in your paid Apple Developer Team ID.
+// Never commit the Team ID or any certificate.
+// Without this file the app is ad-hoc signed: the signature changes on every build, so macOS
+// asks for Automation and Calendar permission again each time.
+
+// DEVELOPMENT_TEAM =
+// CODE_SIGN_STYLE = Automatic
+// CODE_SIGN_IDENTITY = Apple Development

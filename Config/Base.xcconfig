@@ -1,0 +1,5 @@
+// Default: local ad-hoc signing. Real signing comes from the git-ignored Signing.xcconfig.
+CODE_SIGN_IDENTITY = -
+CODE_SIGN_STYLE = Manual
+
+#include? "Signing.xcconfig"

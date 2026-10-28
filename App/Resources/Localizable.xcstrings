@@ -1,0 +1,23 @@
+{
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+    "app.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula"
+          }
+        }
+      }
+    }
+  }
+}
