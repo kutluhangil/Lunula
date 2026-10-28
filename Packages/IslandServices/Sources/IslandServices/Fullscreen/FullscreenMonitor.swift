@@ -50,11 +50,12 @@ public final class FullscreenMonitor {
         return stream
     }
 
+    /// A nil frontmost PID means every screen reports false. Quartz y is relative to the primary screen (frame origin zero), not the focused one.
     private func evaluate() -> [UInt32: Bool] {
         let all = screens()
         guard let pid = frontmostPID() else { return Dictionary(uniqueKeysWithValues: all.map { ($0.id, false) }) }
         let windows = reader.windows()
-        let primaryHeight = (all.first(where: \.isMain) ?? all.first)?.frame.height ?? 0
+        let primaryHeight = (all.first(where: { $0.frame.origin == .zero }) ?? all.first)?.frame.height ?? 0
         return Dictionary(
             uniqueKeysWithValues: all.map {
                 (

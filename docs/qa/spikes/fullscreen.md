@@ -14,18 +14,19 @@ Her senaryo için hedef duruma geç, sonra kendi terminalinden (komut 5 sn bekle
 sleep 5; swift Scripts/spikes/window-list.swift
 ```
 
-Çıktı satırı: `pid=… layer=… bounds=(x, y, w, h) onscreen=…`. Yalnızca PID, katman, sınırlar ve ekranda-mı alanı yazılır; pencere veya sahip adı okunmaz. Bounds Quartz koordinatındadır (sol üst orijin, birincil ekran). Ön plandaki uygulamanın PID'ini bulmak için aynı komuttan sonra `lsappinfo front` veya Etkinlik Monitörü kullan.
+Çıktı satırı: `pid=… layer=… bounds=(x, y, w, h) onscreen=…`. Yalnızca PID, katman, sınırlar ve ekranda-mı alanı yazılır; pencere veya sahip adı okunmaz. Bounds Quartz koordinatındadır (sol üst orijin, birincil ekran). Ön plandaki uygulamanın PID'ini bulmak için aynı komuttan sonra `lsappinfo info -only pid "$(lsappinfo front)"` kullan.
 
 ## Sonuçlar
 
-| Senaryo | Ön plandaki uygulama | Bu ekranda katman-24 penceresi var mı? | Ön plan katman-0 penceresinin sınırları | Beklenen sezgisel sonucu |
-|---|---|---|---|---|
-| Masaüstü (Finder, pencere yok) | | | | tam ekran değil |
-| Maksimize Safari | | | | tam ekran değil |
-| Tam ekran Safari | | | | tam ekran |
-| Keynote sunumu | | | | tam ekran |
-| Tam ekran Xcode | | | | tam ekran |
-| Otomatik gizlenen menü çubuğu (maksimize pencere) | | | | tam ekran değil (menü çubuğu imleçle geri gelince) — doğrula |
+| Senaryo | Ekran (çentikli dahili / harici) | Ekran çerçevesi | Ön plandaki uygulama | Bu ekranda katman-24 penceresi var mı? | Ön plan katman-0 penceresinin sınırları | Beklenen sezgisel sonucu |
+|---|---|---|---|---|---|---|
+| Masaüstü (Finder, pencere yok) | | | | | | tam ekran değil |
+| Maksimize Safari | | | | | | tam ekran değil |
+| Tam ekran Safari | | | | | | tam ekran |
+| Keynote sunumu | | | | | | tam ekran |
+| Tam ekran Xcode | | | | | | tam ekran |
+| Otomatik gizlenen menü çubuğu (maksimize pencere) | | | | | | tam ekran değil (menü çubuğu imleçle geri gelince) — doğrula |
+| Harici ekranda tam ekran uygulama, dahili ekran birincil | harici | | | | | harici: tam ekran, dahili: değil |
 
 ## Notlar
 
