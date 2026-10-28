@@ -25,6 +25,13 @@ import Testing
     @Test func pulseAddsPulseAnimation() {
         #expect(animation("lunula.pulse", in: applied(.init(mode: .pulse, color: .white))) != nil)
     }
+    @Test func timingsComeFromMotionTokens() throws {
+        let breath = try #require(
+            animation("lunula.breath", in: applied(.init(mode: .ambient(breathing: true), color: .white))))
+        #expect(breath.duration == MotionToken.breath.spec.duration / 2 && breath.autoreverses)
+        let pulse = try #require(animation("lunula.pulse", in: applied(.init(mode: .pulse, color: .white))))
+        #expect(pulse.duration == MotionToken.pulse.spec.duration)
+    }
     @Test func reduceMotionAddsNoAnimations() {
         var a = HaloAccessibility.standard
         a.reduceMotion = true

@@ -36,12 +36,11 @@ public enum MotionToken: CaseIterable, Sendable {
         switch token {
         case .content: return .smooth(duration: token.spec.duration)
         case .breath:
-            return .easeInOut(duration: token.spec.duration).repeatForever(autoreverses: true)
+            // The halo breath runs on Core Animation (HaloLayer), not this; each autoreversed half is duration / 2.
+            return .easeInOut(duration: token.spec.duration / 2).repeatForever(autoreverses: true)
         default: return token.spec.animation
         }
     }
 
-    // AnyTransition is an immutable value that SwiftUI has not marked Sendable.
-    nonisolated(unsafe) public static let reducedTransition: AnyTransition = .opacity.combined(
-        with: .scale(scale: 0.98))
+    @MainActor public static let reducedTransition: AnyTransition = .opacity.combined(with: .scale(scale: 0.98))
 }

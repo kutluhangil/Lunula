@@ -102,7 +102,7 @@ public final class HaloLayer: CALayer {
             let breath = CABasicAnimation(keyPath: "shadowOpacity")
             breath.fromValue = Float(values.glowOpacity * 0.6)
             breath.toValue = Float(values.glowOpacity)
-            breath.duration = 2.5
+            breath.duration = MotionToken.breath.spec.duration / 2
             breath.autoreverses = true
             breath.repeatCount = .infinity
             breath.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -112,7 +112,7 @@ public final class HaloLayer: CALayer {
             let pulse = CAKeyframeAnimation(keyPath: "shadowOpacity")
             pulse.values = [0, Float(values.glowOpacity), 0]
             pulse.keyTimes = [0, 0.35, 1]
-            pulse.duration = 0.9
+            pulse.duration = MotionToken.pulse.spec.duration
             glow.add(pulse, forKey: "lunula.pulse")
         }
         if case .progress(let fraction, let endsAt?) = state.mode, endsAt.timeIntervalSince(now) > 0 {

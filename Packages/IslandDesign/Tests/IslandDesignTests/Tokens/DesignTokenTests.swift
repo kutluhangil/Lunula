@@ -38,6 +38,11 @@ import Testing
     @Test func reducedMotionUsesShortEase() {
         #expect(MotionToken.animation(.open, reduceMotion: true) == .easeInOut(duration: 0.2))
     }
+    @Test func breathIsAFiveSecondCycle() {
+        // Autoreversing: each half lasts duration / 2, so a full in-and-out breath is 5 s.
+        let breath = Animation.easeInOut(duration: 2.5).repeatForever(autoreverses: true)
+        #expect(MotionToken.animation(.breath, reduceMotion: false) == breath)
+    }
     @Test func haloIntensitiesMatchSpec() { #expect(HaloLevel.allCases.map(\.intensity) == [0, 0.16, 0.32, 0.55]) }
     @Test func cardRadiusIsConcentric() { #expect(Radii.card == 12) }
 }
