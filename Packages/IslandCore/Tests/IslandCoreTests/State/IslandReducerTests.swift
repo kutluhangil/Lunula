@@ -128,4 +128,22 @@ private func run(_ s: IslandState, _ events: IslandEvent...) -> IslandTransition
         #expect(opened.state.phase == .expanded(.home) && Set(opened.effects).contains(.makePanelKey(true)))
         #expect(IslandReducer.reduce(opened.state, .toggleRequested).state.phase == .idle)
     }
+    @Test func fullscreenExitDuringCriticalAlertRestoresIsland() {
+        let t = run(
+            compactState, .fullscreenChanged(true), .alertRaised(.fixture(priority: .critical)),
+            .fullscreenChanged(false))
+        #expect(!t.state.isFullscreen)
+        guard case .transient = t.state.phase else {
+            Issue.record("expected transient, got \(t.state.phase)")
+            return
+        }
+        #expect(IslandReducer.reduce(t.state, .alertExpired).state.phase == .compact)
+    }
+    @Test func enablingHideWhileFullscreenHides() {
+        var s = IslandState()
+        s.options.hideInFullscreen = false
+        let fs = IslandReducer.reduce(s, .fullscreenChanged(true)).state
+        #expect(fs.phase == .idle && fs.isFullscreen)
+        #expect(IslandReducer.reduce(fs, .optionsChanged(IslandOptions())).state.phase == .hidden)
+    }
 }

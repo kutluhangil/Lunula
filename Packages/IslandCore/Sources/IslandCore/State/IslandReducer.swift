@@ -131,15 +131,15 @@ public enum IslandReducer {
             if case .transient = phase { fx = collapse(&s) }
 
         case .fullscreenChanged(true):
-            guard phase != .hidden, s.options.hideInFullscreen else { break }
+            guard phase != .hidden else { break }
             s.isFullscreen = true
+            guard s.options.hideInFullscreen else { break }
             s.phase = .hidden
             fx = cancelAll + [.setMouseEventsIgnored(true), .makePanelKey(false)]
 
         case .fullscreenChanged(false):
-            guard phase == .hidden else { break }
             s.isFullscreen = false
-            s.phase = s.restingPhase
+            if phase == .hidden { s.phase = s.restingPhase }
 
         case .displayConfigurationChanged, .systemWillSleep:
             s.pointerInside = false
@@ -152,7 +152,12 @@ public enum IslandReducer {
 
         case .optionsChanged(let o):
             s.options = o
-            if s.isFullscreen, !o.hideInFullscreen, phase == .hidden { s.phase = s.restingPhase }
+            if s.isFullscreen, !o.hideInFullscreen, phase == .hidden {
+                s.phase = s.restingPhase
+            } else if s.isFullscreen, o.hideInFullscreen, phase == .idle || phase == .compact {
+                s.phase = .hidden
+                fx = cancelAll + [.setMouseEventsIgnored(true), .makePanelKey(false)]
+            }
         }
 
         return IslandTransition(state: s, effects: fx)
