@@ -1,0 +1,9 @@
+Lunula.xcodeproj/
+build/
+DerivedData/
+.build/
+.swiftpm/
+*.xcuserstate
+xcuserdata/
+Config/Signing.xcconfig
+.DS_Store
