@@ -14,9 +14,8 @@ public enum TypeToken: CaseIterable, Sendable {
 
     public var weight: Font.Weight {
         switch self {
-        case .numeralLarge, .title: .semibold
-        case .numeralCompact, .caption: .medium
-        case .body: .regular
+        case .numeralLarge, .numeralCompact, .title: .semibold
+        case .body, .caption: .medium
         }
     }
 

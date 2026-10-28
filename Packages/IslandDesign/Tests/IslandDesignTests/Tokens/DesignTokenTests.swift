@@ -12,6 +12,20 @@ import Testing
         #expect(c.redComponent == 0 && c.greenComponent == 0 && c.blueComponent == 0 && c.alphaComponent == 1)
     }
     @Test func smallestTypeIs11pt() { #expect(TypeToken.allCases.map(\.size).min() == 11) }
+    @Test func typeStylesMatchSpecTable() {
+        typealias Row = (TypeToken, CGFloat, Font.Weight, Bool, Bool)
+        let table: [Row] = [
+            (.numeralLarge, 28, .semibold, true, true),
+            (.numeralCompact, 13, .semibold, true, true),
+            (.title, 15, .semibold, false, false),
+            (.body, 13, .medium, false, false),
+            (.caption, 11, .medium, false, false),
+        ]
+        for (token, size, weight, rounded, mono) in table {
+            #expect(token.size == size && token.weight == weight, "\(token)")
+            #expect(token.isRounded == rounded && token.monospacedDigits == mono, "\(token)")
+        }
+    }
     @Test func transitionsRespectBounceAndDurationLimits() {
         for t in MotionToken.transitions { #expect(t.spec.bounce <= 0.12 && t.spec.duration <= 2.0, "\(t)") }
     }
