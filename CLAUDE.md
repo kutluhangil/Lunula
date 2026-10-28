@@ -74,10 +74,11 @@ Scripts/perf/measure-idle.sh --seconds 60 --assert-idle  # idle CPU/wakeups budg
 ## Workflow
 
 - Skills: `superpowers:subagent-driven-development` (execution), `superpowers:test-driven-development` (every task), `superpowers:using-git-worktrees` (parallel tasks), `superpowers:dispatching-parallel-agents`, `superpowers:verification-before-completion` (before any "done"), `superpowers:systematic-debugging` (any failure), `superpowers:requesting-code-review`, `superpowers:finishing-a-development-branch`. Also `design:accessibility-review` for T9.4 and `design:design-critique` for visual reviews.
-- **Branches:**
-  - One branch per task, named `feat/T<id>-<slug>` and created from `main`.
-  - Merge to `main` through a PR with green CI.
-  - Never push to `main` directly. Never force-push someone else's branch.
+- **Branches (owner decision, 2026-10-28):**
+  - Work directly on `main`. No feature branches, no PRs.
+  - Before every commit, `Scripts/lint.sh && Scripts/check-architecture.sh && Scripts/test-all.sh` must be green.
+  - CI runs on every push to `main`. A red run is fixed before the next task starts.
+  - Never force-push.
 - **Commits:** Conventional Commits in English (`feat:`, `fix:`, `test:`, `chore:`, `docs:`, `perf:`, `ci:`). Never put a model name in commits, PRs or code.
 - **Evidence over claims:** every task report includes the actual output of its failing test and its passing test runs.
 - **Spikes (T3.7 fullscreen, T5.2 Music scripting, T7.5 camera/mic):**
