@@ -19,7 +19,7 @@ public struct CustomActivityRegistry: Equatable, Sendable {
             content: .custom(
                 CustomActivitySnapshot(
                     title: request.title, subtitle: request.subtitle, symbol: request.symbol,
-                    progress: request.progress, endsAt: expiresAt)),
+                    progress: request.progress, endsAt: request.duration == nil ? nil : expiresAt)),
             accent: request.accent)
         if let existing {
             activities[existing] = activity

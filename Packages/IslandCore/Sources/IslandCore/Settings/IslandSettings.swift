@@ -41,7 +41,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case displayMode, hideInFullscreen, criticalAlertsInFullscreen, launchAtLogin, hapticsEnabled, soundsEnabled
-        case haloIntensity, enabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
+        case haloIntensity, disabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
         case showMenuBarIcon, muteUntil, hasCompletedOnboarding
     }
 
@@ -59,14 +59,19 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         hapticsEnabled = value(.hapticsEnabled, d.hapticsEnabled)
         soundsEnabled = value(.soundsEnabled, d.soundsEnabled)
         haloIntensity = min(max(value(.haloIntensity, d.haloIntensity), 0), 1)
-        enabledFeatures = value(.enabledFeatures, d.enabledFeatures)
+        showMenuBarIcon = value(.showMenuBarIcon, d.showMenuBarIcon)
+        // Persist the complement so features added later default to on and unknown strings are ignored.
+        let disabled = ((try? c.decodeIfPresent([String].self, forKey: .disabledFeatures)) ?? nil) ?? []
+        enabledFeatures = Set(IslandFeature.allCases).subtracting(disabled.compactMap(IslandFeature.init(rawValue:)))
         weatherLocation = value(.weatherLocation, d.weatherLocation)
         temperatureUnit = value(.temperatureUnit, d.temperatureUnit)
         shelfCopiesFiles = value(.shelfCopiesFiles, d.shelfCopiesFiles)
         // An explicit null means "never"; only a missing key takes the default.
-        shelfRetentionDays =
-            c.contains(.shelfRetentionDays)
-            ? (try? c.decodeIfPresent(Int.self, forKey: .shelfRetentionDays)) ?? nil : d.shelfRetentionDays
+        if c.contains(.shelfRetentionDays), (try? c.decodeNil(forKey: .shelfRetentionDays)) == true {
+            shelfRetentionDays = nil
+        } else {
+            shelfRetentionDays = value(.shelfRetentionDays, d.shelfRetentionDays)
+        }
         muteUntil = value(.muteUntil, d.muteUntil)
         hasCompletedOnboarding = value(.hasCompletedOnboarding, d.hasCompletedOnboarding)
     }
@@ -80,7 +85,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(hapticsEnabled, forKey: .hapticsEnabled)
         try c.encode(soundsEnabled, forKey: .soundsEnabled)
         try c.encode(haloIntensity, forKey: .haloIntensity)
-        try c.encode(enabledFeatures, forKey: .enabledFeatures)
+        try c.encode(
+            IslandFeature.allCases.filter { !enabledFeatures.contains($0) }.map(\.rawValue), forKey: .disabledFeatures)
         try c.encode(weatherLocation, forKey: .weatherLocation)
         try c.encode(temperatureUnit, forKey: .temperatureUnit)
         try c.encode(shelfCopiesFiles, forKey: .shelfCopiesFiles)

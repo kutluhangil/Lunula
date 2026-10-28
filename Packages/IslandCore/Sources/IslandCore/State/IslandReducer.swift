@@ -35,7 +35,8 @@ public enum IslandReducer {
             case .peek, .expanded:
                 s.pointerInside = false
                 fx = [.schedule(.exitGrace, after: IslandTiming.exitGrace)]
-            default: break
+            case .transient, .hidden:
+                s.pointerInside = false
             }
 
         case .exitGraceElapsed:
@@ -139,7 +140,7 @@ public enum IslandReducer {
 
         case .fullscreenChanged(false):
             s.isFullscreen = false
-            if phase == .hidden { s.phase = s.restingPhase }
+            if phase == .hidden { fx = collapse(&s) }
 
         case .displayConfigurationChanged, .systemWillSleep:
             s.pointerInside = false
@@ -167,6 +168,21 @@ public enum IslandReducer {
 
     /// Shows the next pending alert, or falls back to the resting phase.
     private static func collapse(_ s: inout IslandState) -> [IslandEffect] {
+        if s.restingPhase == .hidden {
+            // Fullscreen: only critical alerts may surface, briefly; the rest stay queued for later.
+            guard s.options.criticalAlertsInFullscreen,
+                let i = s.pendingAlerts.firstIndex(where: { $0.priority == .critical })
+            else {
+                s.phase = .hidden
+                return [.setMouseEventsIgnored(true), .makePanelKey(false)]
+            }
+            let a = s.pendingAlerts.remove(at: i)
+            s.phase = .transient(a)
+            var fx: [IslandEffect] = [.schedule(.alertExpiry, after: IslandTiming.fullscreenCriticalAlert)]
+            if a.kind == .timerFinished { fx.append(.playSound(.timerFinished)) }
+            fx.append(.setMouseEventsIgnored(false))
+            return fx
+        }
         guard !s.pendingAlerts.isEmpty else {
             s.phase = s.restingPhase
             return [.setMouseEventsIgnored(true), .makePanelKey(false)]

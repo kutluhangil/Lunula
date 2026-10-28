@@ -8,18 +8,24 @@ public enum SpeedUnit: String, Codable, Sendable { case kilometersPerHour, miles
 public enum IslandFormat {
     /// Remaining time, rounded up: 59.2 s shows "1:00". Negative values clamp to "0:00".
     public static func countdown(_ remaining: TimeInterval) -> String {
-        clock(Int(max(0, remaining).rounded(.up)))
+        clock(whole(max(0, remaining).rounded(.up)))
     }
 
     /// Elapsed track time, rounded down.
     public static func trackTime(_ seconds: TimeInterval) -> String {
-        clock(Int(max(0, seconds).rounded(.down)))
+        clock(whole(max(0, seconds).rounded(.down)))
     }
 
     /// Rounds half away from zero; Int conversion drops the negative zero.
     public static func temperature(celsius: Double, unit: TemperatureUnit) -> String {
+        guard celsius.isFinite else { return "--°" }
         let value = unit == .celsius ? celsius : celsius * 9 / 5 + 32
-        return "\(Int(value.rounded()))°"
+        return "\(whole(value.rounded()))°"
+    }
+
+    /// Untrusted input (AppleScript): non-finite becomes 0, huge values clamp (about 31 years) instead of trapping.
+    private static func whole(_ v: Double) -> Int {
+        v.isFinite ? Int(min(max(v, -1e9), 1e9)) : 0
     }
 
     private static func clock(_ total: Int) -> String {

@@ -17,6 +17,11 @@ import Testing
         var r = CustomActivityRegistry()
         let a = r.upsert(req("a"), now: now)
         #expect(a.expiresAt == now.addingTimeInterval(28_800))
+        guard case .custom(let snapshot) = a.content else {
+            Issue.record("expected custom content")
+            return
+        }
+        #expect(snapshot.endsAt == nil)
         r.removeExpired(now: now.addingTimeInterval(28_801))
         #expect(r.activities.isEmpty)
     }
@@ -25,6 +30,11 @@ import Testing
         r.upsert(req("a"), now: now)
         let u = r.upsert(req("a", duration: 28_800), now: now.addingTimeInterval(3600))
         #expect(u.startedAt == now && u.expiresAt == now.addingTimeInterval(28_800))
+        guard case .custom(let snapshot) = u.content else {
+            Issue.record("expected custom content")
+            return
+        }
+        #expect(snapshot.endsAt != nil)
     }
     @Test func reShowAfterExpiryStartsFresh() {
         var r = CustomActivityRegistry()

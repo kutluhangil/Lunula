@@ -12,6 +12,11 @@ import Testing
         #expect(IslandFormat.temperature(celsius: -0.4, unit: .celsius) == "0°")
         #expect(IslandFormat.temperature(celsius: -3.2, unit: .celsius) == "-3°")
     }
+    @Test func nonFiniteInputDoesNotCrash() {
+        #expect(IslandFormat.countdown(.infinity) == "0:00")
+        #expect(IslandFormat.trackTime(.nan) == "0:00")
+        #expect(IslandFormat.temperature(celsius: .nan, unit: .celsius) == "--°")
+    }
     @Test func temperatureConvertsToFahrenheit() {
         #expect(IslandFormat.temperature(celsius: 20, unit: .fahrenheit) == "68°")
     }

@@ -128,6 +128,19 @@ private func run(_ s: IslandState, _ events: IslandEvent...) -> IslandTransition
         #expect(opened.state.phase == .expanded(.home) && Set(opened.effects).contains(.makePanelKey(true)))
         #expect(IslandReducer.reduce(opened.state, .toggleRequested).state.phase == .idle)
     }
+    @Test func queuedNormalAlertStaysQueuedInFullscreen() {
+        let normal = TransientAlert.fixture(priority: .normal)
+        let t = run(
+            IslandState(), .toggleRequested, .alertRaised(normal), .fullscreenChanged(true),
+            .alertRaised(.fixture(priority: .critical)), .alertExpired)
+        #expect(t.state.phase == .hidden && t.state.pendingAlerts == [normal])
+        let after = IslandReducer.reduce(t.state, .fullscreenChanged(false))
+        #expect(after.state.phase == .transient(normal))
+    }
+    @Test func pointerExitDuringAlertClearsInside() {
+        let t = run(IslandState(), .alertRaised(.fixture()), .pointerEnteredHotZone, .pointerExitedIsland)
+        #expect(!t.state.pointerInside)
+    }
     @Test func fullscreenExitDuringCriticalAlertRestoresIsland() {
         let t = run(
             compactState, .fullscreenChanged(true), .alertRaised(.fixture(priority: .critical)),

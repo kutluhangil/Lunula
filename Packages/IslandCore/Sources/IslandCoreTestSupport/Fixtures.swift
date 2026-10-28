@@ -60,12 +60,14 @@ extension TransientAlert {
     public static func fixture(
         id: UUID = UUID(),
         kind: AlertKind = .custom,
-        detail: AlertDetail = .text(title: "Alert", subtitle: nil, symbol: nil),
+        detail: AlertDetail? = nil,
         tint: SignalTint = .neutral,
         duration: TimeInterval = 2.6,
         priority: ActivityPriority = .normal
     ) -> TransientAlert {
-        TransientAlert(id: id, kind: kind, detail: detail, tint: tint, duration: duration, priority: priority)
+        TransientAlert(
+            id: id, kind: kind, detail: detail ?? kind.fixtureDetail, tint: tint, duration: duration, priority: priority
+        )
     }
 }
 
@@ -84,5 +86,20 @@ extension WeatherSnapshot {
         WeatherSnapshot(
             temperatureC: temperatureC, highC: highC, lowC: lowC, condition: condition, isDaylight: isDaylight,
             sunrise: sunrise, sunset: sunset, placeName: placeName, fetchedAt: fetchedAt)
+    }
+}
+
+extension AlertKind {
+    fileprivate var fixtureDetail: AlertDetail {
+        switch self {
+        case .charging, .unplugged: .batteryLevel(80)
+        case .batteryLow: .batteryLevel(10)
+        case .batteryFull: .batteryLevel(100)
+        case .downloadFinished: .file(name: "Report.pdf", url: URL(fileURLWithPath: "/tmp/Report.pdf"))
+        case .timerFinished: .timer(label: nil, phase: .simple)
+        case .trackChanged: .track(title: "Song", artist: "Artist", artworkKey: nil)
+        case .permissionNeeded: .permission(.music)
+        case .custom: .text(title: "Alert", subtitle: nil, symbol: nil)
+        }
     }
 }

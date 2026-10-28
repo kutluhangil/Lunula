@@ -1,6 +1,6 @@
 import Foundation
 
-// Apple SDKs (Xcode 27) no longer expose CGRect members through Foundation alone; Linux Foundation has them.
+// Swift 6.4 hides CGRect's conformances unless CoreGraphics is imported; Linux gets them from Foundation.
 #if canImport(CoreGraphics)
     import CoreGraphics
 #endif
