@@ -9,6 +9,7 @@ public final class ScreenService {
     private let provider: @MainActor () -> [ScreenDescriptor]
     private var observers: [(center: NotificationCenter, token: NSObjectProtocol)] = []
     private var pending: Task<Void, Never>?
+    private var isStopped = false
     private var continuations: [UUID: AsyncStream<[ScreenDescriptor]>.Continuation] = [:]
 
     public init(
@@ -31,6 +32,10 @@ public final class ScreenService {
     public func updates() -> AsyncStream<[ScreenDescriptor]> {
         let id = UUID()
         let (stream, continuation) = AsyncStream<[ScreenDescriptor]>.makeStream()
+        if isStopped {
+            continuation.finish()
+            return stream
+        }
         continuations[id] = continuation
         continuation.onTermination = { [weak self] _ in
             Task { @MainActor in self?.continuations[id] = nil }
@@ -40,6 +45,7 @@ public final class ScreenService {
 
     /// Removes every observer, cancels the pending recompute and ends all streams.
     public func stop() {
+        isStopped = true
         for (center, token) in observers { center.removeObserver(token) }
         observers = []
         pending?.cancel()

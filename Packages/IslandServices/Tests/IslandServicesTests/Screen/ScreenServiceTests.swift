@@ -41,6 +41,14 @@ import Testing
         Task { w.post(name: NSWorkspace.didWakeNotification, object: nil) }
         #expect(await collect(s, for: 200).count == 1)
     }
+    @Test func updatesAfterStopFinishesImmediately() async {
+        let s = ScreenService(
+            center: NotificationCenter(), workspaceCenter: NotificationCenter(), provider: { [.mbp14] })
+        s.stop()
+        var count = 0
+        for await _ in s.updates() { count += 1 }
+        #expect(count == 0)
+    }
     @Test(.enabled(if: !NSScreen.screens.isEmpty)) func liveScreensMapsEveryScreen() {
         #expect(ScreenService.liveScreens().count == NSScreen.screens.count)
     }
