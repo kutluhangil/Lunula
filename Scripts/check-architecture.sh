@@ -17,6 +17,11 @@ while IFS=: read -r file line text; do
     module=$(sed -E 's/^[[:space:]]*(@[A-Za-z_]+[[:space:]]+)*import[[:space:]]+((struct|class|enum|protocol|func|var|let|typealias)[[:space:]]+)?([A-Za-z_]+).*/\4/' <<<"$text")
     [[ $module == Foundation || $module == Observation ]] && continue
     [[ $module == IslandCore && $file == Packages/IslandCore/Sources/IslandCoreTestSupport/* ]] && continue
+    # Swift 6.4 hides CGRect's conformances behind CoreGraphics; Linux gets them from Foundation, so only a
+    # canImport-guarded CoreGraphics import is allowed.
+    if [[ $module == CoreGraphics ]] && sed -n "$((line - 1))p" "$file" | grep -qE '^[[:space:]]*#if canImport\(CoreGraphics\)'; then
+        continue
+    fi
     report "$file:$line: IslandCore may only import Foundation/Observation"
 done < <(scan '^[[:space:]]*(@[A-Za-z_]+[[:space:]]+)*import[[:space:]]' Packages/IslandCore/Sources)
 

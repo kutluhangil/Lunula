@@ -45,7 +45,7 @@ Scripts/perf/measure-idle.sh --seconds 60 --assert-idle  # idle CPU/wakeups budg
 ## Architecture rules (enforced by CI)
 
 - **Packages:**
-  - `IslandCore`: pure logic, imports only `Foundation`/`Observation`, Linux-testable.
+  - `IslandCore`: pure logic, imports only `Foundation`/`Observation`, Linux-testable. Exception: files using `CGRect`/`CGSize` add `#if canImport(CoreGraphics) import CoreGraphics #endif` (Swift 6.4 hides their conformances otherwise; Linux gets them from Foundation).
   - `IslandDesign`: tokens, shape, halo, motion.
   - `IslandServices`: system adapters, no SwiftUI.
   - `IslandFeatures`: SwiftUI views and the store, never imports `IslandServices`.
