@@ -8,6 +8,9 @@ let package = Package(
     dependencies: [.package(path: "../IslandCore")],
     targets: [
         .target(name: "IslandDesign", dependencies: [.product(name: "IslandCore", package: "IslandCore")]),
-        .testTarget(name: "IslandDesignTests", dependencies: ["IslandDesign"]),
+        .testTarget(
+            name: "IslandDesignTests",
+            dependencies: ["IslandDesign", .product(name: "IslandCore", package: "IslandCore")]
+        ),
     ]
 )
