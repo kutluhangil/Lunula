@@ -14,7 +14,7 @@ public final class ManualTime: IslandTime {
     private var entries: [Entry] = []
     private var nextSeq = 0
 
-    public init(start: Date = Date(timeIntervalSinceReferenceDate: 800_000_000)) { now = start }
+    public init(start: Date = fixtureReferenceDate) { now = start }
 
     @discardableResult
     public func schedule(after delay: TimeInterval, _ action: @escaping @MainActor () -> Void) -> ScheduledToken {

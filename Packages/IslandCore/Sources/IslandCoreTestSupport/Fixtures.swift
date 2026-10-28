@@ -1,14 +1,14 @@
 import Foundation
 import IslandCore
 
-public let referenceDate = Date(timeIntervalSinceReferenceDate: 800_000_000)
+public let fixtureReferenceDate = Date(timeIntervalSinceReferenceDate: 800_000_000)
 
 extension Activity {
     public static func fixture(
         id: ActivityID = "activity",
         priority: ActivityPriority = .normal,
-        startedAt: Date = referenceDate,
-        updatedAt: Date = referenceDate,
+        startedAt: Date = fixtureReferenceDate,
+        updatedAt: Date = fixtureReferenceDate,
         expiresAt: Date? = nil,
         content: ActivityContent = .custom(
             CustomActivitySnapshot(title: "Activity", subtitle: nil, symbol: nil, progress: nil, endsAt: nil)),
@@ -30,7 +30,7 @@ extension NowPlayingSnapshot {
         artworkKey: String? = nil,
         duration: TimeInterval? = 200,
         position: TimeInterval = 0,
-        positionTimestamp: Date = referenceDate,
+        positionTimestamp: Date = fixtureReferenceDate,
         isPlaying: Bool = true
     ) -> NowPlayingSnapshot {
         NowPlayingSnapshot(
@@ -43,7 +43,7 @@ extension EventSnapshot {
     public static func fixture(
         eventID: String = "event-1",
         title: String = "Event",
-        start: Date = referenceDate,
+        start: Date = fixtureReferenceDate,
         end: Date? = nil,
         isAllDay: Bool = false,
         calendarColor: RGBAColor? = nil,
@@ -79,7 +79,7 @@ extension WeatherSnapshot {
         sunrise: Date? = nil,
         sunset: Date? = nil,
         placeName: String? = "Istanbul",
-        fetchedAt: Date = referenceDate
+        fetchedAt: Date = fixtureReferenceDate
     ) -> WeatherSnapshot {
         WeatherSnapshot(
             temperatureC: temperatureC, highC: highC, lowC: lowC, condition: condition, isDaylight: isDaylight,
