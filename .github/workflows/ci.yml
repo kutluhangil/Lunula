@@ -1,0 +1,30 @@
+name: CI
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-linux:
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test --package-path Packages/IslandCore
+
+  macos:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: Scripts/bootstrap.sh
+      - name: Generated plist and entitlements are committed
+        run: git diff --exit-code App/Info.plist App/Lunula.entitlements
+      - run: Scripts/lint.sh
+      - run: Scripts/check-architecture.sh
+      - run: Scripts/test-all.sh
+      - name: Release build (ad-hoc)
+        run: xcodebuild -project Lunula.xcodeproj -scheme Lunula -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- build
+      - run: Scripts/check-entitlements.sh build/Build/Products/Release/Lunula.app
