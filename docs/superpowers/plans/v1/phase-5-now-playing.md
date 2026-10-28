@@ -20,7 +20,7 @@
   - `final class AppleScriptExecutor: ScriptExecuting, @unchecked Sendable` — `NSAppleScript`, kaynak metne göre derlenmiş betik önbelleği (kilitli sözlük); `NSAppleEventDescriptor` → `ScriptValue` dönüşümü (liste, metin, tamsayı/gerçek, boolean, `typeData`/resim → `data`); `static func outcome(forErrorCode: Int) -> ScriptOutcome`: -1743 → `permissionDenied`, -1744 → `permissionNeeded`, -600 → `notRunning`, -1712 → `timedOut`, diğerleri `failed`.
   - `actor ScriptRunner { init(executor: ScriptExecuting = AppleScriptExecutor(), isRunning: @escaping @Sendable (String) -> Bool = ScriptRunner.isAppRunning, timeout: Duration = .seconds(1)); func run(_ source: String, target bundleID: String) async -> ScriptOutcome; static func isAppRunning(_ bundleID: String) -> Bool /* NSRunningApplication */ }`
 
-Kurallar: hedef çalışmıyorsa betik **hiç yürütülmez** (`tell application` uygulamayı başlatırdı) → `.notRunning`. Yürütme özel bir seri `DispatchQueue(label: "com.kutluhangul.nimbo.scripts", qos: .userInitiated)` üzerinde, aynı anda tek betik. Çağrı `timeout` ile yarıştırılır; süre dolarsa `.timedOut` döner (devam süreci tek seferlik sonuç bayrağıyla korunur). Her betik kaynağı ayrıca `with timeout of 1 second … end timeout` ile sarılır (çağıran sorumluluğunda; T5.2/T5.3).
+Kurallar: hedef çalışmıyorsa betik **hiç yürütülmez** (`tell application` uygulamayı başlatırdı) → `.notRunning`. Yürütme özel bir seri `DispatchQueue(label: "com.kutluhangul.lunula.scripts", qos: .userInitiated)` üzerinde, aynı anda tek betik. Çağrı `timeout` ile yarıştırılır; süre dolarsa `.timedOut` döner (devam süreci tek seferlik sonuç bayrağıyla korunur). Her betik kaynağı ayrıca `with timeout of 1 second … end timeout` ile sarılır (çağıran sorumluluğunda; T5.2/T5.3).
 
 - [ ] **Step 1: Testler** (`FakeExecutor`: verilen süre kadar uyur, iş parçacığını ve eşzamanlılığı kaydeder)
 
@@ -147,7 +147,7 @@ Ayrıştırma: ilk öğe `"stopped"` → `nil`; ad boşsa → `nil` (Tahoe'daki 
 - Produces: `enum SpotifyScriptParser { static func parse(_: ScriptValue, now: Date) -> (snapshot: NowPlayingSnapshot, artworkURL: URL?)? }`; `final class SpotifySource: NowPlayingSource { init(runner: ScriptRunner, session: URLSession = .shared, cacheDirectory: URL) }` — `bundleID = "com.spotify.client"`, `notificationName = "com.spotify.client.PlaybackStateChanged"`.
 
 Sorgu betiği T5.2 kalıbında, dönüş `{player state as text, name of t, artist of t, album of t, duration of t, player position, id of t, artwork url of t}`. Ayrıştırma: `duration` **milisaniye** → `/1000` (sdef saniye dese de); `id` `spotify:ad:` ile başlıyorsa ya da ad boşsa → `nil` (reklam); kapak URL'si yalnızca `https` ise kabul. Kapak indirme: `URLSession`, `cacheDirectory/<trackID SHA-256>.jpg`, varsa diskten. `artworkKey = "spotify:" + id`.
-CompositionRoot bu kaynağı yalnızca `#if NIMBO_SPOTIFY` altında kaydeder (MAS yapılandırmasında kapatılabilir; spec §5.1 MAS notu).
+CompositionRoot bu kaynağı yalnızca `#if LUNULA_SPOTIFY` altında kaydeder (MAS yapılandırmasında kapatılabilir; spec §5.1 MAS notu).
 
 - [ ] **Step 1: Testler**
 
@@ -340,7 +340,7 @@ Davranış:
 - Consumes: T5.2 `AutomationPermission`, `AutomationPermissionChecking`; T5.4 `NowPlayingCoordinator` (test için).
 - Produces:
   - `struct AutomationPermissionChecker: AutomationPermissionChecking` (protokol T5.2'de) — `AEDeterminePermissionToAutomateTarget(hedef tanımlayıcı, typeWildCard, typeWildCard, askUserIfNeeded)`; ana iş parçacığı dışında; `requestConsent` öncesinde `await MainActor.run { NSApp.activate() }`. `static func permission(forStatus: OSStatus) -> AutomationPermission`: `noErr` → `granted`, -1744 → `needsConsent`, -1743 → `denied`, -600 → `notRunning`.
-  - `struct PermissionCard: View { init(source: MediaSourceID, onAllow: () -> Void) }` — tek cümle açıklama ("Nimbo, Music'te çalanı göstermek için izin istiyor.") + "İzin ver" düğmesi; `HomeCard.permission` bu kartı kullanır.
+  - `struct PermissionCard: View { init(source: MediaSourceID, onAllow: () -> Void) }` — tek cümle açıklama ("Lunula, Music'te çalanı göstermek için izin istiyor.") + "İzin ver" düğmesi; `HomeCard.permission` bu kartı kullanır.
   - Reddedildiğinde açılacak URL sabiti: `x-apple.systempreferences:com.apple.preference.security?Privacy_Automation` (T9.2 kullanır).
 
 - [ ] **Step 1: Testler**
@@ -363,7 +363,7 @@ Davranış:
 ```
 
 - [ ] **Step 2–4:** FAIL → uygula → PASS (2 test).
-- [ ] **Step 5: Cihazda doğrula** — temiz kullanıcı hesabında (veya `tccutil reset AppleEvents com.kutluhangul.nimbo`): Music çal → adada tek uyarı → tıkla → Ev'de izin kartı → "İzin ver" → sistem izin penceresi → kabul → kapak ve başlık görünür. Reddet → uyarı bu oturumda tekrar gelmez.
+- [ ] **Step 5: Cihazda doğrula** — temiz kullanıcı hesabında (veya `tccutil reset AppleEvents com.kutluhangul.lunula`): Music çal → adada tek uyarı → tıkla → Ev'de izin kartı → "İzin ver" → sistem izin penceresi → kabul → kapak ve başlık görünür. Reddet → uyarı bu oturumda tekrar gelmez.
 - [ ] **Step 6: Commit** — `git commit -m "feat: automation consent flow without surprise prompts"`
 - **Entegrasyon notları:** `hub.register(coordinator, feature: .nowPlaying)` (+ uyarılar); `HomeInputs.pendingPermission = coordinator.pendingConsent`, `hasNowPlaying = coordinator.snapshot != nil`; Ayarlar'a "Şimdi Çalıyor" satırı (T9.2).
 

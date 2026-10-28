@@ -656,7 +656,7 @@ Kalan süre **duvar saatiyle** hesaplanır: `max(0, duration − (now − starte
   - `enum IslandURLError: Error, Equatable { wrongScheme, unknownCommand(String), missingParameter(String), invalidParameter(String), rateLimited }` (`rateLimited` yalnızca `URLRouter` tarafından üretilir, T8.1)
   - `enum CustomActivityLimits { static let maxIDLength = 64; static let maxTitleLength = 80; static let maxSubtitleLength = 120; static let maxLifetime: TimeInterval = 28_800; static let maxConcurrent = 3; static let timerMinutes: ClosedRange<Double> = 1...600 }`
   - `extension CustomActivityRequest { static func make(id: String?, title: String?, subtitle: String?, symbol: String?, accentHex: String?, progress: Double?, duration: Double?) -> Result<CustomActivityRequest, IslandURLError> }` — tüm doğrulama burada; ayrıştırıcı ve App Intents (T8.2) aynı fonksiyonu kullanır.
-  - `enum IslandURLParser { static func parse(_ url: URL, expectedScheme: String = "nimbo") -> Result<IslandURLCommand, IslandURLError> }` — yollar: `activity/show`, `activity/end`, `timer/start`, `island/toggle`. `id` yalnızca `[A-Za-z0-9._-]`, en çok 64 (aşarsa `invalidParameter("id")`); başlık/alt başlık sınırı aşarsa **kısaltılır** (sonuna `…`); `progress` 0...1'e sıkıştırılır, NaN → `invalidParameter`; `duration` 1...28800 dışı → `invalidParameter`; `accent` `RGBAColor(hex:)`; `minutes` aralık dışı → `invalidParameter`.
+  - `enum IslandURLParser { static func parse(_ url: URL, expectedScheme: String = "lunula") -> Result<IslandURLCommand, IslandURLError> }` — yollar: `activity/show`, `activity/end`, `timer/start`, `island/toggle`. `id` yalnızca `[A-Za-z0-9._-]`, en çok 64 (aşarsa `invalidParameter("id")`); başlık/alt başlık sınırı aşarsa **kısaltılır** (sonuna `…`); `progress` 0...1'e sıkıştırılır, NaN → `invalidParameter`; `duration` 1...28800 dışı → `invalidParameter`; `accent` `RGBAColor(hex:)`; `minutes` aralık dışı → `invalidParameter`.
   - `struct CustomActivityRegistry: Equatable, Sendable { private(set) var activities: [Activity]; @discardableResult mutating func upsert(_: CustomActivityRequest, now: Date) -> Activity; @discardableResult mutating func end(id: String) -> Bool; mutating func removeExpired(now: Date) }` — güncellemede `startedAt` korunur; `expiresAt = min(now + (duration ?? maxLifetime), startedAt + maxLifetime)`; 4. yeni etkinlik en eski `updatedAt`'lıyı çıkarır; öncelik `.normal`.
   - `struct RateLimiter: Sendable { init(limit: Int = 10, window: TimeInterval = 10); mutating func allow(at: Date) -> Bool }`
 
@@ -666,29 +666,29 @@ Kalan süre **duvar saatiyle** hesaplanır: `max(0, duration − (now − starte
 @Suite struct IslandURLParserTests {
     func parse(_ s: String) -> Result<IslandURLCommand, IslandURLError> { IslandURLParser.parse(URL(string: s)!) }
     @Test func parsesShowActivityWithAllFields() {
-        let r = parse("nimbo://activity/show?id=build&title=Derleme&subtitle=Nimbo&symbol=hammer&accent=FF8000&progress=0.4&duration=600")
-        #expect(r == .success(.showActivity(.init(id: "build", title: "Derleme", subtitle: "Nimbo", symbol: "hammer",
+        let r = parse("lunula://activity/show?id=build&title=Derleme&subtitle=Lunula&symbol=hammer&accent=FF8000&progress=0.4&duration=600")
+        #expect(r == .success(.showActivity(.init(id: "build", title: "Derleme", subtitle: "Lunula", symbol: "hammer",
                                                   accent: RGBAColor(hex: "FF8000"), progress: 0.4, duration: 600))))
     }
     @Test func percentDecodesTurkishCharacters() {
-        guard case .success(.showActivity(let req)) = parse("nimbo://activity/show?id=m&title=Toplant%C4%B1%20ba%C5%9Fl%C4%B1yor") else { Issue.record(); return }
+        guard case .success(.showActivity(let req)) = parse("lunula://activity/show?id=m&title=Toplant%C4%B1%20ba%C5%9Fl%C4%B1yor") else { Issue.record(); return }
         #expect(req.title == "Toplantı başlıyor")
     }
-    @Test func rejectsMissingTitle() { #expect(parse("nimbo://activity/show?id=a") == .failure(.missingParameter("title"))) }
+    @Test func rejectsMissingTitle() { #expect(parse("lunula://activity/show?id=a") == .failure(.missingParameter("title"))) }
     @Test func clampsProgressAndTruncatesTitle() {
-        guard case .success(.showActivity(let req)) = parse("nimbo://activity/show?id=a&title=\(String(repeating: "x", count: 100))&progress=1.7") else { Issue.record(); return }
+        guard case .success(.showActivity(let req)) = parse("lunula://activity/show?id=a&title=\(String(repeating: "x", count: 100))&progress=1.7") else { Issue.record(); return }
         #expect(req.progress == 1 && req.title.count == 80 && req.title.hasSuffix("…"))
     }
-    @Test func rejectsDurationOver8Hours() { #expect(parse("nimbo://activity/show?id=a&title=t&duration=40000") == .failure(.invalidParameter("duration"))) }
-    @Test func rejectsInvalidID() { #expect(parse("nimbo://activity/show?id=a%20b&title=t") == .failure(.invalidParameter("id"))) }
+    @Test func rejectsDurationOver8Hours() { #expect(parse("lunula://activity/show?id=a&title=t&duration=40000") == .failure(.invalidParameter("duration"))) }
+    @Test func rejectsInvalidID() { #expect(parse("lunula://activity/show?id=a%20b&title=t") == .failure(.invalidParameter("id"))) }
     @Test func parsesEndTimerAndToggle() {
-        #expect(parse("nimbo://activity/end?id=a") == .success(.endActivity(id: "a")))
-        #expect(parse("nimbo://timer/start?minutes=25") == .success(.startTimer(minutes: 25)))
-        #expect(parse("nimbo://island/toggle") == .success(.toggleIsland))
+        #expect(parse("lunula://activity/end?id=a") == .success(.endActivity(id: "a")))
+        #expect(parse("lunula://timer/start?minutes=25") == .success(.startTimer(minutes: 25)))
+        #expect(parse("lunula://island/toggle") == .success(.toggleIsland))
     }
     @Test func rejectsWrongSchemeAndUnknownCommand() {
         #expect(parse("other://activity/show?id=a&title=t") == .failure(.wrongScheme))
-        #expect(parse("nimbo://foo/bar") == .failure(.unknownCommand("foo/bar")))
+        #expect(parse("lunula://foo/bar") == .failure(.unknownCommand("foo/bar")))
     }
 }
 

@@ -62,7 +62,7 @@
 - Create: `App/Tests/AccessibilityTests.swift`, `docs/qa/accessibility.md`
 
 **Interfaces:**
-- Produces: ada kökü `accessibilityElement(children: .contain)` + etiket "Nimbo, <birincil etkinlik özeti>" + `.isButton`; her denetim etiketli (oynat/duraklat durumuna göre değişen etiket); Ev sayfaları ←/→ ile gezilebilir; Hareketi Azalt / Şeffaflığı Azalt / Kontrastı Artır her bileşende uygulanmış; vurgu renkleri siyah üzerinde ≥ 3:1 (T1.10), metin ≥ 4.5:1.
+- Produces: ada kökü `accessibilityElement(children: .contain)` + etiket "Lunula, <birincil etkinlik özeti>" + `.isButton`; her denetim etiketli (oynat/duraklat durumuna göre değişen etiket); Ev sayfaları ←/→ ile gezilebilir; Hareketi Azalt / Şeffaflığı Azalt / Kontrastı Artır her bileşende uygulanmış; vurgu renkleri siyah üzerinde ≥ 3:1 (T1.10), metin ≥ 4.5:1.
 - Tüm denetim etiketleri tek yerde: `Packages/IslandFeatures/Sources/IslandFeatures/Accessibility/AccessibilityLabels.swift` (`enum AccessibilityLabels { static func playPause(isPlaying: Bool) -> LocalizedStringResource; static let next, previous, seek, startTimer, pauseTimer, join, removeShelfItem, openSettings: LocalizedStringResource; static func island(summary: String) -> LocalizedStringResource }`); görünümler `.accessibilityLabel(Text(AccessibilityLabels.…))` kullanır.
 - `AccessibilityTests`: `everyLabelResolvesInTurkishAndEnglish` (her etiket `String(localized:locale:)` ile `tr` ve `en`'de boş değil ve anahtarın kendisi değil), `textColorsMeetContrast` (`textPrimary`, `textSecondary` siyah üzerinde ≥ 4.5).
 
@@ -80,7 +80,7 @@
 - Modify: `docs/qa/perf-log.md`
 
 **Interfaces:**
-- Produces: `enum Signposts { static let island = OSSignposter(subsystem: "com.kutluhangul.nimbo", category: "island") }` — açılış/kapanış geçişleri, betik çağrıları, hava isteği, renk çıkarımı aralık olarak işaretlenir.
+- Produces: `enum Signposts { static let island = OSSignposter(subsystem: "com.kutluhangul.lunula", category: "island") }` — açılış/kapanış geçişleri, betik çağrıları, hava isteği, renk çıkarımı aralık olarak işaretlenir.
 
 - [ ] **Step 1: Ölç** (Release, `/Applications`'a kopyalanmış derleme, 120 Hz ekran):
   - Boşta, etkinlik yok: `measure-idle.sh --seconds 120 --assert-idle` → CPU medyanı < %0.1, uyanma < 1/sn.
@@ -111,10 +111,11 @@
 - Create: `.github/workflows/release.yml`, `Scripts/release/{build-dmg.sh,notarize.sh}`, `docs/release.md`, `CHANGELOG.md`
 
 **Interfaces:**
-- `release.yml`: `v*` etiketiyle tetiklenir, `macos-26`; Release derleme → `Scripts/release/build-dmg.sh` (`hdiutil create -format UDZO`) → **sırlar varsa** (`DEVELOPER_ID_CERT_P12`, `DEVELOPER_ID_CERT_PASSWORD`, `APPSTORE_CONNECT_KEY_ID`, `APPSTORE_CONNECT_ISSUER_ID`, `APPSTORE_CONNECT_KEY_P8`) Developer ID ile imzala (`--options runtime --timestamp`, **`--deep` yok**), `xcrun notarytool submit --wait`, `xcrun stapler staple`; sırlar yoksa imzasız `.zip` üret ve sürüm notuna uyarı ekle → GitHub Release'e yükle.
-- `docs/release.md`: iki yol — (A) **Apple Developer Program üyeliği varsa** (yıllık 99 $): imzalı + notarize DMG, kullanıcı çift tıklayıp açar; (B) **yoksa**: imzasız zip; macOS 15+ Control-tık ile açmaya izin vermez, kullanıcı Sistem Ayarları › Gizlilik ve Güvenlik › "Yine de Aç" yolunu izlemelidir (adım adım, ekran görüntülü). Sparkle bu sürümde yok (backlog).
+- `release.yml`: `v*` etiketiyle tetiklenir, `macos-26`; Release derleme → `Scripts/release/build-dmg.sh` (`hdiutil create -format UDZO`) → GitHub Secrets (`DEVELOPER_ID_CERT_P12`, `DEVELOPER_ID_CERT_PASSWORD`, `APPSTORE_CONNECT_KEY_ID`, `APPSTORE_CONNECT_ISSUER_ID`, `APPSTORE_CONNECT_KEY_P8`, `DEVELOPMENT_TEAM`) ile geçici anahtar zincirine sertifika yükle → Developer ID ile imzala (`--options runtime --timestamp`, **`--deep` yok**) → `xcrun notarytool submit --wait` → `xcrun stapler staple` → `spctl -a -vv` doğrulaması → GitHub Release'e yükle. Sırlardan biri eksikse iş **başarısız olur** (imzasız sürüm yayımlanmaz).
+- `docs/release.md` (kullanıcının Developer Program üyeliği var): Developer ID Application sertifikasının oluşturulması (yalnızca Account Holder), `.p12` dışa aktarımı, App Store Connect API anahtarı, GitHub Secrets'a eklenmesi, yerelde `xcrun notarytool store-credentials lunula-notary` ile deneme, sürüm etiketleme adımları. Sparkle bu sürümde yok (backlog).
+- Yayından önce: "Lunula" için TÜRKPATENT, USPTO ve EUIPO (sınıf 9 ve 42) marka taraması; sonuç `docs/release.md`'ye.
 
-- [ ] **Step 1:** Yerelde `Scripts/release/build-dmg.sh` → `build/Nimbo-0.1.0.dmg` oluşur; `spctl -a -vv` sonucu belgeye yazılır.
+- [ ] **Step 1:** Yerelde `Scripts/release/build-dmg.sh` → `build/Lunula-0.1.0.dmg` oluşur; `spctl -a -vv` sonucu belgeye yazılır.
 - [ ] **Step 2:** Bir `v0.1.0-rc1` etiketiyle iş akışını dene; yapıt GitHub Release'te görünür.
 - [ ] **Step 3:** `git commit -m "ci: release workflow with optional notarization"`
 

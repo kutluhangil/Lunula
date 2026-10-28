@@ -1,6 +1,6 @@
-# CLAUDE.md — Nimbo
+# CLAUDE.md — Lunula
 
-Nimbo (working name) is a premium macOS notch "island" app. It is native Swift (SwiftUI + AppKit), sandboxed from day one, uses no private APIs, and is free. It is developed on GitHub and goes to the Mac App Store later.
+Lunula is a premium macOS notch "island" app (formerly the working name "Nimbo"; the research report still uses that name). It is native Swift (SwiftUI + AppKit), sandboxed from day one, uses no private APIs, and is free. It is developed on GitHub and goes to the Mac App Store later.
 
 ## Read these first
 
@@ -12,7 +12,7 @@ Nimbo (working name) is a premium macOS notch "island" app. It is native Swift (
 
 All planning documents are in Turkish; code, identifiers, comments and commit messages are in English.
 
-**Status gate:** implementation starts only after the user has approved the plan and chosen an execution method in conversation. If you cannot see that approval, ask before writing product code. Progress is tracked **only** by the checkboxes in the master plan's task list.
+**Status gate:** the user approved the plan on 2026-10-28 and chose **subagent-driven** execution, with the product name **Lunula**. Implementation starts at T0.1 once the planning PR is merged into `main`. Progress is tracked **only** by the checkboxes in the master plan's task list.
 
 ## Talking to the user
 
@@ -30,16 +30,16 @@ All planning documents are in Turkish; code, identifiers, comments and commit me
 ## Build and test (macOS only, Xcode 26+)
 
 ```bash
-Scripts/bootstrap.sh                                   # installs xcodegen if missing, generates Nimbo.xcodeproj
+Scripts/bootstrap.sh                                   # installs xcodegen if missing, generates Lunula.xcodeproj
 swift test --package-path Packages/IslandCore          # core logic (also runs on Linux)
 Scripts/test-all.sh                                    # all packages + app tests
-xcodebuild -project Nimbo.xcodeproj -scheme Nimbo -destination 'platform=macOS' build test
+xcodebuild -project Lunula.xcodeproj -scheme Lunula -destination 'platform=macOS' build test
 Scripts/lint.sh && Scripts/check-architecture.sh       # format + architecture guard
 Scripts/perf/measure-idle.sh --seconds 60 --assert-idle  # idle CPU/wakeups budget (Release build running)
 ```
 
-- `Nimbo.xcodeproj` is generated and git-ignored. Edit `project.yml`, never the project file.
-- Signing: copy `Config/Signing.xcconfig.example` to `Config/Signing.xcconfig` (git-ignored) and set a free Personal Team. With ad-hoc signing, macOS asks for Automation and Calendar permission again after every build.
+- `Lunula.xcodeproj` is generated and git-ignored. Edit `project.yml`, never the project file.
+- Signing: copy `Config/Signing.xcconfig.example` to `Config/Signing.xcconfig` (git-ignored) and set `DEVELOPMENT_TEAM` to the user's paid Apple Developer team ID (`CODE_SIGN_IDENTITY = Apple Development`). Never commit the team ID or any certificate. With ad-hoc signing, macOS asks for Automation and Calendar permission again after every build.
 - If the scripts do not exist yet, the plan is before T0.1/T0.2. Start there.
 
 ## Architecture rules (enforced by CI)
@@ -97,14 +97,14 @@ Scripts/perf/measure-idle.sh --seconds 60 --assert-idle  # idle CPU/wakeups budg
 - **Now Playing:**
   - No public API reads other apps' Now Playing. Support only Music and Spotify, through AppleScript.
   - Music has scripting access groups: `com.apple.Music.playback`, `com.apple.Music.playerInfo`.
-  - Spotify needs a temporary exception. App Review rarely approves it, so it sits behind `NIMBO_SPOTIFY`.
+  - Spotify needs a temporary exception. App Review rarely approves it, so it sits behind `LUNULA_SPOTIFY`.
   - Spotify `duration` is in milliseconds.
   - Never script an app that is not running.
   - `AEDeterminePermissionToAutomateTarget` codes: -1744 = consent needed, -1743 = denied, -600 = not running.
 - **Focus status is out of v1:** it needs the Communication Notifications capability and carries App Review risk.
 - **App Intents (macOS 26):** use `static let supportedModes: IntentModes = .background`. `openAppWhenRun` is deprecated.
 - **WeatherKit** is not available for Developer ID distribution, so v1 uses Open-Meteo (attribution: CC BY 4.0).
-- **Distribution:** notarization requires the paid Apple Developer Program. Unsigned builds on macOS 15+ need System Settings › Privacy & Security › "Open Anyway".
+- **Distribution:** the user has a paid Apple Developer Program membership, so GitHub releases are Developer ID–signed, notarized and stapled DMGs (T9.7). Secrets live only in GitHub Actions secrets.
 - **Tooling:**
   - CI runner `macos-26` defaults to Xcode 26.6.
   - KeyboardShortcuts 3.1.0 is sandbox-safe.

@@ -120,7 +120,7 @@ Geometri (SwiftUI koordinatları, y aşağı): `s = min(shoulderRadius, rect.hei
   - `struct HaloAccessibility: Equatable, Sendable { var reduceMotion = false; var reduceTransparency = false; var increaseContrast = false; var lowPowerMode = false; static let standard }`
   - `struct HaloStyleValues: Equatable { keyLineWidth: CGFloat; keyLineOpacity: Double; glowOpacity: Double; glowRadius: CGFloat; breathes: Bool; pulses: Bool }`
   - `enum HaloStyle { static func resolve(_ state: HaloState, accessibility: HaloAccessibility) -> HaloStyleValues }`
-  - `final class HaloLayer: CALayer { func apply(_ values: HaloStyleValues, state: HaloState, outline: CGPath, now: Date); func suspend() }` — animasyon anahtarları: `"nimbo.breath"`, `"nimbo.progress"`, `"nimbo.pulse"`.
+  - `final class HaloLayer: CALayer { func apply(_ values: HaloStyleValues, state: HaloState, outline: CGPath, now: Date); func suspend() }` — animasyon anahtarları: `"lunula.breath"`, `"lunula.progress"`, `"lunula.pulse"`.
   - `struct HaloView: NSViewRepresentable { var state: HaloState; var outline: CGPath; var lowPowerMode: Bool }` — erişilebilirlik bayraklarını `@Environment(\.accessibilityReduceMotion)`, `\.accessibilityReduceTransparency`, `\.colorSchemeContrast` değerlerinden okur.
 
 Kurallar (spec §6.4): `off` → her şey 0. `ambient` → parıltı 0.16 × ölçek, anahtar çizgi 1 pt %35, `breathes = breathing && !reduceMotion && !lowPowerMode`. `progress`/`warming`/`fill` → 0.32 × ölçek. `pulse` → tepe 0.55 × ölçek, `pulses = !reduceMotion` (azaltılmışsa sabit 0.32). `reduceTransparency` → `glowOpacity = 0`. `increaseContrast` → çizgi 1.5 pt %60. Parıltı yarıçapı 14.
@@ -164,7 +164,7 @@ Katman: parıltı = `shadowPath = outline`, `shadowRadius = 14`, `shadowOffset =
         let l = HaloLayer(); l.apply(HaloStyle.resolve(s, accessibility: a), state: s, outline: outline, now: Date()); return l
     }
     @Test func breathingAddsBreathAnimation() {
-        #expect(applied(.init(mode: .ambient(breathing: true), color: .white)).animation(forKey: "nimbo.breath") != nil)
+        #expect(applied(.init(mode: .ambient(breathing: true), color: .white)).animation(forKey: "lunula.breath") != nil)
     }
     @Test func reduceMotionAddsNoAnimations() {
         var a = HaloAccessibility.standard; a.reduceMotion = true
@@ -172,7 +172,7 @@ Katman: parıltı = `shadowPath = outline`, `shadowRadius = 14`, `shadowOffset =
     }
     @Test func progressWithEndDateAnimatesStrokeEnd() {
         let l = applied(.init(mode: .progress(fraction: 0.2, endsAt: Date().addingTimeInterval(60)), color: .white))
-        #expect(l.sublayers?.contains { $0.animation(forKey: "nimbo.progress") != nil } == true)
+        #expect(l.sublayers?.contains { $0.animation(forKey: "lunula.progress") != nil } == true)
     }
     @Test func suspendRemovesAllAnimations() {
         let l = applied(.init(mode: .ambient(breathing: true), color: .white)); l.suspend()

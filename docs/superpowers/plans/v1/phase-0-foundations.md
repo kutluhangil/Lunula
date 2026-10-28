@@ -15,11 +15,11 @@
 - Create (her `P` ∈ `IslandCore, IslandDesign, IslandServices, IslandFeatures`): `Packages/P/Package.swift`, `Packages/P/Sources/P/PModule.swift`, `Packages/P/Tests/PTests/PackageSmokeTests.swift`
 - Create: `Packages/IslandCore/Sources/IslandCoreTestSupport/TestSupport.swift`
 - Create: `Scripts/bootstrap.sh`, `Scripts/test-all.sh`
-- Generated + committed (XcodeGen çıktısı): `App/Info.plist`, `App/Nimbo.entitlements`
-- Generated + **ignored**: `Nimbo.xcodeproj/`
+- Generated + committed (XcodeGen çıktısı): `App/Info.plist`, `App/Lunula.entitlements`
+- Generated + **ignored**: `Lunula.xcodeproj/`
 
 **Interfaces:**
-- Produces: `IslandCoreModule.version`, `IslandDesignModule.version`, `IslandServicesModule.version`, `IslandFeaturesModule.version` (`"0.1.0"`); kütüphane ürünleri `IslandCore`, `IslandCoreTestSupport`, `IslandDesign`, `IslandServices`, `IslandFeatures`; `@MainActor final class CompositionRoot { static let shared; func start() }`; Xcode şeması `Nimbo` (uygulama) + `NimboTests` (uygulama barındırmalı test paketi).
+- Produces: `IslandCoreModule.version`, `IslandDesignModule.version`, `IslandServicesModule.version`, `IslandFeaturesModule.version` (`"0.1.0"`); kütüphane ürünleri `IslandCore`, `IslandCoreTestSupport`, `IslandDesign`, `IslandServices`, `IslandFeatures`; `@MainActor final class CompositionRoot { static let shared; func start() }`; Xcode şeması `Lunula` (uygulama) + `LunulaTests` (uygulama barındırmalı test paketi).
 
 - [ ] **Step 1: Paket duman testlerini yaz** (her paket için aynı kalıp)
 
@@ -47,7 +47,7 @@ import Foundation
     @Test func urlSchemeIsRegistered() throws {
         let types = try #require(Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]])
         let schemes = types.flatMap { $0["CFBundleURLSchemes"] as? [String] ?? [] }
-        #expect(schemes.contains("nimbo"))
+        #expect(schemes.contains("lunula"))
     }
     @Test func everyUsageDescriptionIsPresent() {
         for key in ["NSAppleEventsUsageDescription", "NSCalendarsFullAccessUsageDescription",
@@ -79,7 +79,7 @@ Her `Package.swift`: `// swift-tools-version: 6.2`, `platforms: [.macOS("26.0")]
 - [ ] **Step 4: `project.yml` ve yapılandırmayı yaz** (aşağıdaki değerler spec'ten sabitlenmiştir; anahtar adları XcodeGen 2.46 sözdizimi)
 
 ```yaml
-name: Nimbo
+name: Lunula
 options:
   bundleIdPrefix: com.kutluhangul
   deploymentTarget: { macOS: "26.0" }
@@ -102,7 +102,7 @@ packages:
   IslandFeatures: { path: Packages/IslandFeatures }
   KeyboardShortcuts: { url: https://github.com/sindresorhus/KeyboardShortcuts, from: 3.1.0 }
 targets:
-  Nimbo:
+  Lunula:
     type: application
     platform: macOS
     sources: [App/Sources, App/Resources]
@@ -114,25 +114,25 @@ targets:
       - package: KeyboardShortcuts
     settings:
       base:
-        PRODUCT_NAME: Nimbo
-        PRODUCT_BUNDLE_IDENTIFIER: com.kutluhangul.nimbo
+        PRODUCT_NAME: Lunula
+        PRODUCT_BUNDLE_IDENTIFIER: com.kutluhangul.lunula
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) NIMBO_SPOTIFY"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) LUNULA_SPOTIFY"
     info:
       path: App/Info.plist
       properties:
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.productivity
-        CFBundleDisplayName: Nimbo
+        CFBundleDisplayName: Lunula
         NSHumanReadableCopyright: "© 2026 Kutluhan Gül"
         CFBundleURLTypes:
-          - { CFBundleURLName: com.kutluhangul.nimbo, CFBundleURLSchemes: [nimbo] }
-        NSAppleEventsUsageDescription: "Nimbo shows what's playing in Music and Spotify and lets you control playback."
-        NSCalendarsFullAccessUsageDescription: "Nimbo shows your next event and a Join button for meetings."
-        NSLocationUsageDescription: "Nimbo uses your approximate location to show local weather."
-        NSLocationWhenInUseUsageDescription: "Nimbo uses your approximate location to show local weather."
+          - { CFBundleURLName: com.kutluhangul.lunula, CFBundleURLSchemes: [lunula] }
+        NSAppleEventsUsageDescription: "Lunula shows what's playing in Music and Spotify and lets you control playback."
+        NSCalendarsFullAccessUsageDescription: "Lunula shows your next event and a Join button for meetings."
+        NSLocationUsageDescription: "Lunula uses your approximate location to show local weather."
+        NSLocationWhenInUseUsageDescription: "Lunula uses your approximate location to show local weather."
     entitlements:
-      path: App/Nimbo.entitlements
+      path: App/Lunula.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.automation.apple-events: true
@@ -145,28 +145,28 @@ targets:
         com.apple.security.files.user-selected.read-write: true
         com.apple.security.files.bookmarks.app-scope: true
         com.apple.security.network.client: true
-  NimboTests:
+  LunulaTests:
     type: bundle.unit-test
     platform: macOS
     sources: [App/Tests]
     dependencies:
-      - target: Nimbo
+      - target: Lunula
       - package: IslandCore
         product: IslandCoreTestSupport
 schemes:
-  Nimbo:
-    build: { targets: { Nimbo: all, NimboTests: [test] } }
-    test: { targets: [NimboTests], gatherCoverageData: true }
+  Lunula:
+    build: { targets: { Lunula: all, LunulaTests: [test] } }
+    test: { targets: [LunulaTests], gatherCoverageData: true }
 ```
 
 - `Config/Base.xcconfig`: `CODE_SIGN_IDENTITY = -` ve `CODE_SIGN_STYLE = Manual` (varsayılan: yerel ad-hoc imza), son satırda `#include? "Signing.xcconfig"`.
-- `Config/Signing.xcconfig.example`: yorum satırlarıyla `DEVELOPMENT_TEAM = `, `CODE_SIGN_STYLE = Automatic`, `CODE_SIGN_IDENTITY = Apple Development`. Açıklama: **ücretsiz Apple ID "Personal Team" yeterlidir**; ad-hoc imzada her derlemede imza değiştiği için Otomasyon/Takvim izinleri her seferinde yeniden sorulur.
+- `Config/Signing.xcconfig.example`: yorum satırlarıyla `DEVELOPMENT_TEAM = `, `CODE_SIGN_STYLE = Automatic`, `CODE_SIGN_IDENTITY = Apple Development`. Açıklama: kullanıcının **ücretli Apple Developer** Team ID'si buraya yazılır (dosya git dışıdır, Team ID asla commit'lenmez); ad-hoc imzada her derlemede imza değiştiği için Otomasyon/Takvim izinleri her seferinde yeniden sorulur.
 - `InfoPlist.xcstrings`: dört kullanım metninin Türkçe karşılıkları (`tr`, durum `translated`).
-- `Localizable.xcstrings`: tek anahtar `app.name` (`en`: "Nimbo", `tr`: "Nimbo").
-- `.gitignore`: `Nimbo.xcodeproj/`, `build/`, `DerivedData/`, `.build/`, `.swiftpm/`, `*.xcuserstate`, `xcuserdata/`, `Config/Signing.xcconfig`, `.DS_Store`.
-- `main.swift`: `NSApplication.shared` + `AppDelegate` + `run()`. `AppDelegate` `@MainActor`, `applicationDidFinishLaunching` → `CompositionRoot.shared.start()`; `start()` şimdilik yalnızca `Logger(subsystem: "com.kutluhangul.nimbo", category: "app").info("start")`.
+- `Localizable.xcstrings`: tek anahtar `app.name` (`en`: "Lunula", `tr`: "Lunula").
+- `.gitignore`: `Lunula.xcodeproj/`, `build/`, `DerivedData/`, `.build/`, `.swiftpm/`, `*.xcuserstate`, `xcuserdata/`, `Config/Signing.xcconfig`, `.DS_Store`.
+- `main.swift`: `NSApplication.shared` + `AppDelegate` + `run()`. `AppDelegate` `@MainActor`, `applicationDidFinishLaunching` → `CompositionRoot.shared.start()`; `start()` şimdilik yalnızca `Logger(subsystem: "com.kutluhangul.lunula", category: "app").info("start")`.
 - `Scripts/bootstrap.sh` (`set -euo pipefail`): xcodegen yoksa `brew install xcodegen`; `Config/Signing.xcconfig` yoksa örnekten kopyala; `xcodegen generate`.
-- `Scripts/test-all.sh` (`set -euo pipefail`): 4 paket için `swift test --package-path Packages/$p`, ardından `xcodebuild test -project Nimbo.xcodeproj -scheme Nimbo -destination 'platform=macOS' -quiet`.
+- `Scripts/test-all.sh` (`set -euo pipefail`): 4 paket için `swift test --package-path Packages/$p`, ardından `xcodebuild test -project Lunula.xcodeproj -scheme Lunula -destination 'platform=macOS' -quiet`.
 
 - [ ] **Step 5: Çalıştır, geçtiğini gör**
 
@@ -175,8 +175,8 @@ Expected: 4 paket `✔ Test run with 1 test passed`; `xcodebuild` `** TEST SUCCE
 
 - [ ] **Step 6: Uygulamanın gerçekten açıldığını doğrula**
 
-Run: `xcodebuild -project Nimbo.xcodeproj -scheme Nimbo -configuration Debug -derivedDataPath build build && open build/Build/Products/Debug/Nimbo.app && sleep 2 && pgrep -x Nimbo`
-Expected: bir PID yazdırılır; Dock'ta simge yok; Konsol'da `start` günlüğü. Sonra `pkill -x Nimbo`.
+Run: `xcodebuild -project Lunula.xcodeproj -scheme Lunula -configuration Debug -derivedDataPath build build && open build/Build/Products/Debug/Lunula.app && sleep 2 && pgrep -x Lunula`
+Expected: bir PID yazdırılır; Dock'ta simge yok; Konsol'da `start` günlüğü. Sonra `pkill -x Lunula`.
 
 - [ ] **Step 7: Commit**
 
@@ -194,7 +194,7 @@ git commit -m "chore: scaffold XcodeGen project, four local packages and sandbox
 - Create: `Scripts/lint.sh`, `Scripts/check-architecture.sh`, `Scripts/check-entitlements.sh`
 
 **Interfaces:**
-- Consumes: T0.1'in `Scripts/bootstrap.sh`, `Scripts/test-all.sh`, `Nimbo` şeması.
+- Consumes: T0.1'in `Scripts/bootstrap.sh`, `Scripts/test-all.sh`, `Lunula` şeması.
 - Produces: her PR'da çalışan iki iş: `core-linux` (IslandCore'un yalnızca Foundation kullandığını Linux'ta derleyerek kanıtlar) ve `macos` (lint + mimari + testler + Release ad-hoc derleme + yetki denetimi).
 
 - [ ] **Step 1: Bekçiyi bilerek kıracak bir ihlal dosyası oluştur**
@@ -232,11 +232,11 @@ Expected: `architecture OK`, `exit=0`.
 - `Scripts/check-entitlements.sh <App yolu>`: `codesign -d --entitlements - --xml "$1"` çıktısını `plutil -extract com.apple.security.app-sandbox raw -` ile okur → `true` değilse çık 1; `codesign -dv "$1" 2>&1 | grep -q 'flags=.*runtime'` değilse çık 1 (Hardened Runtime).
 - `.github/workflows/ci.yml` (`on: [push, pull_request]`, `concurrency` ile eski çalıştırmaları iptal):
   - `core-linux`: `runs-on: ubuntu-latest`, `container: swift:6.2`, adım: `swift test --package-path Packages/IslandCore`.
-  - `macos`: `runs-on: macos-26` (varsayılan Xcode 26.6), adımlar sırayla: checkout → `brew install xcodegen` → `Scripts/bootstrap.sh` → `git diff --exit-code App/Info.plist App/Nimbo.entitlements` (üretilen dosyalar commit'lenmiş olmalı) → `Scripts/lint.sh` → `Scripts/check-architecture.sh` → `Scripts/test-all.sh` → `xcodebuild -project Nimbo.xcodeproj -scheme Nimbo -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- build` → `Scripts/check-entitlements.sh build/Build/Products/Release/Nimbo.app`.
+  - `macos`: `runs-on: macos-26` (varsayılan Xcode 26.6), adımlar sırayla: checkout → `brew install xcodegen` → `Scripts/bootstrap.sh` → `git diff --exit-code App/Info.plist App/Lunula.entitlements` (üretilen dosyalar commit'lenmiş olmalı) → `Scripts/lint.sh` → `Scripts/check-architecture.sh` → `Scripts/test-all.sh` → `xcodebuild -project Lunula.xcodeproj -scheme Lunula -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- build` → `Scripts/check-entitlements.sh build/Build/Products/Release/Lunula.app`.
 
 - [ ] **Step 6: Yerelde tüm bekçileri çalıştır**
 
-Run: `Scripts/lint.sh && Scripts/check-architecture.sh && Scripts/test-all.sh && xcodebuild -project Nimbo.xcodeproj -scheme Nimbo -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- build -quiet && Scripts/check-entitlements.sh build/Build/Products/Release/Nimbo.app`
+Run: `Scripts/lint.sh && Scripts/check-architecture.sh && Scripts/test-all.sh && xcodebuild -project Lunula.xcodeproj -scheme Lunula -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- build -quiet && Scripts/check-entitlements.sh build/Build/Products/Release/Lunula.app`
 Expected: hata yok; son satır `entitlements OK (sandbox, hardened runtime)`.
 
 - [ ] **Step 7: Commit ve push; CI'ın yeşil olduğunu gör**

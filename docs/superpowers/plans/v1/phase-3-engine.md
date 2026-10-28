@@ -2,7 +2,7 @@
 
 > Ana plan: [../2026-10-28-v1-plan.md](../2026-10-28-v1-plan.md) · Spec §4, §7, §8
 > Önkoşul: T1.2, T1.4, T2.1, T2.2, T2.3. Bu fazın sonunda gerçek bir ada vardır: notch'la birebir kapalı durur, hover/tık/kaydırma/klavye ile açılır, çoklu ekranda, tam ekranda ve uyku/uyanmada doğru davranır; boşta ~%0 CPU ölçülür.
-> Komutlar: paketler `swift test --package-path Packages/<P> --filter <Suite>`; uygulama `xcodebuild test -project Nimbo.xcodeproj -scheme Nimbo -destination 'platform=macOS' -only-testing:NimboTests/<Suite>`
+> Komutlar: paketler `swift test --package-path Packages/<P> --filter <Suite>`; uygulama `xcodebuild test -project Lunula.xcodeproj -scheme Lunula -destination 'platform=macOS' -only-testing:LunulaTests/<Suite>`
 > **Entegrasyon notları** satırları Integrator'ın `CompositionRoot.swift` / `project.yml` üzerinde yapacağı değişikliklerdir; görev sahibi bu dosyalara dokunmaz.
 
 ---
@@ -117,7 +117,7 @@
 }
 ```
 
-- [ ] **Step 2–4:** `-only-testing:NimboTests/IslandPanelTests` → FAIL → uygula → PASS (7 test).
+- [ ] **Step 2–4:** `-only-testing:LunulaTests/IslandPanelTests` → FAIL → uygula → PASS (7 test).
 - [ ] **Step 5: Commit** — `git commit -m "feat(app): island and hot-zone panels with per-screen window manager"`
 - **Entegrasyon notları:** `CompositionRoot.start()` → `ScreenService.updates()` + `SettingsStore.settings.displayMode` değişince `IslandWindowManager.sync`; her ekran için `content` T3.5'in `IslandRootView`'ı.
 
@@ -202,7 +202,7 @@
 }
 ```
 
-- [ ] **Step 2–4:** IslandCore `--filter "PointerSpeedEstimatorTests|SwipeDetectorTests|IslandHitTestingTests"` ve `-only-testing:NimboTests/PointerRouterTests` → FAIL → uygula → PASS (11 + 3 test).
+- [ ] **Step 2–4:** IslandCore `--filter "PointerSpeedEstimatorTests|SwipeDetectorTests|IslandHitTestingTests"` ve `-only-testing:LunulaTests/PointerRouterTests` → FAIL → uygula → PASS (11 + 3 test).
 - [ ] **Step 5: Commit** — `git commit -m "feat: pointer speed, swipe detection, hit testing and pointer router"`
 
 ---
@@ -339,7 +339,7 @@
 **Interfaces:**
 - Consumes: T1.9 `SettingsStore` (`muteUntil`); T3.4 `IslandStore.send`.
 - Produces:
-  - `struct ContextMenuActions { var openSettings: () -> Void; var toggleMute: () -> Void; var quit: () -> Void }`; `enum ContextMenuBuilder { @MainActor static func menu(isMuted: Bool, actions: ContextMenuActions) -> NSMenu }` — öğeler: "Ayarlar…" (⌘,), "1 saat sustur" ya da "Susturmayı kaldır", ayraç, "Nimbo'dan çık" (⌘Q).
+  - `struct ContextMenuActions { var openSettings: () -> Void; var toggleMute: () -> Void; var quit: () -> Void }`; `enum ContextMenuBuilder { @MainActor static func menu(isMuted: Bool, actions: ContextMenuActions) -> NSMenu }` — öğeler: "Ayarlar…" (⌘,), "1 saat sustur" ya da "Susturmayı kaldır", ayraç, "Lunula'dan çık" (⌘Q).
   - `extension KeyboardShortcuts.Name { static let toggleIsland = Self("toggleIsland", default: .init(.space, modifiers: [.control, .option])) }`; `@MainActor enum GlobalShortcut { static func install(onToggle: @escaping @MainActor () -> Void) }` — `KeyboardShortcuts.onKeyUp(for: .toggleIsland)`.
   - `enum PageCycler { static let pages: [IslandPage] = [.home, .shelf]; static func next(after: IslandPage) -> IslandPage; static func previous(before: IslandPage) -> IslandPage }` — `.activity` sayfasından ← → `.home`.
   - `ExpandedView`: `.focusable()` + `.onKeyPress(.escape)` → `.escapePressed`; `.leftArrow/.rightArrow` → `.pageSelected(...)`.
@@ -369,7 +369,7 @@
 }
 ```
 
-- [ ] **Step 2–4:** `-only-testing:NimboTests/ContextMenuTests` ve IslandFeatures `--filter PageCyclerTests` → FAIL → uygula → PASS (3 + 1 test).
+- [ ] **Step 2–4:** `-only-testing:LunulaTests/ContextMenuTests` ve IslandFeatures `--filter PageCyclerTests` → FAIL → uygula → PASS (3 + 1 test).
 - [ ] **Step 5: Commit** — `git commit -m "feat: context menu, global toggle shortcut and keyboard navigation"`
 - **Entegrasyon notları:** `PointerRouter(showContextMenu:)` → `NSMenu.popUp(positioning:at:in:)`; `GlobalShortcut.install { activeStore.send(.toggleRequested) }` (etkin store: imlecin bulunduğu ekranınki, yoksa ana ekranınki); sustur → `settings.muteUntil = now + 3600`.
 
@@ -483,13 +483,13 @@ Services testleri: `FullscreenMonitorTests.reevaluatesOnSpaceChange` (sahte okuy
 - Create: `Scripts/perf/measure-idle.sh`, `docs/qa/checklist.md`, `docs/qa/perf-log.md`
 
 **Interfaces:**
-- Produces: `Scripts/perf/measure-idle.sh [--seconds N] [--assert-idle]` — çalışan `Nimbo` sürecinin PID'ini bulur, `top -l $((N+1)) -s 1 -pid $pid -stats pid,cpu,idlew,mem` örnekler (ilk örnek atılır), medyan CPU, medyan boşta uyanma/sn ve son bellek değerini `cpu_median=… idlew_median=… mem=…` biçiminde yazar; `--assert-idle` verilirse CPU medyanı > 0.1 veya uyanma medyanı > 1 ise `exit 1`. `docs/qa/checklist.md` — bölüm başlıkları: Motor, Şimdi Çalıyor, Zamanlayıcı, Takvim, Hava, Raf, Sinyaller, Otomasyon, Erişilebilirlik, Performans; bu görev yalnızca **Motor** bölümünü doldurur, diğer fazlar kendi bölümlerini ekler.
+- Produces: `Scripts/perf/measure-idle.sh [--seconds N] [--assert-idle]` — çalışan `Lunula` sürecinin PID'ini bulur, `top -l $((N+1)) -s 1 -pid $pid -stats pid,cpu,idlew,mem` örnekler (ilk örnek atılır), medyan CPU, medyan boşta uyanma/sn ve son bellek değerini `cpu_median=… idlew_median=… mem=…` biçiminde yazar; `--assert-idle` verilirse CPU medyanı > 0.1 veya uyanma medyanı > 1 ise `exit 1`. `docs/qa/checklist.md` — bölüm başlıkları: Motor, Şimdi Çalıyor, Zamanlayıcı, Takvim, Hava, Raf, Sinyaller, Otomasyon, Erişilebilirlik, Performans; bu görev yalnızca **Motor** bölümünü doldurur, diğer fazlar kendi bölümlerini ekler.
 
 - [ ] **Step 1: Ölçüm betiğini çalıştırılabilir hâlde yaz ve uygulama kapalıyken dene**
 Run: `Scripts/perf/measure-idle.sh --seconds 5; echo "exit=$?"`
-Expected: `Nimbo is not running`, `exit=2`.
+Expected: `Lunula is not running`, `exit=2`.
 - [ ] **Step 2: Release derleyip boşta ölç**
-Run: `xcodebuild -project Nimbo.xcodeproj -scheme Nimbo -configuration Release -derivedDataPath build build -quiet && open build/Build/Products/Release/Nimbo.app && sleep 10 && Scripts/perf/measure-idle.sh --seconds 60 --assert-idle`
+Run: `xcodebuild -project Lunula.xcodeproj -scheme Lunula -configuration Release -derivedDataPath build build -quiet && open build/Build/Products/Release/Lunula.app && sleep 10 && Scripts/perf/measure-idle.sh --seconds 60 --assert-idle`
 Expected: `cpu_median=0.0 idlew_median=0` civarı, `exit=0`. Sonuç satırını tarih, cihaz ve macOS sürümüyle `docs/qa/perf-log.md`'ye ekle.
 - [ ] **Step 3: Motor kontrol listesini yaz ve cihazda uygula** — maddeler: kapalı ada notch'la birebir (yakın çekim fotoğraf) · hover → peek · hızlı geçişte peek yok · 250 ms çıkış toleransı · tık → expanded · Esc / dışarı tık / yukarı kaydırma kapatır · iki parmak aşağı açar · sağ tık menüsü · ⌃⌥Space · ekran modları (yalnız notch / tümü / ana) · kapak kapalı + yalnız harici ekran (hap modu) · uyku/uyanma ×3 (Review Focus #1) · harici ekran tak/çıkar ×3 · tam ekran: Safari, Keynote, Xcode · maksimize pencere yanlış pozitifi · Spaces geçişi, Mission Control, Sahne Yöneticisi · Hareketi Azalt / Şeffaflığı Azalt / Kontrastı Artır · **ada açıkken panelin şeffaf bölgesine tıklama alttaki menü öğesine ulaşıyor mu** (ulaşmıyorsa: panel çerçevesini her faz değişiminde ada + hâle payına küçült ve bunu `docs/qa/spikes/panel-hit-testing.md`'ye yaz) · macOS 27'de menü çubuğu değişikliği sonrası konum.
 - [ ] **Step 4: Commit** — `git add Scripts/perf docs/qa && git commit -m "test(qa): idle performance script, engine checklist and baseline"`

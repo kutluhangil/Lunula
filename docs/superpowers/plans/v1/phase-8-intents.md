@@ -43,24 +43,24 @@
     }
     @Test func routerDispatchesShowAndTimer() {
         let (r, custom, timer) = make()
-        r.handle(URL(string: "nimbo://activity/show?id=build&title=Derleme")!); r.handle(URL(string: "nimbo://timer/start?minutes=5")!)
+        r.handle(URL(string: "lunula://activity/show?id=build&title=Derleme")!); r.handle(URL(string: "lunula://timer/start?minutes=5")!)
         #expect(custom.activities.count == 1 && timer.current?.duration == 300)
     }
     @Test func routerDropsCommandsBeyondRateLimit() {
         let (r, custom, _) = make()
-        for i in 0..<15 { r.handle(URL(string: "nimbo://activity/show?id=a\(i % 3)&title=t")!) }
+        for i in 0..<15 { r.handle(URL(string: "lunula://activity/show?id=a\(i % 3)&title=t")!) }
         #expect(custom.activities.count <= 3)
-        #expect(r.handle(URL(string: "nimbo://island/toggle")!) == .failure(.rateLimited))
+        #expect(r.handle(URL(string: "lunula://island/toggle")!) == .failure(.rateLimited))
     }
     @Test func invalidURLIsIgnored() {
         let (r, custom, _) = make()
-        #expect(r.handle(URL(string: "nimbo://activity/show?id=a")!) == .failure(.missingParameter("title")) && custom.activities.isEmpty)
+        #expect(r.handle(URL(string: "lunula://activity/show?id=a")!) == .failure(.missingParameter("title")) && custom.activities.isEmpty)
     }
 }
 ```
 
 - [ ] **Step 2–4:** FAIL → uygula → PASS (3 + 3 test).
-- [ ] **Step 5: Elle doğrula** — `open -g "nimbo://activity/show?id=demo&title=Merhaba&symbol=sparkles&accent=7C5CFF&progress=0.3"` → adada etkinlik; `open -g "nimbo://activity/end?id=demo"` → kaybolur; `-g` ile uygulama öne gelmez.
+- [ ] **Step 5: Elle doğrula** — `open -g "lunula://activity/show?id=demo&title=Merhaba&symbol=sparkles&accent=7C5CFF&progress=0.3"` → adada etkinlik; `open -g "lunula://activity/end?id=demo"` → kaybolur; `-g` ile uygulama öne gelmez.
 - [ ] **Step 6: Commit** — `git commit -m "feat: URL router and custom activity controller"`
 - **Entegrasyon notları:** `hub.register(custom, feature: .customActivities)`; `AppDelegate.application(_:open:)` → `router.handle`; `toggle` → etkin store `.toggleRequested`.
 
@@ -69,7 +69,7 @@
 ### T8.2 App Intents ve Kestirmeler
 
 **Files:**
-- Create: `App/Sources/Intents/{ShowActivityIntent,UpdateActivityIntent,EndActivityIntent,StartTimerIntent,ToggleIslandIntent,NimboShortcuts,IntentError}.swift`
+- Create: `App/Sources/Intents/{ShowActivityIntent,UpdateActivityIntent,EndActivityIntent,StartTimerIntent,ToggleIslandIntent,LunulaShortcuts,IntentError}.swift`
 - Create: `App/Resources/AppShortcuts.xcstrings` (TR + EN ifadeler)
 - Test: `App/Tests/IntentsTests.swift`
 
@@ -79,7 +79,7 @@
   - Her niyet: `static let supportedModes: IntentModes = .background` (macOS 26; `openAppWhenRun` kullanımdan kalktı), `@Dependency` ile `CustomActivityController` / `TimerController` / `IslandToggler` alır.
   - `ShowActivityIntent` (`id`, `title`, `subtitle?`, `symbol?`, `accentHex?`, `progress?`, `durationSeconds?`) ve `UpdateActivityIntent` (aynı alanlar; kimlik yoksa hata) → `CustomActivityRequest.make` → `show`. `EndActivityIntent(id)`, `StartTimerIntent(minutes)`, `ToggleIslandIntent`.
   - `enum IntentError: Error, CustomLocalizedStringResourceConvertible { invalid(IslandURLError), notFound(String) }`
-  - `struct NimboShortcuts: AppShortcutsProvider` — İngilizce: "Show activity in \(.applicationName)", "Start a timer in \(.applicationName)", "Toggle \(.applicationName)"; Türkçe karşılıklar `AppShortcuts.xcstrings`'te.
+  - `struct LunulaShortcuts: AppShortcutsProvider` — İngilizce: "Show activity in \(.applicationName)", "Start a timer in \(.applicationName)", "Toggle \(.applicationName)"; Türkçe karşılıklar `AppShortcuts.xcstrings`'te.
   - `@MainActor final class IslandToggler { init(_ toggle: @escaping @MainActor () -> Void); func toggle() }`
 - Bağımlılık kaydı (Integrator, `CompositionRoot`): `AppDependencyManager.shared.add(dependency: custom)`, `…(dependency: timer)`, `…(dependency: IslandToggler { … })`.
 
@@ -111,7 +111,7 @@
 (`perform(using:)` her niyette `perform()`'un test edilebilir çekirdeğidir; `perform()` bağımlılığı `@Dependency`'den alıp ona devreder.)
 
 - [ ] **Step 2–4:** FAIL → uygula → PASS (4 test).
-- [ ] **Step 5: Elle doğrula** — Kestirmeler uygulamasında "Nimbo" eylemleri görünür; "Etkinlik göster" çalıştırılınca uygulama öne gelmeden adada belirir.
+- [ ] **Step 5: Elle doğrula** — Kestirmeler uygulamasında "Lunula" eylemleri görünür; "Etkinlik göster" çalıştırılınca uygulama öne gelmeden adada belirir.
 - [ ] **Step 6: Commit** — `git commit -m "feat(app): App Intents and shortcuts running in background mode"`
 
 ---
@@ -126,7 +126,7 @@
 **Interfaces:**
 - Consumes: T1.1 `CustomActivitySnapshot`.
 - Produces: `enum CustomSymbol { static let fallback = "sparkle"; static func resolve(_ name: String?) -> String /* NSImage(systemSymbolName:) nil ise fallback */ }`; `CustomCompactLeading` (simge, vurgu renginde), `CustomCompactTrailing` (`progress` → 14 pt halka; `endsAt` → `Text(timerInterval:)`; ikisi de yoksa boş), `CustomExpandedCard` (başlık, alt başlık, ilerleme çubuğu).
-- `docs/automation.md`: URL başvurusu (tüm parametreler, sınırlar: 3 eşzamanlı, 8 saat, 10 istek/10 sn), App Intents listesi, `bash` örnekleri (`open -g "nimbo://…"`), Claude Code kancası örneği (`.claude/settings.json` içinde `PreToolUse`/`Stop` kancalarından `open -g "nimbo://activity/show?id=claude&title=…&symbol=sparkles"` ve bitişte `activity/end`).
+- `docs/automation.md`: URL başvurusu (tüm parametreler, sınırlar: 3 eşzamanlı, 8 saat, 10 istek/10 sn), App Intents listesi, `bash` örnekleri (`open -g "lunula://…"`), Claude Code kancası örneği (`.claude/settings.json` içinde `PreToolUse`/`Stop` kancalarından `open -g "lunula://activity/show?id=claude&title=…&symbol=sparkles"` ve bitişte `activity/end`).
 
 - [ ] **Step 1: Testler**
 
@@ -138,7 +138,7 @@
         #expect(CustomSymbol.resolve(nil) == "sparkle")
     }
     @Test func customCardRenders() {
-        let s = CustomActivitySnapshot(title: "Derleme", subtitle: "Nimbo · Release", symbol: "hammer", progress: 0.4, endsAt: nil)
+        let s = CustomActivitySnapshot(title: "Derleme", subtitle: "Lunula · Release", symbol: "hammer", progress: 0.4, endsAt: nil)
         #expect(ImageRenderer(content: CustomExpandedCard(snapshot: s, accent: nil).frame(width: 492)).cgImage != nil)
     }
 }
