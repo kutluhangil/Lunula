@@ -76,6 +76,7 @@ Scripts/perf/measure-idle.sh --seconds 60 --assert-idle  # idle CPU/wakeups budg
 - Skills: `superpowers:subagent-driven-development` (execution), `superpowers:test-driven-development` (every task), `superpowers:using-git-worktrees` (parallel tasks), `superpowers:dispatching-parallel-agents`, `superpowers:verification-before-completion` (before any "done"), `superpowers:systematic-debugging` (any failure), `superpowers:requesting-code-review`, `superpowers:finishing-a-development-branch`. Also `design:accessibility-review` for T9.4 and `design:design-critique` for visual reviews.
 - **Branches (owner decision, 2026-10-28):**
   - Work directly on `main`. No feature branches, no PRs.
+  - Exception: parallel subagents work in local git worktrees. Their branches never leave the machine; the Integrator rebases each onto `main`, fast-forwards and deletes the branch.
   - Before every commit, `Scripts/lint.sh && Scripts/check-architecture.sh && Scripts/test-all.sh` must be green.
   - CI runs on every push to `main`. A red run is fixed before the next task starts.
   - Never force-push.
