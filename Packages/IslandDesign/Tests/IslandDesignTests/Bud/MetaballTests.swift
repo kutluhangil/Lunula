@@ -10,6 +10,11 @@ import Testing
         #expect(MetaballMath.blurRadius(progress: 0.5) == 6)
     }
 
+    @Test func blurIsZeroOnSpringOvershoot() {
+        #expect(MetaballMath.blurRadius(progress: 1.05) == 0)
+        #expect(MetaballMath.blurRadius(progress: -0.05) == 0)
+    }
+
     @Test func bubbleInterpolatesLinearly() {
         let r = MetaballMath.bubbleRect(
             progress: 0.5, from: CGRect(x: 0, y: 0, width: 10, height: 10),
@@ -25,5 +30,9 @@ import Testing
         ).frame(width: 200, height: 40)
         let image = try #require(ImageRenderer(content: view).cgImage)
         #expect(PixelProbe.allPixelsAreBlackOrTransparent(image, tolerance: 0.02))
+        #expect(PixelProbe.hasOpaqueContent(image))
+        // (128, 1) lies outside both shapes: 12.0 pt from the island's top-right corner centre (120, 10), r = 10,
+        // and 16.3 pt from the bubble centre (136, 16), r = 16. Only the gooey neck fills it.
+        #expect(PixelProbe.alpha(image, x: 128, y: 1) > 127)
     }
 }

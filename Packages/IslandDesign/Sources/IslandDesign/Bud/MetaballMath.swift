@@ -4,9 +4,9 @@ import Foundation
 public enum MetaballMath {
     public static let maxBlur: CGFloat = 6
 
-    /// maxBlur × sin(π·p): zero at both ends, peak at the midpoint.
+    /// maxBlur × sin(π·p): zero at both ends, peak at the midpoint, never negative on spring overshoot.
     public static func blurRadius(progress: Double) -> CGFloat {
-        maxBlur * CGFloat(sin(Double.pi * progress))
+        maxBlur * CGFloat(max(0, sin(Double.pi * progress)))
     }
 
     public static func bubbleRect(progress: Double, from: CGRect, to: CGRect) -> CGRect {

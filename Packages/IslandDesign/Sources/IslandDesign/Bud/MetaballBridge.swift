@@ -1,6 +1,7 @@
 import SwiftUI
 
 /// Gooey island-to-bubble bridge. Use only during the 0.55 s transition; steady state draws plain shapes.
+/// Draws a simplified island (no shoulders) for the bud transition only; overlay it on the real island, never replace it.
 public struct MetaballBridge: View, Animatable {
     public var islandRect: CGRect
     public var bubbleStart: CGRect
