@@ -51,6 +51,7 @@ import Testing
         #expect(parse("lunula://activity/end?id=a") == .success(.endActivity(id: "a")))
         #expect(parse("lunula://timer/start?minutes=25") == .success(.startTimer(minutes: 25)))
         #expect(parse("lunula://island/toggle") == .success(.toggleIsland))
+        #expect(parse("lunula://activity/end?id=a%20b") == .failure(.invalidParameter("id")))
     }
     @Test func rejectsWrongSchemeAndUnknownCommand() {
         #expect(parse("other://activity/show?id=a&title=t") == .failure(.wrongScheme))

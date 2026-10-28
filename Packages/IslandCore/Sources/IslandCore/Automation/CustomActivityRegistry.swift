@@ -7,6 +7,7 @@ public struct CustomActivityRegistry: Equatable, Sendable {
 
     @discardableResult
     public mutating func upsert(_ request: CustomActivityRequest, now: Date) -> Activity {
+        removeExpired(now: now)
         let id = ActivityID(request.id)
         let existing = activities.firstIndex { $0.id == id }
         let startedAt = existing.map { activities[$0].startedAt } ?? now

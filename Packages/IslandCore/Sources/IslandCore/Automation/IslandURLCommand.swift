@@ -53,10 +53,8 @@ extension CustomActivityRequest {
         id: String?, title: String?, subtitle: String?, symbol: String?, accentHex: String?, progress: Double?,
         duration: Double?
     ) -> Result<CustomActivityRequest, IslandURLError> {
-        guard let id, !id.isEmpty else { return .failure(.missingParameter("id")) }
-        guard id.count <= CustomActivityLimits.maxIDLength, id.allSatisfy(Self.isIDCharacter) else {
-            return .failure(.invalidParameter("id"))
-        }
+        if let failure = validateID(id) { return .failure(failure) }
+        guard let id else { return .failure(.missingParameter("id")) }
         let cleanTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !cleanTitle.isEmpty else { return .failure(.missingParameter("title")) }
         var accent: RGBAColor?
@@ -85,6 +83,15 @@ extension CustomActivityRequest {
                 },
                 symbol: cleanSymbol.flatMap { $0.isEmpty ? nil : $0 },
                 accent: accent, progress: clampedProgress, duration: duration))
+    }
+
+    /// Returns the error for a missing or malformed id, nil when valid.
+    static func validateID(_ id: String?) -> IslandURLError? {
+        guard let id, !id.isEmpty else { return .missingParameter("id") }
+        guard id.count <= CustomActivityLimits.maxIDLength, id.allSatisfy(isIDCharacter) else {
+            return .invalidParameter("id")
+        }
+        return nil
     }
 
     private static func isIDCharacter(_ c: Character) -> Bool {

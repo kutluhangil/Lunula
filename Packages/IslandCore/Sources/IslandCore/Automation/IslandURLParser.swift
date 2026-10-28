@@ -23,8 +23,8 @@ public enum IslandURLParser {
                 duration: query["duration"].map { Double($0) ?? .nan }
             ).map(IslandURLCommand.showActivity)
         case "activity/end":
-            guard let id = query["id"], !id.isEmpty else { return .failure(.missingParameter("id")) }
-            return .success(.endActivity(id: id))
+            if let failure = CustomActivityRequest.validateID(query["id"]) { return .failure(failure) }
+            return .success(.endActivity(id: query["id"] ?? ""))
         case "timer/start":
             guard let raw = query["minutes"] else { return .failure(.missingParameter("minutes")) }
             guard let minutes = Double(raw), CustomActivityLimits.timerMinutes.contains(minutes) else {
