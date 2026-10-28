@@ -5,8 +5,16 @@ import QuartzCore
 /// Glow (shadow along the outline), a key line and a progress stroke. All animation runs on the render server.
 @MainActor
 public final class HaloLayer: CALayer {
+    // CALayer's overridden inits are nonisolated; these are only mutated from the MainActor.
     nonisolated(unsafe) private let keyLine = CAShapeLayer()
     nonisolated(unsafe) private let progress = CAShapeLayer()
+    nonisolated(unsafe) private var lastApplied: Applied?
+
+    private struct Applied: Equatable {
+        var values: HaloStyleValues
+        var state: HaloState
+        var outline: CGPath
+    }
 
     public override init() {
         super.init()
@@ -27,8 +35,12 @@ public final class HaloLayer: CALayer {
         fatalError("init(coder:) is not supported")
     }
 
+    /// Idempotent: SwiftUI re-applies on every parent update, which must not restart a breath or re-flash a pulse.
     public func apply(_ values: HaloStyleValues, state: HaloState, outline: CGPath, now: Date) {
+        let next = Applied(values: values, state: state, outline: outline)
+        guard next != lastApplied else { return }
         suspend()
+        lastApplied = next
         let accent = CGColor(
             red: state.color.red, green: state.color.green, blue: state.color.blue, alpha: state.color.alpha)
         CATransaction.begin()
@@ -91,6 +103,7 @@ public final class HaloLayer: CALayer {
 
     /// Hidden islands must not animate.
     public func suspend() {
+        lastApplied = nil
         removeAllAnimations()
         keyLine.removeAllAnimations()
         progress.removeAllAnimations()

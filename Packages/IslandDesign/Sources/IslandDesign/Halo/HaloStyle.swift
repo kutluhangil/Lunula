@@ -1,6 +1,6 @@
 import CoreGraphics
 
-public struct HaloStyleValues: Equatable {
+public struct HaloStyleValues: Equatable, Sendable {
     public var keyLineWidth: CGFloat
     public var keyLineOpacity: Double
     public var glowOpacity: Double
