@@ -1,6 +1,8 @@
 import AppKit
 import SwiftUI
 
+/// Place above the island fill, outside its clipShape. `outline` is in this view's SwiftUI (y-down) local space.
+/// The view's frame must exceed the outline by at least `HaloStyle.glowRadius` (14 pt) on every side or the glow clips.
 public struct HaloView: NSViewRepresentable {
     public var state: HaloState
     public var outline: CGPath
@@ -16,22 +18,38 @@ public struct HaloView: NSViewRepresentable {
         self.lowPowerMode = lowPowerMode
     }
 
-    public func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.layer = HaloLayer()
-        view.wantsLayer = true
-        return view
-    }
+    public func makeNSView(context: Context) -> HaloHostView { HaloHostView() }
 
-    public func updateNSView(_ view: NSView, context: Context) {
-        guard let layer = view.layer as? HaloLayer else { return }
+    public func updateNSView(_ view: HaloHostView, context: Context) {
         let accessibility = HaloAccessibility(
             reduceMotion: reduceMotion, reduceTransparency: reduceTransparency,
             increaseContrast: contrast == .increased, lowPowerMode: lowPowerMode)
-        layer.apply(HaloStyle.resolve(state, accessibility: accessibility), state: state, outline: outline, now: Date())
+        view.halo.apply(
+            HaloStyle.resolve(state, accessibility: accessibility), state: state, outline: outline, now: Date())
     }
 
-    public static func dismantleNSView(_ view: NSView, coordinator: ()) {
-        (view.layer as? HaloLayer)?.suspend()
+    public static func dismantleNSView(_ view: HaloHostView, coordinator: ()) {
+        view.halo.suspend()
+    }
+}
+
+/// Layer-hosting view for `HaloLayer` that keeps its raster scale in step with the window's screen.
+public final class HaloHostView: NSView {
+    let halo = HaloLayer()
+
+    init() {
+        super.init(frame: .zero)
+        layer = halo
+        wantsLayer = true
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) is not supported")
+    }
+
+    public override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        guard let window else { return }
+        halo.setContentsScale(window.backingScaleFactor)
     }
 }

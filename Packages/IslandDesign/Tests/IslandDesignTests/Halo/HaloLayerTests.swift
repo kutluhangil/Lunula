@@ -51,6 +51,40 @@ import Testing
         l.apply(HaloStyle.resolve(s, accessibility: .standard), state: s, outline: samePath, now: Date())
         #expect(animation(key, in: l) === first)
     }
+    @Test func outlineIsInSwiftUIYDownSpace() {
+        #expect(HaloLayer().isGeometryFlipped)
+    }
+    @Test func glowIsMaskedToOutsideOfOutline() throws {
+        let l = applied(.init(mode: .ambient(breathing: false), color: .white))
+        #expect(l.shadowOpacity == 0)  // the root casts no shadow into the #000000 core
+        #expect(l.glow.shadowOpacity > 0)
+        let mask = try #require(l.glow.mask as? CAShapeLayer)
+        let path = try #require(mask.path)
+        #expect(mask.fillRule == .evenOdd)
+        #expect(path.contains(CGPoint(x: 100, y: -5), using: .evenOdd))  // glow band outside the island
+        #expect(path.contains(CGPoint(x: 100, y: 40 + HaloStyle.glowRadius), using: .evenOdd))
+        #expect(!path.contains(CGPoint(x: 100, y: 20), using: .evenOdd))  // island core
+    }
+    @Test(arguments: [false, true])
+    func keyLineIsAnInnerLineClippedToOutline(increaseContrast: Bool) throws {
+        var a = HaloAccessibility.standard
+        a.increaseContrast = increaseContrast
+        let s = HaloState(mode: .ambient(breathing: false), color: .white)
+        let l = applied(s, a)
+        // Half of a centred stroke falls outside the clip, so the visible inner width is lineWidth / 2.
+        #expect(l.keyLine.lineWidth == 2 * HaloStyle.resolve(s, accessibility: a).keyLineWidth)
+        let mask = try #require(l.keyLine.mask as? CAShapeLayer)
+        #expect(mask.path == outline)
+    }
+    @Test func contentsScaleReachesEverySublayerAndMask() {
+        let l = applied(.init(mode: .ambient(breathing: false), color: .white))
+        l.setContentsScale(2)
+        func tree(_ layer: CALayer) -> [CALayer] {
+            [layer] + (layer.mask.map(tree) ?? []) + (layer.sublayers ?? []).flatMap(tree)
+        }
+        #expect(tree(l).count == 6)
+        #expect(tree(l).allSatisfy { $0.contentsScale == 2 })
+    }
     @Test func reapplyingAfterSuspendRestartsAnimation() {
         let s = HaloState(mode: .ambient(breathing: true), color: .white)
         let l = applied(s)
