@@ -57,7 +57,7 @@ public final class HaloLayer: CALayer {
         suspend()
         lastApplied = next
         let accent = CGColor(
-            red: state.color.red, green: state.color.green, blue: state.color.blue, alpha: state.color.alpha)
+            srgbRed: values.color.red, green: values.color.green, blue: values.color.blue, alpha: values.color.alpha)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         // Bounds origin at the canvas origin keeps the glow's coordinates identical to this layer's.
@@ -89,7 +89,7 @@ public final class HaloLayer: CALayer {
         case .progress(let fraction, let endsAt):
             progress.opacity = 1
             progress.strokeEnd = endsAt == nil ? clamp(fraction) : 1
-        case .warming(let fraction), .fill(let fraction):
+        case .fill(let fraction):
             progress.opacity = 1
             progress.strokeEnd = clamp(fraction)
         default:

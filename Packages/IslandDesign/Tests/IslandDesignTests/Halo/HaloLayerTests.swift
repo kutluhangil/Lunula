@@ -51,6 +51,15 @@ import Testing
         l.apply(HaloStyle.resolve(s, accessibility: .standard), state: s, outline: samePath, now: Date())
         #expect(animation(key, in: l) === first)
     }
+    @Test func warmingDrawsNoProgressStrokeAndUsesResolvedColour() throws {
+        let s = HaloState(mode: .warming(fraction: 1), color: .white)
+        let l = applied(s)
+        #expect(l.progress.opacity == 0)
+        let warm = HaloStyle.resolve(s, accessibility: .standard).color
+        let expected = [warm.red, warm.green, warm.blue, warm.alpha].map { CGFloat($0) }
+        #expect(l.glow.shadowColor?.components == expected)
+        #expect(l.keyLine.strokeColor?.components == expected)
+    }
     @Test func outlineIsInSwiftUIYDownSpace() {
         #expect(HaloLayer().isGeometryFlipped)
     }
