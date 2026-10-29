@@ -29,7 +29,12 @@ struct ActivityContentView: View {
             case .compactTrailing: TimerCompactTrailing(snapshot: timer)
             case .expanded: TimerExpandedCard(snapshot: timer)
             }
-        case .calendar(let event): fallback(symbol: "calendar", title: event.title)
+        case .calendar(let event):
+            switch slot {
+            case .compactLeading: CalendarCompactLeading(event: event)
+            case .compactTrailing: CalendarCompactTrailing(event: event)
+            case .expanded: CalendarExpandedCard(event: event)
+            }
         case .custom(let custom): fallback(symbol: custom.symbol ?? "circle.fill", title: custom.title)
         }
     }

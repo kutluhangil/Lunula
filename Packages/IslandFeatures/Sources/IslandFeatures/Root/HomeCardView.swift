@@ -10,11 +10,24 @@ struct HomeCardView: View {
 
     @Environment(\.islandLayout) private var layout
     @Environment(\.nowPlayingActions) private var nowPlaying
+    @Environment(\.calendarActions) private var calendar
 
     var body: some View {
         switch card {
         case .timerQuickStart:
             TimerQuickStartTile()
+        case .calendarAccess:
+            CalendarAccessTile()
+        case .meeting:
+            if let activity = layout.primaryCalendarActivity, case .calendar(let event) = activity.content {
+                CalendarExpandedCard(event: event)
+            } else if let event = calendar.nextEvent() {
+                CalendarExpandedCard(event: event)
+            } else {
+                fallbackCard
+            }
+        case .nextEvent:
+            if let event = calendar.nextEvent() { NextEventTile(event: event) } else { fallbackCard }
         case .permission(let source):
             PermissionCard(source: source) { nowPlaying.requestConsent(source) }
         case .nowPlaying:
@@ -68,6 +81,10 @@ extension EnvironmentValues {
 
 extension IslandLayout {
     func activity(_ id: ActivityID) -> Activity? { ([primary].compactMap { $0 } + detached).first { $0.id == id } }
+
+    var primaryCalendarActivity: Activity? {
+        ([primary].compactMap { $0 } + detached).first { $0.kind == .calendar }
+    }
 }
 
 extension TimerSnapshot {
