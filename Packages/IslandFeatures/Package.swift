@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "IslandFeatures",
+    defaultLocalization: "en",
     platforms: [.macOS("26.0")],
     products: [.library(name: "IslandFeatures", targets: ["IslandFeatures"])],
     dependencies: [.package(path: "../IslandCore"), .package(path: "../IslandDesign")],
@@ -12,7 +13,8 @@ let package = Package(
             dependencies: [
                 .product(name: "IslandCore", package: "IslandCore"),
                 .product(name: "IslandDesign", package: "IslandDesign"),
-            ]
+            ],
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "IslandFeaturesTests",
