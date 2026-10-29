@@ -28,7 +28,7 @@ struct ExpandedView: View {
                     tab("island.tab.shelf", .shelf)
                     Button(action: openSettings) { Image(systemName: "gearshape") }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(Text("island.settings", bundle: .module))
+                        .accessibilityLabel(Text(AccessibilityLabels.openSettings))
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }

@@ -42,6 +42,7 @@ struct CalendarExpandedCard: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Palette.textPrimary)
+                .accessibilityLabel(Text(AccessibilityLabels.join))
             }
         }
         .padding(12)

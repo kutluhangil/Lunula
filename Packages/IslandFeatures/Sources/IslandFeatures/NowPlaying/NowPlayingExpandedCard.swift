@@ -23,11 +23,11 @@ struct NowPlayingExpandedCard: View {
                     .lineLimit(1)
                 NowPlayingProgressBar(snapshot: snapshot, accent: accent)
                 HStack(spacing: 18) {
-                    control("backward.fill", "nowPlaying.previous", actions.previous)
+                    control("backward.fill", AccessibilityLabels.previous, actions.previous)
                     control(
                         snapshot.isPlaying ? "pause.fill" : "play.fill",
-                        snapshot.isPlaying ? "nowPlaying.pause" : "nowPlaying.play", actions.playPause)
-                    control("forward.fill", "nowPlaying.next", actions.next)
+                        AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
+                    control("forward.fill", AccessibilityLabels.next, actions.next)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -38,7 +38,7 @@ struct NowPlayingExpandedCard: View {
         .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
     }
 
-    private func control(_ symbol: String, _ key: LocalizedStringKey, _ action: @escaping @MainActor () -> Void)
+    private func control(_ symbol: String, _ label: LocalizedStringResource, _ action: @escaping @MainActor () -> Void)
         -> some View
     {
         Button(action: action) {
@@ -46,6 +46,6 @@ struct NowPlayingExpandedCard: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(Palette.textPrimary)
-        .accessibilityLabel(Text(key, bundle: .module))
+        .accessibilityLabel(Text(label))
     }
 }

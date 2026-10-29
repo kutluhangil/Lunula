@@ -33,7 +33,7 @@ struct ShelfItemView: View {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.textSecondary)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text("shelf.remove", bundle: .module))
+                .accessibilityLabel(Text(AccessibilityLabels.removeShelfItem))
             }
         }
         .onHover { hovering = $0 }

@@ -32,7 +32,7 @@ struct NowPlayingProgressBar: View {
             .frame(height: 16)
         }
         .accessibilityElement()
-        .accessibilityLabel(Text("nowPlaying.position", bundle: .module))
+        .accessibilityLabel(Text(AccessibilityLabels.seek))
         .accessibilityValue(
             Text("\(Int(NowPlayingProgress.fraction(position: snapshot.position, duration: snapshot.duration) * 100))%")
         )

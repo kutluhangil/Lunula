@@ -40,7 +40,8 @@ struct TimerExpandedCard: View {
                 if snapshot.endsAt == nil {
                     control("play.fill", "timer.resume", actions.resume)
                 } else {
-                    control("pause.fill", "timer.pause", actions.pause)
+                    control("pause.fill", "timer.pause", actions.pause).accessibilityLabel(
+                        Text(AccessibilityLabels.pauseTimer))
                 }
                 if snapshot.phase != .simple { control("forward.end.fill", "timer.skip", actions.skip) }
                 control("xmark", "timer.cancel", actions.cancel)

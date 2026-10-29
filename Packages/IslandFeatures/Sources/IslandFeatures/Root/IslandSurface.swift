@@ -36,6 +36,9 @@ struct IslandSurface: View {
             .frame(width: size.width, height: size.height)
             .clipShape(shape)
             .contentShape(shape)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(Text(AccessibilityLabels.island(summary: Self.summary(state))))
+            .accessibilityAddTraits(.isButton)
             .onHover { onHover($0) }
             .offset(x: island.minX)
 
@@ -127,6 +130,18 @@ struct IslandSurface: View {
             budProgress = 1
         } completion: {
             budID = nil
+        }
+    }
+
+    /// Short spoken summary of what the island shows (VoiceOver).
+    static func summary(_ state: IslandState) -> String {
+        if case .transient(let alert) = state.phase, case .text(let title, _, _) = alert.detail { return title }
+        switch state.layout.primary?.content {
+        case .nowPlaying(let track)?: return "\(track.title), \(track.artist)"
+        case .timer(let timer)?: return timer.label ?? ""
+        case .calendar(let event)?: return event.title
+        case .custom(let custom)?: return custom.title
+        case nil: return ""
         }
     }
 
