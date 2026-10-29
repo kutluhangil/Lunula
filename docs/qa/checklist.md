@@ -69,7 +69,17 @@ Başka bir çentik uygulaması (ör. Sapphire, Boring Notch) açıkken test etme
 
 ## Raf
 
+- [ ] Finder'dan dosyayı ekranın üstüne sürükle → ada rafa açılır (mıknatıs) → bırak → dokunsal tık
+- [ ] Raftan Masaüstü'ne sürükle; ⌘-tıkla çoklu seçim
+- [ ] AirDrop paneli ve Paylaş… menüsü açılır (paylaşılan dosya gerçekten gider)
+- [ ] Uygulamayı yeniden başlat → öğeler durur; orijinali sil → "bulunamadı" görünümü
+- [ ] İndirme uyarısındaki "Rafa ekle" dosyayı rafa koyar
+
 ## Sinyaller
+
+- [ ] Şarj tak / çıkar uyarıları; %20 ve %10 inişinde birer uyarı (`pmset -g batt` ile gözle)
+- [ ] Tarayıcıdan indirme bitince tek uyarı (geçici .crdownload sırasında uyarı yok)
+- [ ] `docs/qa/spikes/camera-microphone-indicator.md` spike'ı: FaceTime → yeşil, ses kaydı → turuncu nokta; izin penceresi çıkmaz
 
 ## Otomasyon
 
