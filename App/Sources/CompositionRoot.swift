@@ -82,7 +82,11 @@ final class CompositionRoot {
         }
         if settings.settings.enabledFeatures.contains(.privacyIndicator) { deviceUsage.start() }
         hub.register(alerts: downloads, feature: .downloads)
-        if settings.settings.enabledFeatures.contains(.downloads) { downloads.start() }
+        // Download alerts start only after the user turns them on in Settings (T9.2): watching ~/Downloads can
+        // raise a privacy prompt, and prompts must never come unasked at launch.
+        if settings.settings.enabledFeatures.contains(.downloads), settings.settings.downloadsAlertsOptedIn {
+            downloads.start()
+        }
         hub.register(alerts: power, feature: .battery)
         if settings.settings.enabledFeatures.contains(.battery) { power.start() }
         hub.register(calendar, feature: .calendar)

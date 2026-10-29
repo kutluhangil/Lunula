@@ -16,6 +16,7 @@ import Testing
         var names: [String] = []
         w.onAlert = { if case .file(let n, _) = $0.detail { names.append(n) } }
         w.start()
+        await settle()  // start() opens the directory off the main thread
         try Data(count: 100).write(to: dir.appending(path: "rapor.pdf"))
         try await Task.sleep(for: .seconds(2))
         #expect(names == ["rapor.pdf"])

@@ -27,6 +27,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var showMenuBarIcon = false
     public var muteUntil: Date?
     public var hasCompletedOnboarding = false
+    /// Download alerts watch ~/Downloads, which can raise a privacy prompt; they start only after the user opts in.
+    public var downloadsAlertsOptedIn = false
 
     public static let `default` = IslandSettings()
 
@@ -42,7 +44,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case displayMode, hideInFullscreen, criticalAlertsInFullscreen, launchAtLogin, hapticsEnabled, soundsEnabled
         case haloIntensity, disabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
-        case showMenuBarIcon, muteUntil, hasCompletedOnboarding
+        case showMenuBarIcon, muteUntil, hasCompletedOnboarding, downloadsAlertsOptedIn
     }
 
     /// Missing, unknown or malformed keys fall back to the default per key, so old or future data never breaks.
@@ -74,6 +76,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         }
         muteUntil = value(.muteUntil, d.muteUntil)
         hasCompletedOnboarding = value(.hasCompletedOnboarding, d.hasCompletedOnboarding)
+        downloadsAlertsOptedIn = value(.downloadsAlertsOptedIn, d.downloadsAlertsOptedIn)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -94,5 +97,6 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encodeIfPresent(muteUntil, forKey: .muteUntil)
         try c.encode(showMenuBarIcon, forKey: .showMenuBarIcon)
         try c.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
+        try c.encode(downloadsAlertsOptedIn, forKey: .downloadsAlertsOptedIn)
     }
 }

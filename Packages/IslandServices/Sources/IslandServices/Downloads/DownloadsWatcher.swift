@@ -10,6 +10,7 @@ import IslandCore
     private var source: DispatchSourceFileSystemObject?
     private var tracker = DownloadTracker()
     private var scan: Task<Void, Never>?
+    private var opening: Task<Void, Never>?
 
     public init(
         directory: URL = DownloadsWatcher.realDownloadsDirectory(), stabilityDelay: Duration = .milliseconds(1200)
@@ -24,20 +25,33 @@ import IslandCore
         return URL(fileURLWithPath: home).appending(path: "Downloads").resolvingSymlinksInPath()
     }
 
+    /// Opening the real ~/Downloads can block on a privacy (TCC) check, so it happens off the main thread; call
+    /// only after the user turned download alerts on (never at launch).
     public func start() {
-        guard source == nil else { return }
-        let fd = open(directory.path(), O_EVTONLY)
-        guard fd >= 0 else { return }
-        let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
-        source.setEventHandler { [weak self] in MainActor.assumeIsolated { self?.schedule(after: .milliseconds(500)) } }
-        source.setCancelHandler { close(fd) }
-        // Baseline before watching: files already there are not "new". One listing at start, so it stays synchronous.
-        _ = tracker.ingest(Self.list(directory))
-        source.resume()
-        self.source = source
+        guard source == nil, opening == nil else { return }
+        let directory = directory
+        opening = Task { [weak self] in
+            let opened = await Task.detached { () -> (Int32, Set<FileEntry>)? in
+                let fd = open(directory.path(), O_EVTONLY)
+                return fd >= 0 ? (fd, Self.list(directory)) : nil
+            }.value
+            self?.opening = nil
+            guard let self, let (fd, baseline) = opened else { return }
+            // Baseline before watching: files already there are not "new".
+            _ = tracker.ingest(baseline)
+            let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
+            source.setEventHandler { [weak self] in
+                MainActor.assumeIsolated { self?.schedule(after: .milliseconds(500)) }
+            }
+            source.setCancelHandler { close(fd) }
+            source.resume()
+            self.source = source
+        }
     }
 
     public func stop() {
+        opening?.cancel()
+        opening = nil
         source?.cancel()
         source = nil
         scan?.cancel()
