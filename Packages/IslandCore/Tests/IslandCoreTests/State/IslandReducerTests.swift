@@ -55,6 +55,16 @@ private func run(_ s: IslandState, _ events: IslandEvent...) -> IslandTransition
         #expect(IslandReducer.reduce(compactState, .clicked(.island)).effects.contains(.makePanelKey(true)))
         #expect(IslandReducer.reduce(compactState, .swipedDown).effects.contains(.makePanelKey(true)))
     }
+    @Test func timerSoundPlaysOnceWhenQueuedWhileExpandedThenShown() {
+        var s = compactState
+        s.phase = .expanded(.home)
+        let alert = TransientAlert.fixture(kind: .timerFinished, priority: .critical)
+        let queued = IslandReducer.reduce(s, .alertRaised(alert))
+        let shown = IslandReducer.reduce(queued.state, .escapePressed)
+        #expect(shown.state.phase == .transient(alert))
+        let sounds = (queued.effects + shown.effects).filter { $0 == .playSound(.timerFinished) }
+        #expect(sounds.count == 1)
+    }
     @Test func clickOnBubbleOpensThatActivity() {
         #expect(IslandReducer.reduce(compactState, .clicked(.bubble("b"))).state.phase == .expanded(.activity("b")))
     }

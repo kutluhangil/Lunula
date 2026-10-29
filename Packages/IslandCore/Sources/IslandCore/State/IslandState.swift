@@ -14,6 +14,10 @@ public enum IslandPhase: Hashable, Sendable {
     case expanded(IslandPage)
     case transient(TransientAlert)
 
+    public var transientAlert: TransientAlert? {
+        if case .transient(let alert) = self { alert } else { nil }
+    }
+
     public var isOpen: Bool {
         switch self {
         case .peek, .expanded: true
@@ -36,6 +40,8 @@ public struct IslandState: Equatable, Sendable {
     public var pointerInside = false
     public var pendingAlerts: [TransientAlert] = []
     public var options = IslandOptions()
+    /// Alerts whose timer sound already played (see IslandReducer.sound(for:in:)).
+    public var soundedAlerts: Set<UUID> = []
 
     public init() {}
 

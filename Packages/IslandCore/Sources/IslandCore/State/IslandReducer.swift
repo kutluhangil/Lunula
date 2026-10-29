@@ -115,7 +115,7 @@ public enum IslandReducer {
                 fx = show(a, in: &s)
             case .expanded:
                 enqueue(a, atFront: false, in: &s)
-                if a.kind == .timerFinished { fx = [.playSound(.timerFinished)] }
+                fx = sound(for: a, in: &s)
             case .transient(let current):
                 if a.priority > current.priority {
                     fx = show(a, in: &s)
@@ -127,7 +127,7 @@ public enum IslandReducer {
                 guard a.priority == .critical, s.options.criticalAlertsInFullscreen else { break }
                 s.phase = .transient(a)
                 fx = [.schedule(.alertExpiry, after: IslandTiming.fullscreenCriticalAlert)]
-                if a.kind == .timerFinished { fx.append(.playSound(.timerFinished)) }
+                fx += sound(for: a, in: &s)
             }
 
         case .alertExpired:
@@ -163,7 +163,17 @@ public enum IslandReducer {
             }
         }
 
+        // Forget announced alerts once they are neither shown nor queued.
+        let live = Set(s.pendingAlerts.map(\.id) + [s.phase.transientAlert?.id].compactMap { $0 })
+        s.soundedAlerts.formIntersection(live)
         return IslandTransition(state: s, effects: fx)
+    }
+
+    /// The timer sound plays once per alert: when it is first shown or queued while expanded, never again when a
+    /// queued or preempted alert is shown later.
+    private static func sound(for a: TransientAlert, in s: inout IslandState) -> [IslandEffect] {
+        guard a.kind == .timerFinished, s.soundedAlerts.insert(a.id).inserted else { return [] }
+        return [.playSound(.timerFinished)]
     }
 
     private static let cancelAll: [IslandEffect] = [.cancel(.dwell), .cancel(.exitGrace), .cancel(.alertExpiry)]
@@ -181,7 +191,7 @@ public enum IslandReducer {
             let a = s.pendingAlerts.remove(at: i)
             s.phase = .transient(a)
             var fx: [IslandEffect] = [.schedule(.alertExpiry, after: IslandTiming.fullscreenCriticalAlert)]
-            if a.kind == .timerFinished { fx.append(.playSound(.timerFinished)) }
+            fx += sound(for: a, in: &s)
             fx.append(.setMouseEventsIgnored(false))
             return fx
         }
@@ -192,7 +202,7 @@ public enum IslandReducer {
         let a = s.pendingAlerts.removeFirst()
         s.phase = .transient(a)
         var fx: [IslandEffect] = [.schedule(.alertExpiry, after: a.duration)]
-        if a.kind == .timerFinished { fx.append(.playSound(.timerFinished)) }
+        fx += sound(for: a, in: &s)
         fx.append(.setMouseEventsIgnored(false))
         return fx
     }
@@ -202,7 +212,7 @@ public enum IslandReducer {
         var fx: [IslandEffect] = [
             .cancel(.dwell), .schedule(.alertExpiry, after: a.duration), .setMouseEventsIgnored(false),
         ]
-        if a.kind == .timerFinished { fx.append(.playSound(.timerFinished)) }
+        fx += sound(for: a, in: &s)
         return fx
     }
 
