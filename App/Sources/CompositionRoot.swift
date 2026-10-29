@@ -16,6 +16,8 @@ final class CompositionRoot {
     private let settings = SettingsStore(defaults: .standard)
     private let launchAtLogin = LaunchAtLoginService()
     private let windows = IslandWindowManager()
+    private lazy var hub = ActivityHub(time: time, settings: settings)
+    private lazy var timer = TimerController(time: time, defaults: .standard)
     private lazy var feedback = SystemFeedbackPlayer(preferences: { [unowned self] in
         let muted = isMuted
         return (settings.settings.hapticsEnabled && !muted, settings.settings.soundsEnabled && !muted)
@@ -38,7 +40,12 @@ final class CompositionRoot {
                     for (id, isFullscreen) in states { islands[id]?.store.send(.fullscreenChanged(isFullscreen)) }
                 }
             })
+        hub.onLayoutChange = { [unowned self] layout in broadcast(.activitiesChanged(layout)) }
+        hub.onAlert = { [unowned self] alert in broadcast(.alertRaised(alert)) }
+        hub.register(timer, feature: .timer)
+        hub.register(alerts: timer, feature: .timer)
         applySettings()  // first call syncs the windows
+        timer.restore()
         observeSettings()
         GlobalShortcut.install { [unowned self] in activeIsland()?.store.send(.toggleRequested) }
 
@@ -95,8 +102,14 @@ final class CompositionRoot {
 
     private func makeIsland(for screen: ScreenDescriptor) -> AnyView {
         let panel = PanelProxy()
-        let store = IslandStore(time: time, panel: panel, feedback: feedback, speed: { [panel] in panel.speed() })
-        let island = ScreenIsland(screen: screen, store: store, panel: panel)
+        // Alerts reach every screen's store; only the main display's island plays sounds, so one alert = one sound.
+        let screenFeedback = ScreenFeedback(
+            base: feedback,
+            playsSounds: { [unowned self] in
+                screen.id == (screens.first(where: \.isMain) ?? screens.first)?.id
+            })
+        let store = IslandStore(time: time, panel: panel, feedback: screenFeedback, speed: { [panel] in panel.speed() })
+        let island = ScreenIsland(screen: screen, store: store, panel: panel, feedback: screenFeedback)
         let router = PointerRouter(
             send: { store.send($0) }, phase: { store.state.phase },
             geometry: { [unowned island] in Self.restingGeometry(state: store.state, notch: island.notch) },
@@ -104,6 +117,7 @@ final class CompositionRoot {
         island.router = router
         panel.speed = { [weak router] in router?.currentSpeed ?? 0 }
         store.send(.optionsChanged(settings.settings.islandOptions))
+        store.send(.activitiesChanged(hub.layout))
         islands[screen.id] = island
         observeHotZone(of: island)
         return rootView(for: island)
@@ -112,9 +126,17 @@ final class CompositionRoot {
     private func rootView(for island: ScreenIsland) -> AnyView {
         AnyView(
             IslandRootView(
-                store: island.store, notch: island.notch, home: { Self.homeInputs },
+                store: island.store, notch: island.notch, home: { [unowned self] in homeInputs },
                 onHover: { [weak router = island.router] in router?.islandHoverChanged($0) },
-                openSettings: { [unowned self] in showSettings() }))
+                openSettings: { [unowned self] in showSettings() }
+            )
+            .environment(\.timerActions, timerActions)
+            .environment(
+                \.alertActions,
+                AlertActions(
+                    revealInFinder: { NSWorkspace.shared.activateFileViewerSelecting([$0]) },
+                    // shortcut: the shelf arrives in Phase 7 (T7.1); until then the button only reveals the file.
+                    addToShelf: { NSWorkspace.shared.activateFileViewerSelecting([$0]) })))
     }
 
     /// While closed the hot zone hugs the visible island, which widens when an activity shows in the wings.
@@ -155,10 +177,21 @@ final class CompositionRoot {
         return (island, bubbles)
     }
 
-    /// Feature phases bind real inputs; until then the home page shows its quick-start tile.
-    private static let homeInputs = HomeInputs(
-        pendingPermission: nil, hasNowPlaying: false, hasImminentMeeting: false, hasRunningTimer: false,
-        hasWeather: false, hasUpcomingEvent: false, calendarAccessUndetermined: false)
+    /// Feature phases bind their inputs here as they land.
+    private var homeInputs: HomeInputs {
+        HomeInputs(
+            pendingPermission: nil, hasNowPlaying: false, hasImminentMeeting: false,
+            hasRunningTimer: timer.current != nil, hasWeather: false, hasUpcomingEvent: false,
+            calendarAccessUndetermined: false)
+    }
+
+    private var timerActions: TimerActions {
+        TimerActions(
+            start: { [unowned self] in timer.start(minutes: $0, label: nil) },
+            startPomodoro: { [unowned self] in timer.startPomodoro() },
+            pause: { [unowned self] in timer.pause() }, resume: { [unowned self] in timer.resume() },
+            cancel: { [unowned self] in timer.cancel() }, skip: { [unowned self] in timer.skip() })
+    }
 
     private func activeIsland() -> ScreenIsland? {
         let mouse = NSEvent.mouseLocation
@@ -224,15 +257,30 @@ final class CompositionRoot {
     var notch: NotchMetrics
     let store: IslandStore
     let panel: PanelProxy
+    let feedback: ScreenFeedback
     var router: PointerRouter!
     var hotZoneRect: CGRect?
 
-    init(screen: ScreenDescriptor, store: IslandStore, panel: PanelProxy) {
+    init(screen: ScreenDescriptor, store: IslandStore, panel: PanelProxy, feedback: ScreenFeedback) {
         self.screen = screen
         notch = NotchGeometry.metrics(for: screen)
         self.store = store
         self.panel = panel
+        self.feedback = feedback
     }
+}
+
+@MainActor private final class ScreenFeedback: FeedbackPlaying {
+    private let base: FeedbackPlaying
+    private let playsSounds: @MainActor () -> Bool
+
+    init(base: FeedbackPlaying, playsSounds: @escaping @MainActor () -> Bool) {
+        self.base = base
+        self.playsSounds = playsSounds
+    }
+
+    func play(_ haptic: HapticKind) { base.play(haptic) }
+    func play(_ sound: SoundKind) { if playsSounds() { base.play(sound) } }
 }
 
 @MainActor private final class PanelProxy: PanelControlling {
