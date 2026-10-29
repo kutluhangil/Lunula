@@ -15,8 +15,33 @@ import Testing
         ]
     }
 
+    /// Every label key has a translated Turkish and English entry in the package catalog (source of truth; CI's
+    /// `swift test` may copy the catalog uncompiled, so runtime lookup alone is not reliable there).
+    @Test func everyLabelHasTurkishAndEnglishEntry() throws {
+        let catalog = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appending(path: "Sources/IslandFeatures/Resources/Localizable.xcstrings")
+        let json = try #require(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: catalog)) as? [String: Any])
+        let strings = try #require(json["strings"] as? [String: [String: Any]])
+        for label in Self.allLabels {
+            let localizations = strings[label.key]?["localizations"] as? [String: [String: [String: String]]]
+            for language in ["tr", "en"] {
+                let unit = localizations?[language]?["stringUnit"]
+                #expect(
+                    unit?["state"] == "translated" && unit?["value"]?.isEmpty == false, "\(label.key) [\(language)]")
+            }
+        }
+    }
+
+    /// When the catalog is compiled into the bundle (Xcode builds), labels must also resolve at runtime.
     @Test(arguments: ["tr", "en"])
-    func everyLabelResolvesInTurkishAndEnglish(language: String) {
+    func labelsResolveAtRuntimeWhenCompiled(language: String) {
+        guard
+            Bundle.module.path(
+                forResource: "Localizable", ofType: "strings", inDirectory: nil, forLocalization: language)
+                != nil
+        else { return }
         for label in Self.allLabels {
             var resource = label
             resource.locale = Locale(identifier: language)
