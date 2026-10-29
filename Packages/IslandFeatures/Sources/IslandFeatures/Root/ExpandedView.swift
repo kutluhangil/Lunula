@@ -38,6 +38,20 @@ struct ExpandedView: View {
         }
         .padding(.horizontal, Spacing.expandedPadding)
         .padding(.bottom, Spacing.expandedPadding)
+        .focusable()
+        .focusEffectDisabled()
+        .onKeyPress(.escape) {
+            send(.escapePressed)
+            return .handled
+        }
+        .onKeyPress(.leftArrow) {
+            send(.pageSelected(PageCycler.previous(before: page)))
+            return .handled
+        }
+        .onKeyPress(.rightArrow) {
+            send(.pageSelected(PageCycler.next(after: page)))
+            return .handled
+        }
     }
 
     @ViewBuilder private var content: some View {

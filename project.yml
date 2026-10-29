@@ -75,6 +75,7 @@ targets:
       - target: Lunula
       - package: IslandCore
         product: IslandCoreTestSupport
+      - package: KeyboardShortcuts
 schemes:
   Lunula:
     build: { targets: { Lunula: all, LunulaTests: [test] } }
