@@ -38,6 +38,7 @@ final class CompositionRoot {
         screens: { [unowned self] in islands.values.map(\.screen) },
         send: { [unowned self] id, event in islands[id]?.store.send(event) })
     private var shelfIcons: [UUID: NSImage] = [:]
+    private let power = PowerMonitor()
     private lazy var weather = WeatherService(
         provider: OpenMeteoProvider(),
         cache: WeatherCache(
@@ -77,6 +78,8 @@ final class CompositionRoot {
             shelf.cleanUp()
             fileDrags.start()
         }
+        hub.register(alerts: power, feature: .battery)
+        if settings.settings.enabledFeatures.contains(.battery) { power.start() }
         hub.register(calendar, feature: .calendar)
         if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
         applySettings()  // first call syncs the windows
