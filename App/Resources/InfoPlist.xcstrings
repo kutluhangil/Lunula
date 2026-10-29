@@ -10,6 +10,12 @@
             "state": "translated",
             "value": "Lunula, Müzik ve Spotify'da çalanı gösterir ve oynatmayı kontrol etmenizi sağlar."
           }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula shows what's playing in Music and Spotify and lets you control playback."
+          }
         }
       }
     },
@@ -20,6 +26,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lunula, bir sonraki etkinliğinizi ve toplantılar için Katıl düğmesini gösterir."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula shows your next event and a Join button for meetings."
           }
         }
       }
@@ -32,6 +44,12 @@
             "state": "translated",
             "value": "Lunula, yerel hava durumunu göstermek için yaklaşık konumunuzu kullanır."
           }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula uses your approximate location to show local weather."
+          }
         }
       }
     },
@@ -42,6 +60,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lunula, yerel hava durumunu göstermek için yaklaşık konumunuzu kullanır."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula uses your approximate location to show local weather."
           }
         }
       }
