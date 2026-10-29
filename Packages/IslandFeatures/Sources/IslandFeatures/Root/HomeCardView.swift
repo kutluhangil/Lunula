@@ -11,11 +11,18 @@ struct HomeCardView: View {
     @Environment(\.islandLayout) private var layout
     @Environment(\.nowPlayingActions) private var nowPlaying
     @Environment(\.calendarActions) private var calendar
+    @Environment(\.weatherInfo) private var weather
 
     var body: some View {
         switch card {
         case .timerQuickStart:
             TimerQuickStartTile()
+        case .weather:
+            if let current = weather.current() {
+                WeatherTileView(snapshot: current.snapshot, units: current.units)
+            } else {
+                fallbackCard
+            }
         case .calendarAccess:
             CalendarAccessTile()
         case .meeting:

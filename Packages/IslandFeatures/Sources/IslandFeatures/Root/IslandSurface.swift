@@ -17,6 +17,7 @@ struct IslandSurface: View {
     let openSettings: @MainActor () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.weatherInfo) private var weather
     @State private var budID: ActivityID?
     @State private var budProgress = 0.0
 
@@ -24,7 +25,7 @@ struct IslandSurface: View {
         let size = Self.islandSize(state: state, notch: notch)
         let island = Self.islandRect(size: size)
         let shape = state.phase.isOpen ? IslandShape.expanded : IslandShape.closed
-        let halo = HaloDerivation.state(phase: state.phase, layout: state.layout, now: now)
+        let halo = homeHalo(HaloDerivation.state(phase: state.phase, layout: state.layout, now: now))
 
         ZStack(alignment: .topLeading) {
             ZStack {
@@ -96,6 +97,17 @@ struct IslandSurface: View {
         }
         .frame(width: size.width, height: size.height, alignment: .top)
         .transition(reduceMotion ? MotionToken.reducedTransition : .opacity)
+    }
+
+    /// On the home page with nothing else lit, a faint time-of-day tint (spec §6.4 daylight).
+    private func homeHalo(_ derived: HaloState) -> HaloState {
+        guard derived.mode == .off, state.phase == .expanded(.home), let current = weather.current() else {
+            return derived
+        }
+        let s = current.snapshot
+        let phase = DaylightPhase.phase(now: now, sunrise: s.sunrise, sunset: s.sunset, isDaylight: s.isDaylight)
+        return HaloState(
+            mode: .ambient(breathing: false), color: Daylight.color(phase), intensityScale: Daylight.intensityScale)
     }
 
     /// Reduce Motion: no metaball bridge, the bubble simply fades in (Phase 2 carry-over).
