@@ -31,9 +31,14 @@ final class CompositionRoot {
         logger.info("start")
         let screenService = ScreenService()
         self.screenService = screenService
-        screens = screenService.current.isEmpty ? ScreenService.liveScreens() : screenService.current
-        syncWindows()
-        applySettings()
+        screens = screenService.current
+        tasks.append(
+            Task { [unowned self] in
+                for await states in fullscreen.updates() {
+                    for (id, isFullscreen) in states { islands[id]?.store.send(.fullscreenChanged(isFullscreen)) }
+                }
+            })
+        applySettings()  // first call syncs the windows
         observeSettings()
         GlobalShortcut.install { [unowned self] in activeIsland()?.store.send(.toggleRequested) }
 
@@ -43,15 +48,6 @@ final class CompositionRoot {
                     screens = updated
                     syncWindows()
                     broadcast(.displayConfigurationChanged)
-                }
-            })
-        let fullscreen = FullscreenMonitor(
-            screens: { [unowned self] in screens },
-            frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier })
-        tasks.append(
-            Task { [unowned self] in
-                for await states in fullscreen.updates() {
-                    for (id, isFullscreen) in states { islands[id]?.store.send(.fullscreenChanged(isFullscreen)) }
                 }
             })
         let systemEvents = SystemEventsMonitor()
@@ -67,6 +63,10 @@ final class CompositionRoot {
             })
     }
 
+    private lazy var fullscreen = FullscreenMonitor(
+        screens: { [unowned self] in screens },
+        frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier })
+
     // MARK: - Windows
 
     private func syncWindows() {
@@ -75,47 +75,67 @@ final class CompositionRoot {
         }
         islands = islands.filter { controllers[$0.key] != nil }
         for (id, controller) in controllers {
-            guard let island = islands[id] else { continue }
+            guard let island = islands[id], let screen = screens.first(where: { $0.id == id }) else { continue }
+            // Displays keep their id across rearrangement and resolution changes; refresh the geometry.
+            island.screen = screen
+            let notch = NotchGeometry.metrics(for: screen)
+            if notch != island.notch {
+                island.notch = notch
+                controller.setContent(rootView(for: island))
+            }
             island.panel.target = controller
             controller.hotZone.hotZoneView.delegate = island.router
+            controller.scrollDelegate = island.router
+            controller.onResignKey = { [weak island] in island?.store.send(.clickedOutside) }
+            island.hotZoneRect = nil
             layoutHotZone(id)
         }
+        fullscreen.refresh()
     }
 
     private func makeIsland(for screen: ScreenDescriptor) -> AnyView {
-        let notch = NotchGeometry.metrics(for: screen)
         let panel = PanelProxy()
         let store = IslandStore(time: time, panel: panel, feedback: feedback, speed: { [panel] in panel.speed() })
+        let island = ScreenIsland(screen: screen, store: store, panel: panel)
         let router = PointerRouter(
             send: { store.send($0) }, phase: { store.state.phase },
-            geometry: { Self.restingGeometry(state: store.state, notch: notch) },
+            geometry: { [unowned island] in Self.restingGeometry(state: store.state, notch: island.notch) },
             showContextMenu: { [unowned self] point in contextMenu().popUp(positioning: nil, at: point, in: nil) })
+        island.router = router
         panel.speed = { [weak router] in router?.currentSpeed ?? 0 }
         store.send(.optionsChanged(settings.settings.islandOptions))
-        islands[screen.id] = ScreenIsland(screen: screen, notch: notch, store: store, router: router, panel: panel)
-        observePhase(of: screen.id)
-        return AnyView(
+        islands[screen.id] = island
+        observeHotZone(of: island)
+        return rootView(for: island)
+    }
+
+    private func rootView(for island: ScreenIsland) -> AnyView {
+        AnyView(
             IslandRootView(
-                store: store, notch: notch, home: { Self.homeInputs },
-                onHover: { [weak router] in router?.islandHoverChanged($0) },
+                store: island.store, notch: island.notch, home: { Self.homeInputs },
+                onHover: { [weak router = island.router] in router?.islandHoverChanged($0) },
                 openSettings: { [unowned self] in showSettings() }))
     }
 
     /// While closed the hot zone hugs the visible island, which widens when an activity shows in the wings.
     private func layoutHotZone(_ id: UInt32) {
         guard let island = islands[id], let controller = windows.controller(for: id) else { return }
-        let rect = Self.restingGeometry(state: island.store.state, notch: island.notch).island
-        controller.layout(screen: island.screen, hotZoneRect: IslandMetrics.hotZone(around: rect))
+        let rect = IslandMetrics.hotZone(
+            around: Self.restingGeometry(state: island.store.state, notch: island.notch).island)
+        guard rect != island.hotZoneRect else { return }
+        island.hotZoneRect = rect
+        controller.layout(screen: island.screen, hotZoneRect: rect)
     }
 
-    private func observePhase(of id: UInt32) {
-        guard let store = islands[id]?.store else { return }
+    private func observeHotZone(of island: ScreenIsland) {
         withObservationTracking {
-            _ = store.state.layout
-        } onChange: { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.layoutHotZone(id)
-                self?.observePhase(of: id)
+            _ = island.store.state.layout
+            _ = island.store.state.phase
+        } onChange: { [weak self, weak island] in
+            Task { @MainActor [weak self, weak island] in
+                guard let self, let island else { return }
+                layoutHotZone(island.screen.id)
+                observeHotZone(of: island)
             }
         }
     }
@@ -124,7 +144,10 @@ final class CompositionRoot {
         -> (island: CGRect, bubbles: [(ActivityID, CGRect)])
     {
         let request: IslandSizeRequest =
-            state.layout.primary == nil ? .idle : .compact(wing: IslandMetrics.wingMax)
+            switch state.phase {
+            case .transient: .compact(wing: IslandMetrics.wingMax)
+            default: state.layout.primary == nil ? .idle : .compact(wing: IslandMetrics.wingMax)
+            }
         let island = IslandMetrics.islandRect(size: IslandMetrics.size(for: request, notch: notch), notch: notch)
         let bubbles = state.layout.detached.enumerated().map { index, activity in
             (activity.id, IslandMetrics.bubbleRect(index: index, primary: island, notch: notch))
@@ -172,7 +195,6 @@ final class CompositionRoot {
             broadcast(.optionsChanged(current.islandOptions))
         }
         statusItem.isVisible = current.showMenuBarIcon
-        statusItem.refreshMenu()
     }
 
     private func contextMenu() -> NSMenu {
@@ -187,7 +209,7 @@ final class CompositionRoot {
                 quit: { NSApp.terminate(nil) }))
     }
 
-    private func showSettings() {
+    func showSettings() {
         if settingsWindow == nil {
             settingsWindow = SettingsWindowController(
                 tabs: SettingsTab.baseTabs(settings: settings, launchAtLogin: launchAtLogin))
@@ -197,12 +219,20 @@ final class CompositionRoot {
 }
 
 /// Per-screen island parts. The store needs a panel before the window controller exists, hence the proxy.
-@MainActor private struct ScreenIsland {
-    let screen: ScreenDescriptor
-    let notch: NotchMetrics
+@MainActor private final class ScreenIsland {
+    var screen: ScreenDescriptor
+    var notch: NotchMetrics
     let store: IslandStore
-    let router: PointerRouter
     let panel: PanelProxy
+    var router: PointerRouter!
+    var hotZoneRect: CGRect?
+
+    init(screen: ScreenDescriptor, store: IslandStore, panel: PanelProxy) {
+        self.screen = screen
+        notch = NotchGeometry.metrics(for: screen)
+        self.store = store
+        self.panel = panel
+    }
 }
 
 @MainActor private final class PanelProxy: PanelControlling {

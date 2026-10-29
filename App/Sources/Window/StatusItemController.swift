@@ -1,7 +1,7 @@
 import AppKit
 
-/// Optional menu bar icon; its menu is the island's context menu.
-@MainActor final class StatusItemController {
+/// Optional menu bar icon; its menu is the island's context menu, rebuilt on every open so titles stay current.
+@MainActor final class StatusItemController: NSObject, NSMenuDelegate {
     private let menu: @MainActor () -> NSMenu
     private var item: NSStatusItem?
 
@@ -13,8 +13,11 @@ import AppKit
             guard newValue != isVisible else { return }
             if newValue {
                 let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-                item.button?.image = NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Lunula")
-                item.menu = menu()
+                item.button?.image = NSImage(
+                    systemSymbolName: "capsule.fill", accessibilityDescription: String(localized: "app.name"))
+                let placeholder = NSMenu()
+                placeholder.delegate = self
+                item.menu = placeholder
                 self.item = item
             } else if let item {
                 NSStatusBar.system.removeStatusItem(item)
@@ -23,6 +26,12 @@ import AppKit
         }
     }
 
-    /// Rebuilds the menu, e.g. after the mute state changes.
-    func refreshMenu() { item?.menu = menu() }
+    func menuNeedsUpdate(_ target: NSMenu) {
+        let fresh = menu()
+        target.removeAllItems()
+        for entry in fresh.items {
+            fresh.removeItem(entry)
+            target.addItem(entry)
+        }
+    }
 }

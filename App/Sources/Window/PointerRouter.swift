@@ -26,8 +26,9 @@ import IslandCore
     var currentSpeed: Double { speedEstimator.speed(at: lastMoveTime) }
 
     func islandHoverChanged(_ inside: Bool) {
-        guard !isResting, !inside else { return }
-        send(.pointerExitedIsland)
+        guard !isResting else { return }
+        // Re-entry within the exit grace cancels the pending collapse (reducer: pointerInside + cancel exitGrace).
+        send(inside ? .pointerEnteredHotZone : .pointerExitedIsland)
     }
 
     func hotZoneEntered() {

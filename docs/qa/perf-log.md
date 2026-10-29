@@ -6,3 +6,4 @@ Bütçe (spec §8): boşta < %0.1 CPU ve < 1 uyanma/sn · müzik çalarken < %1 
 | Tarih | Derleme | Cihaz | macOS | Sonuç | Not |
 |---|---|---|---|---|---|
 | 2026-10-29 | Release, Faz 3 (motor) | Mac mini (Mac18,5), çentiksiz 1280×720 → hap modu | 27.0.1 | `cpu_median=0.0 idlew_median=0 mem=40M` · exit 0 | Ada kapalı, etkinlik yok; Sapphire.app aynı anda açıktı |
+| 2026-10-29 | Release, Faz 3 son inceleme düzeltmeleri | Mac mini (Mac18,5), hap modu | 27.0.1 | `cpu_median=0.00 idlew_median=0 mem=42M` · exit 0 | 2 panel (ada + sıcak bölge) |

@@ -28,6 +28,16 @@ import Testing
         #expect(sent == [.pointerExitedIsland])
     }
 
+    @Test func islandHoverReentryIsForwardedWhileOpen() {
+        var sent: [IslandEvent] = []
+        let r = PointerRouter(
+            send: { sent.append($0) }, phase: { .expanded(.home) }, geometry: { (.zero, []) }, showContextMenu: { _ in }
+        )
+        r.islandHoverChanged(false)
+        r.islandHoverChanged(true)
+        #expect(sent == [.pointerExitedIsland, .pointerEnteredHotZone])
+    }
+
     @Test func rightClickOpensContextMenu() {
         var opened = false
         let r = PointerRouter(

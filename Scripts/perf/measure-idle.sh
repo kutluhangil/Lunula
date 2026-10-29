@@ -30,7 +30,7 @@ result=$(top -l $((seconds + 1)) -s 1 -pid "$pid" -stats pid,cpu,idlew,mem | awk
     END {
         if (n < 2) { print "error"; exit }
         for (i = 2; i <= n; i++) { c[i - 1] = cpu[i]; d[i - 1] = w[i] - w[i - 1] }
-        printf "cpu_median=%.1f idlew_median=%g mem=%s\n", median(c, n - 1), median(d, n - 1), mem
+        printf "cpu_median=%.2f idlew_median=%g mem=%s\n", median(c, n - 1), median(d, n - 1), mem
     }')
 
 echo "$result"
