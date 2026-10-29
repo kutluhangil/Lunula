@@ -29,6 +29,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var hasCompletedOnboarding = false
     /// Download alerts watch ~/Downloads, which can raise a privacy prompt; they start only after the user opts in.
     public var downloadsAlertsOptedIn = false
+    /// Competing notch apps already mentioned (CompetingApps), so each notice appears once.
+    public var notifiedCompetitors: Set<String> = []
 
     public static let `default` = IslandSettings()
 
@@ -45,6 +47,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         case displayMode, hideInFullscreen, criticalAlertsInFullscreen, launchAtLogin, hapticsEnabled, soundsEnabled
         case haloIntensity, disabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
         case showMenuBarIcon, muteUntil, hasCompletedOnboarding, downloadsAlertsOptedIn
+        case notifiedCompetitors
     }
 
     /// Missing, unknown or malformed keys fall back to the default per key, so old or future data never breaks.
@@ -77,6 +80,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         muteUntil = value(.muteUntil, d.muteUntil)
         hasCompletedOnboarding = value(.hasCompletedOnboarding, d.hasCompletedOnboarding)
         downloadsAlertsOptedIn = value(.downloadsAlertsOptedIn, d.downloadsAlertsOptedIn)
+        notifiedCompetitors = value(.notifiedCompetitors, d.notifiedCompetitors)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -98,5 +102,6 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(showMenuBarIcon, forKey: .showMenuBarIcon)
         try c.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
         try c.encode(downloadsAlertsOptedIn, forKey: .downloadsAlertsOptedIn)
+        try c.encode(notifiedCompetitors, forKey: .notifiedCompetitors)
     }
 }

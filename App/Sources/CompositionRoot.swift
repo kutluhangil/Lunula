@@ -62,6 +62,8 @@ final class CompositionRoot {
     private var islands: [UInt32: ScreenIsland] = [:]
     private var screens: [ScreenDescriptor] = []
     private var settingsWindow: SettingsWindowController?
+    private var onboarding: OnboardingWindowController?
+    private lazy var competing = CompetingAppNotice(settings: settings)
     private var tasks: [Task<Void, Never>] = []
 
     func start() {
@@ -104,7 +106,14 @@ final class CompositionRoot {
         if settings.settings.enabledFeatures.contains(.battery) { power.start() }
         hub.register(calendar, feature: .calendar)
         if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
+        hub.register(alerts: competing, feature: .customActivities)
+        competing.start()
         applySettings()  // first call syncs the windows
+        if OnboardingWindowController.shouldShow(settings.settings) {
+            onboarding = OnboardingWindowController(
+                settings: settings, launchAtLogin: launchAtLogin, onFinish: { [unowned self] in onboarding = nil })
+            onboarding?.show()
+        }
         timer.restore()
         observeSettings()
         GlobalShortcut.install { [unowned self] in activeIsland()?.store.send(.toggleRequested) }
