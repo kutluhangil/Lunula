@@ -26,8 +26,10 @@ public actor ScriptRunner {
         return await withCheckedContinuation { continuation in
             once.set(continuation)
             queue.async { once.resume(executor.execute(source)) }
-            Task {
-                try? await Task.sleep(for: timeout)
+            // A dispatch timer, not Task.sleep: the deadline must hold even when the concurrency pool is busy.
+            let c = timeout.components
+            let nanoseconds = Int(c.seconds) * 1_000_000_000 + Int(c.attoseconds / 1_000_000_000)
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + .nanoseconds(nanoseconds)) {
                 once.resume(.timedOut)
             }
         }
