@@ -32,6 +32,13 @@ Başka bir çentik uygulaması (ör. Sapphire, Boring Notch) açıkken test etme
 
 ## Zamanlayıcı
 
+- [ ] ⌃⌥Space → Ev → "25 dk" → compact geri sayım + turuncu ilerleme ışığı
+- [ ] Bitişte 6 sn uyarı ve tek ses (ada açıkken bitse bile bir kez)
+- [ ] Uygulamayı kapatıp açınca zamanlayıcı sürer; kapalıyken biterse 10 dk içinde bir kez uyarır
+- [ ] Mac'i 2 dk uyutup uyandırınca kalan süre doğru
+- [ ] Pomodoro: odak → kısa mola kendiliğinden başlar; Atla bir sonraki aşamaya geçer
+- [ ] İki ekranda uyarı sesi bir kez çalar
+
 ## Takvim
 
 ## Hava
