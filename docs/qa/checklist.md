@@ -51,7 +51,21 @@ Başka bir çentik uygulaması (ör. Sapphire, Boring Notch) açıkken test etme
 
 ## Takvim
 
+- [ ] Açılışta takvim izni istenmez; Ev'de "Takvimi bağla" karosuna tıklayınca istenir
+- [ ] Toplantıdan 10 dk önce compact'ta takvim rengi nokta + geri sayım; 1 dk kala "Şimdi", sonra "Başladı"
+- [ ] Bağlantılı toplantıda "Katıl" tarayıcıda/uygulamada açılır; bağlantısızda düğme yok
+- [ ] Reddedilmiş, iptal edilmiş ve tüm gün etkinlikleri "sıradaki" olmaz
+- [ ] Takvimde etkinlik ekleyince/silince ada güncellenir
+
 ## Hava
+
+- [ ] Ev ilk açılınca konum izni istenir (yalnızca o an); hava karosu görünür
+- [ ] 30 dk içinde Ev'i tekrar açmak ikinci ağ isteği yapmaz (Konsol / ağ günlüğü)
+- [ ] Ağ kapalıyken son değer kalır
+- [ ] Türkçe + Türkiye: °C, "Gök gürültülü fırtına" kesilmez (`docs/qa/shots/weather-tr.png`)
+- [ ] İngilizce + ABD: °F (`docs/qa/shots/weather-en.png`)
+- [ ] Ev'de başka ışık yokken gün ışığı tonu (şafak pembe, gün beyaz, gün batımı turuncu, gece mavi)
+- [ ] Hakkında'da "Open-Meteo.com (CC BY 4.0)" atfı
 
 ## Raf
 
