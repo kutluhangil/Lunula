@@ -9,11 +9,20 @@ struct HomeCardView: View {
     init(card: HomeCard) { self.card = card }
 
     @Environment(\.islandLayout) private var layout
+    @Environment(\.nowPlayingActions) private var nowPlaying
 
     var body: some View {
         switch card {
         case .timerQuickStart:
             TimerQuickStartTile()
+        case .permission(let source):
+            PermissionCard(source: source) { nowPlaying.requestConsent(source) }
+        case .nowPlaying:
+            if let activity = layout.activity("nowPlaying"), case .nowPlaying(let track) = activity.content {
+                NowPlayingExpandedCard(snapshot: track, accent: activity.accent)
+            } else {
+                fallbackCard
+            }
         case .timer:
             if case .timer(let snapshot)? = layout.activity(TimerSnapshot.activityID)?.content {
                 TimerExpandedCard(snapshot: snapshot)

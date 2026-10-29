@@ -17,7 +17,12 @@ struct ActivityContentView: View {
 
     var body: some View {
         switch activity.content {
-        case .nowPlaying(let track): fallback(symbol: "music.note", title: track.title)
+        case .nowPlaying(let track):
+            switch slot {
+            case .compactLeading: NowPlayingCompactLeading(snapshot: track)
+            case .compactTrailing: NowPlayingCompactTrailing(snapshot: track, accent: activity.accent)
+            case .expanded: NowPlayingExpandedCard(snapshot: track, accent: activity.accent)
+            }
         case .timer(let timer):
             switch slot {
             case .compactLeading: TimerCompactLeading(snapshot: timer)
