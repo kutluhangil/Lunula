@@ -10,7 +10,8 @@ let package = Package(
         .target(name: "IslandServices", dependencies: [.product(name: "IslandCore", package: "IslandCore")]),
         .testTarget(
             name: "IslandServicesTests",
-            dependencies: ["IslandServices", .product(name: "IslandCoreTestSupport", package: "IslandCore")]
+            dependencies: ["IslandServices", .product(name: "IslandCoreTestSupport", package: "IslandCore")],
+            resources: [.copy("Resources")]
         ),
     ]
 )
