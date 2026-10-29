@@ -8,7 +8,9 @@ import Testing
 @MainActor @Suite struct ScreenServiceTests {
     func collect(_ s: ScreenService, for ms: Int) async -> [[ScreenDescriptor]] {
         var out: [[ScreenDescriptor]] = []
-        let task = Task { for await v in s.updates() { out.append(v) } }
+        // Subscribe before the first await so a notification posted right after cannot be missed.
+        let stream = s.updates()
+        let task = Task { for await v in stream { out.append(v) } }
         try? await Task.sleep(for: .milliseconds(ms))
         task.cancel()
         return out
