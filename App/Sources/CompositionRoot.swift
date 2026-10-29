@@ -1,5 +1,6 @@
 import AppIntents
 import AppKit
+import CoreLocation
 import IslandCore
 import IslandDesign
 import IslandFeatures
@@ -397,6 +398,59 @@ final class CompositionRoot {
             broadcast(.optionsChanged(current.islandOptions))
         }
         statusItem.isVisible = current.showMenuBarIcon
+        if let previous = appliedSettings { applyFeatureChanges(from: previous, to: current) }
+    }
+
+    /// Starts or stops services when the user toggles a feature in Settings (spec §8: stop releases everything).
+    private func applyFeatureChanges(from old: IslandSettings, to new: IslandSettings) {
+        func turned(_ f: IslandFeature) -> Bool? {
+            let (was, now) = (old.enabledFeatures.contains(f), new.enabledFeatures.contains(f))
+            return was == now ? nil : now
+        }
+        if let on = turned(.nowPlaying) { on ? nowPlaying.start() : nowPlaying.stop() }
+        if let on = turned(.calendar) { on ? calendar.start() : calendar.stop() }
+        if let on = turned(.battery) { on ? power.start() : power.stop() }
+        if let on = turned(.privacyIndicator) { on ? deviceUsage.start() : deviceUsage.stop() }
+        if let on = turned(.shelf) { on ? fileDrags.start() : fileDrags.stop() }
+        let downloadsWas = old.enabledFeatures.contains(.downloads) && old.downloadsAlertsOptedIn
+        let downloadsNow = new.enabledFeatures.contains(.downloads) && new.downloadsAlertsOptedIn
+        if downloadsWas != downloadsNow { downloadsNow ? downloads.start() : downloads.stop() }
+        hub.refresh()
+    }
+
+    private func permissionState(_ feature: IslandFeature) -> PermissionState? {
+        switch feature {
+        case .nowPlaying:
+            switch nowPlaying.permissions[.music] {
+            case .granted?: return .granted
+            case .denied?: return .denied
+            case .needsConsent?: return .notRequested
+            case .notRunning?, nil: return .unavailable
+            }
+        case .calendar:
+            switch calendar.authorization {
+            case .fullAccess: return .granted
+            case .notDetermined: return .notRequested
+            case .denied, .restricted, .writeOnly: return .denied
+            }
+        case .weather:
+            switch CLLocationManager().authorizationStatus {
+            case .authorizedAlways, .authorized: return .granted
+            case .notDetermined: return .notRequested
+            default: return .denied
+            }
+        default:
+            return nil
+        }
+    }
+
+    private func requestPermission(_ feature: IslandFeature) {
+        switch feature {
+        case .nowPlaying: Task { await nowPlaying.requestConsent(for: .music) }
+        case .calendar: Task { await calendar.requestAccess() }
+        case .weather: Task { await weather.islandBecameVisible() }
+        default: break
+        }
     }
 
     private func contextMenu() -> NSMenu {
@@ -413,8 +467,21 @@ final class CompositionRoot {
 
     func showSettings() {
         if settingsWindow == nil {
-            settingsWindow = SettingsWindowController(
-                tabs: SettingsTab.baseTabs(settings: settings, launchAtLogin: launchAtLogin))
+            var tabs = SettingsTab.baseTabs(settings: settings, launchAtLogin: launchAtLogin)
+            tabs.insert(
+                SettingsTab(
+                    id: "activities", titleKey: "settings.tab.activities", symbol: "square.stack",
+                    makeView: { [unowned self] in
+                        AnyView(
+                            ActivitiesSettingsView(
+                                settings: settings, permission: { [unowned self] in permissionState($0) },
+                                request: { [unowned self] in requestPermission($0) }))
+                    }), at: 1)
+            tabs.insert(
+                SettingsTab(
+                    id: "appearance", titleKey: "settings.tab.appearance", symbol: "paintbrush",
+                    makeView: { [unowned self] in AnyView(AppearanceSettingsView(settings: settings)) }), at: 2)
+            settingsWindow = SettingsWindowController(tabs: tabs)
         }
         settingsWindow?.show()
     }
