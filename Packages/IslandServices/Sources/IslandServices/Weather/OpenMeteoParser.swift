@@ -8,24 +8,41 @@ public enum OpenMeteoParser {
             var temperature2m: Double
             var weatherCode: Int
             var isDay: Int
+
+            enum CodingKeys: String, CodingKey {
+                case temperature2m = "temperature_2m"
+                case weatherCode = "weather_code"
+                case isDay = "is_day"
+            }
         }
         struct Daily: Decodable {
             var temperature2mMax: [Double]
             var temperature2mMin: [Double]
             var sunrise: [String]
             var sunset: [String]
+
+            enum CodingKeys: String, CodingKey {
+                case temperature2mMax = "temperature_2m_max"
+                case temperature2mMin = "temperature_2m_min"
+                case sunrise
+                case sunset
+            }
         }
         var utcOffsetSeconds: Int
         var current: Current
         var daily: Daily
+
+        enum CodingKeys: String, CodingKey {
+            case utcOffsetSeconds = "utc_offset_seconds"
+            case current
+            case daily
+        }
     }
 
     private struct Places: Decodable { var results: [GeoPlace]? }
 
     public static func forecast(_ data: Data, fetchedAt: Date) throws -> WeatherSnapshot {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        let f = try decoder.decode(Forecast.self, from: data)
+        let f = try JSONDecoder().decode(Forecast.self, from: data)
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
