@@ -31,3 +31,7 @@ sleep 5; swift Scripts/spikes/window-list.swift
 ## Notlar
 
 (Cihazda doldurulacak. Yanlış pozitif/negatif görülen senaryoları ve önerilen kural değişikliğini buraya yaz.)
+
+## Bilinen sınır
+
+Sezgisel ön plandaki uygulamanın PID'ini kullanır. İkinci ekranda tam ekran olan bir uygulama, klavye odağı başka ekrandayken tam ekran sayılmaz (ada o ekranda görünür kalır). Spike sırasında bu durumu da kaydet.

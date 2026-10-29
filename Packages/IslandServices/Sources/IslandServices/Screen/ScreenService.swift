@@ -55,7 +55,8 @@ public final class ScreenService {
     }
 
     public static func liveScreens() -> [ScreenDescriptor] {
-        NSScreen.screens.map { ScreenDescriptor($0, isMain: $0 == NSScreen.main) }
+        // "Main" is the primary display (menu bar, frame origin zero), not NSScreen.main, which follows key focus.
+        NSScreen.screens.map { ScreenDescriptor($0, isMain: $0 == NSScreen.screens.first) }
     }
 
     private func observe(_ center: NotificationCenter, _ name: Notification.Name) {

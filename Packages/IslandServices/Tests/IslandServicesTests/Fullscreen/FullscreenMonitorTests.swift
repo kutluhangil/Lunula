@@ -25,6 +25,17 @@ private struct FakeReader: WindowListReading {
         #expect(first == [1: true])
     }
 
+    @Test(.timeLimit(.minutes(1))) func refreshEvaluatesWithoutANotification() async {
+        let cover = WindowInfo(
+            ownerPID: 42, layer: 0, bounds: CGRect(x: 0, y: 0, width: 1512, height: 982), isOnscreen: true)
+        let monitor = FullscreenMonitor(
+            workspaceCenter: NotificationCenter(), reader: FakeReader(result: [cover]),
+            screens: { [.mbp14] }, frontmostPID: { 42 }, settleDelay: .milliseconds(50))
+        var iterator = monitor.updates().makeAsyncIterator()
+        monitor.refresh()
+        #expect(await iterator.next() == [1: true])
+    }
+
     @Test(.timeLimit(.minutes(1))) func usesPrimaryScreenNotFocusedScreenForQuartzConversion() async {
         let center = NotificationCenter()
         var builtIn = ScreenDescriptor.mbp14
