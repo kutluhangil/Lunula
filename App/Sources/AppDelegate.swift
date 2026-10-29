@@ -4,6 +4,8 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.make(openSettings: { CompositionRoot.shared.showSettings() })
+        // As the unit-test host the app must not start system services (permissions, monitors, panels).
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
         CompositionRoot.shared.start()
     }
 }
