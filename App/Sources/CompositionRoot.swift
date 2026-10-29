@@ -39,6 +39,7 @@ final class CompositionRoot {
         send: { [unowned self] id, event in islands[id]?.store.send(event) })
     private var shelfIcons: [UUID: NSImage] = [:]
     private let power = PowerMonitor()
+    private lazy var downloads = DownloadsWatcher()
     private lazy var weather = WeatherService(
         provider: OpenMeteoProvider(),
         cache: WeatherCache(
@@ -78,6 +79,8 @@ final class CompositionRoot {
             shelf.cleanUp()
             fileDrags.start()
         }
+        hub.register(alerts: downloads, feature: .downloads)
+        if settings.settings.enabledFeatures.contains(.downloads) { downloads.start() }
         hub.register(alerts: power, feature: .battery)
         if settings.settings.enabledFeatures.contains(.battery) { power.start() }
         hub.register(calendar, feature: .calendar)
@@ -183,8 +186,7 @@ final class CompositionRoot {
                 \.alertActions,
                 AlertActions(
                     revealInFinder: { NSWorkspace.shared.activateFileViewerSelecting([$0]) },
-                    // shortcut: the shelf arrives in Phase 7 (T7.1); until then the button only reveals the file.
-                    addToShelf: { NSWorkspace.shared.activateFileViewerSelecting([$0]) })))
+                    addToShelf: { [unowned self] url in shelfActions.add([url]) })))
     }
 
     /// While closed the hot zone hugs the visible island, which widens when an activity shows in the wings.

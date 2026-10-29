@@ -9,8 +9,16 @@ public protocol BookmarkCoding: Sendable {
 public struct SecurityScopedBookmarkCoding: BookmarkCoding {
     public init() {}
 
+    /// Read-write scope when possible; files reachable only read-only (e.g. ~/Downloads) get a read-only scope.
     public func bookmark(for url: URL) throws -> Data {
-        try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+        do {
+            return try url.bookmarkData(
+                options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+        } catch {
+            return try url.bookmarkData(
+                options: [.withSecurityScope, .securityScopeAllowOnlyReadAccess], includingResourceValuesForKeys: nil,
+                relativeTo: nil)
+        }
     }
 
     public func resolve(_ data: Data) throws -> (url: URL, isStale: Bool) {
