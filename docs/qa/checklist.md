@@ -83,6 +83,12 @@ Başka bir çentik uygulaması (ör. Sapphire, Boring Notch) açıkken test etme
 
 ## Otomasyon
 
+- [ ] `docs/automation.md`'deki her `open -g "lunula://…"` örneği çalışır; uygulama öne gelmez
+- [ ] 4. özel etkinlik en eskisini çıkarır; 15 hızlı istekte uygulama takılmaz (Mac mini'de 2026-10-29 denendi: canlı kaldı)
+- [ ] Kestirmeler'de "Lunula" eylemleri görünür; "Etkinlik göster" adada belirir, uygulama öne gelmez
+- [ ] Claude Code kancası örneği: istek sırasında kıvılcım, bitince kaybolur
+- [ ] Birden çok Lunula kopyası kuruluysa (Debug/Release) URL'ler LaunchServices'in seçtiğine gider; testte `open -g -a <uygulama> "lunula://…"` kullan
+
 ## Erişilebilirlik
 
 ## Performans
