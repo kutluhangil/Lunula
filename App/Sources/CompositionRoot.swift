@@ -29,6 +29,7 @@ final class CompositionRoot {
             sources: sources, time: time, accents: ArtworkAccentStore(), permissions: AutomationPermissionChecker())
     }()
     private var artworkImage: (key: String, image: NSImage)?
+    private lazy var calendar = CalendarService(reader: EventKitReader(), time: time)
     private lazy var feedback = SystemFeedbackPlayer(preferences: { [unowned self] in
         let muted = isMuted
         return (settings.settings.hapticsEnabled && !muted, settings.settings.soundsEnabled && !muted)
@@ -58,6 +59,8 @@ final class CompositionRoot {
         hub.register(nowPlaying, feature: .nowPlaying)
         hub.register(alerts: nowPlaying, feature: .nowPlaying)
         if settings.settings.enabledFeatures.contains(.nowPlaying) { nowPlaying.start() }
+        hub.register(calendar, feature: .calendar)
+        if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
         applySettings()  // first call syncs the windows
         timer.restore()
         observeSettings()
@@ -147,6 +150,13 @@ final class CompositionRoot {
             .environment(\.timerActions, timerActions)
             .environment(\.nowPlayingActions, nowPlayingActions)
             .environment(
+                \.calendarActions,
+                CalendarActions(
+                    join: { NSWorkspace.shared.open($0) },
+                    requestAccess: { [unowned self] in Task { await calendar.requestAccess() } },
+                    nextEvent: { [unowned self] in calendar.nextEvent })
+            )
+            .environment(
                 \.alertActions,
                 AlertActions(
                     revealInFinder: { NSWorkspace.shared.activateFileViewerSelecting([$0]) },
@@ -197,9 +207,10 @@ final class CompositionRoot {
     private var homeInputs: HomeInputs {
         HomeInputs(
             pendingPermission: nowPlaying.pendingConsent, hasNowPlaying: nowPlaying.snapshot != nil,
-            hasImminentMeeting: false,
-            hasRunningTimer: timer.current != nil, hasWeather: false, hasUpcomingEvent: false,
-            calendarAccessUndetermined: false)
+            hasImminentMeeting: calendar.activities.isEmpty == false,
+            hasRunningTimer: timer.current != nil, hasWeather: false,
+            hasUpcomingEvent: calendar.nextEvent != nil,
+            calendarAccessUndetermined: calendar.authorization == .notDetermined)
     }
 
     private var nowPlayingActions: NowPlayingActions {
