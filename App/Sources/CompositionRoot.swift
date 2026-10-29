@@ -1,3 +1,4 @@
+import AppIntents
 import AppKit
 import IslandCore
 import IslandDesign
@@ -86,6 +87,12 @@ final class CompositionRoot {
         }
         if settings.settings.enabledFeatures.contains(.privacyIndicator) { deviceUsage.start() }
         hub.register(custom, feature: .customActivities)
+        // Main-actor classes are Sendable; the dependency autoclosures capture the instances, not `self`.
+        let (custom, timer) = (custom, timer)
+        let toggler = IslandToggler { [unowned self] in activeIsland()?.store.send(.toggleRequested) }
+        AppDependencyManager.shared.add(dependency: custom)
+        AppDependencyManager.shared.add(dependency: timer)
+        AppDependencyManager.shared.add(dependency: toggler)
         hub.register(alerts: downloads, feature: .downloads)
         // Download alerts start only after the user turns them on in Settings (T9.2): watching ~/Downloads can
         // raise a privacy prompt, and prompts must never come unasked at launch.
