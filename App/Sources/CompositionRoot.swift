@@ -143,11 +143,16 @@ final class CompositionRoot {
         screens: { [unowned self] in screens },
         frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier })
 
-    func handle(_ url: URL) { router.handle(url) }
+    func handle(_ url: URL) {
+        Signposts.island.emitEvent("url")
+        router.handle(url)
+    }
 
     // MARK: - Windows
 
     private func syncWindows() {
+        let signpost = Signposts.island.beginInterval("syncWindows")
+        defer { Signposts.island.endInterval("syncWindows", signpost) }
         let controllers = windows.sync(screens: screens, mode: settings.settings.displayMode) { [unowned self] screen in
             makeIsland(for: screen)
         }
@@ -238,6 +243,7 @@ final class CompositionRoot {
         } onChange: { [weak self, weak island] in
             Task { @MainActor [weak self, weak island] in
                 guard let self, let island else { return }
+                Signposts.island.emitEvent("phase")
                 layoutHotZone(island.screen.id)
                 nowPlaying.setExpanded(islands.values.contains { $0.store.state.phase.isOpen })
                 if island.store.state.phase == .expanded(.home), settings.settings.enabledFeatures.contains(.weather) {
