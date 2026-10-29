@@ -30,6 +30,14 @@ final class CompositionRoot {
     }()
     private var artworkImage: (key: String, image: NSImage)?
     private lazy var calendar = CalendarService(reader: EventKitReader(), time: time)
+    private lazy var shelf = ShelfStore(
+        directory: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Shelf"),
+        bookmarks: SecurityScopedBookmarkCoding(), time: time, settings: settings)
+    private lazy var fileDrags = FileDragMonitor(
+        screens: { [unowned self] in islands.values.map(\.screen) },
+        send: { [unowned self] id, event in islands[id]?.store.send(event) })
+    private var shelfIcons: [UUID: NSImage] = [:]
     private lazy var weather = WeatherService(
         provider: OpenMeteoProvider(),
         cache: WeatherCache(
@@ -65,6 +73,10 @@ final class CompositionRoot {
         hub.register(nowPlaying, feature: .nowPlaying)
         hub.register(alerts: nowPlaying, feature: .nowPlaying)
         if settings.settings.enabledFeatures.contains(.nowPlaying) { nowPlaying.start() }
+        if settings.settings.enabledFeatures.contains(.shelf) {
+            shelf.cleanUp()
+            fileDrags.start()
+        }
         hub.register(calendar, feature: .calendar)
         if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
         applySettings()  // first call syncs the windows
@@ -156,6 +168,7 @@ final class CompositionRoot {
             .environment(\.timerActions, timerActions)
             .environment(\.nowPlayingActions, nowPlayingActions)
             .environment(\.weatherInfo, WeatherInfo(current: { [unowned self] in weatherForHome }))
+            .environment(\.shelfActions, shelfActions)
             .environment(
                 \.calendarActions,
                 CalendarActions(
@@ -229,6 +242,69 @@ final class CompositionRoot {
             locale: .current, systemTemperatureSetting: UserDefaults.standard.string(forKey: "AppleTemperatureUnit"),
             override: settings.settings.temperatureUnit)
         return (snapshot, units)
+    }
+
+    private var shelfActions: ShelfActions {
+        ShelfActions(
+            items: { [unowned self] in shelfModels },
+            add: { [unowned self] urls in
+                guard !urls.isEmpty else { return }
+                do {
+                    try shelf.add(urls)
+                    feedback.play(.levelChange)
+                } catch {
+                    logger.error("shelf add failed: \(error.localizedDescription, privacy: .public)")
+                }
+            },
+            remove: { [unowned self] id in
+                shelf.remove(id)
+                shelfIcons[id] = nil
+            },
+            reveal: { [unowned self] id in
+                guard let item = shelf.items.first(where: { $0.id == id }) else { return }
+                _ = shelf.withAccess(to: item) { NSWorkspace.shared.activateFileViewerSelecting([$0]) }
+            },
+            airDrop: { [unowned self] ids in shareFiles(ids, via: NSSharingService(named: .sendViaAirDrop)) },
+            share: { [unowned self] ids in shareFiles(ids, via: nil) },
+            dragItem: { [unowned self] id in
+                guard let item = shelf.items.first(where: { $0.id == id }),
+                    case .available(let url) = shelf.status(of: item)
+                else { return nil }
+                return NSItemProvider(contentsOf: url)
+            })
+    }
+
+    private var shelfModels: [ShelfItemModel] {
+        shelf.items.map { item in
+            let status = shelf.status(of: item)
+            let icon =
+                shelfIcons[item.id]
+                ?? shelf.withAccess(to: item) { NSWorkspace.shared.icon(forFile: $0.path()) }
+                ?? NSImage(systemSymbolName: "doc", accessibilityDescription: nil)!
+            if case .available = status { shelfIcons[item.id] = icon }
+            let isReference = if case .reference = item.storage { true } else { false }
+            return ShelfItemModel(
+                id: item.id, name: item.displayName, icon: icon, isReference: isReference, isMissing: status == .missing
+            )
+        }
+    }
+
+    /// AirDrop or the share sheet for the selected files, anchored to the island panel under the mouse.
+    private func shareFiles(_ ids: [UUID], via service: NSSharingService?) {
+        let urls = ids.compactMap { id -> URL? in
+            guard let item = shelf.items.first(where: { $0.id == id }),
+                case .available(let url) = shelf.status(of: item)
+            else { return nil }
+            return url
+        }
+        guard !urls.isEmpty else { return }
+        let scoped = urls.filter { $0.startAccessingSecurityScopedResource() }
+        defer { for url in scoped { url.stopAccessingSecurityScopedResource() } }
+        if let service {
+            service.perform(withItems: urls)
+        } else if let view = activeIsland().flatMap({ windows.controller(for: $0.screen.id)?.container }) {
+            NSSharingServicePicker(items: urls).show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
+        }
     }
 
     private var nowPlayingActions: NowPlayingActions {
