@@ -16,7 +16,8 @@ public final class MusicSource: NowPlayingSource {
     }
 
     public func artwork(for trackID: String) async -> Data? {
-        guard case .success(.data(let data)) = await runner.run(MusicScripts.artwork, target: bundleID) else { return nil }
+        let outcome = await runner.run(MusicScripts.artwork, target: bundleID)
+        guard case .success(.data(let data)) = outcome else { return nil }
         return data
     }
 

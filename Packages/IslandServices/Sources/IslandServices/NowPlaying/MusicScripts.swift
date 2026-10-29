@@ -13,5 +13,7 @@ enum MusicScripts {
         bundleID,
         "if (count of artworks of current track) > 0 then return raw data of artwork 1 of current track")
 
-    static func command(_ command: PlaybackCommand) -> String { PlayerScripts.wrap(bundleID, PlayerScripts.command(command)) }
+    static func command(_ command: PlaybackCommand) -> String {
+        PlayerScripts.wrap(bundleID, PlayerScripts.command(command))
+    }
 }
