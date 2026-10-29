@@ -18,6 +18,17 @@ final class CompositionRoot {
     private let windows = IslandWindowManager()
     private lazy var hub = ActivityHub(time: time, settings: settings)
     private lazy var timer = TimerController(time: time, defaults: .standard)
+    private lazy var nowPlaying: NowPlayingCoordinator = {
+        let runner = ScriptRunner()
+        var sources: [NowPlayingSource] = [MusicSource(runner: runner)]
+        #if LUNULA_SPOTIFY
+            let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            sources.append(SpotifySource(runner: runner, cacheDirectory: caches.appendingPathComponent("Artwork")))
+        #endif
+        return NowPlayingCoordinator(
+            sources: sources, time: time, accents: ArtworkAccentStore(), permissions: AutomationPermissionChecker())
+    }()
+    private var artworkImage: (key: String, image: NSImage)?
     private lazy var feedback = SystemFeedbackPlayer(preferences: { [unowned self] in
         let muted = isMuted
         return (settings.settings.hapticsEnabled && !muted, settings.settings.soundsEnabled && !muted)
@@ -44,6 +55,9 @@ final class CompositionRoot {
         hub.onAlert = { [unowned self] alert in broadcast(.alertRaised(alert)) }
         hub.register(timer, feature: .timer)
         hub.register(alerts: timer, feature: .timer)
+        hub.register(nowPlaying, feature: .nowPlaying)
+        hub.register(alerts: nowPlaying, feature: .nowPlaying)
+        if settings.settings.enabledFeatures.contains(.nowPlaying) { nowPlaying.start() }
         applySettings()  // first call syncs the windows
         timer.restore()
         observeSettings()
@@ -131,6 +145,7 @@ final class CompositionRoot {
                 openSettings: { [unowned self] in showSettings() }
             )
             .environment(\.timerActions, timerActions)
+            .environment(\.nowPlayingActions, nowPlayingActions)
             .environment(
                 \.alertActions,
                 AlertActions(
@@ -157,6 +172,7 @@ final class CompositionRoot {
             Task { @MainActor [weak self, weak island] in
                 guard let self, let island else { return }
                 layoutHotZone(island.screen.id)
+                nowPlaying.setExpanded(islands.values.contains { $0.store.state.phase.isOpen })
                 observeHotZone(of: island)
             }
         }
@@ -180,9 +196,31 @@ final class CompositionRoot {
     /// Feature phases bind their inputs here as they land.
     private var homeInputs: HomeInputs {
         HomeInputs(
-            pendingPermission: nil, hasNowPlaying: false, hasImminentMeeting: false,
+            pendingPermission: nowPlaying.pendingConsent, hasNowPlaying: nowPlaying.snapshot != nil,
+            hasImminentMeeting: false,
             hasRunningTimer: timer.current != nil, hasWeather: false, hasUpcomingEvent: false,
             calendarAccessUndetermined: false)
+    }
+
+    private var nowPlayingActions: NowPlayingActions {
+        NowPlayingActions(
+            playPause: { [unowned self] in Task { await nowPlaying.perform(.playPause) } },
+            next: { [unowned self] in Task { await nowPlaying.perform(.next) } },
+            previous: { [unowned self] in Task { await nowPlaying.perform(.previous) } },
+            seek: { [unowned self] seconds in Task { await nowPlaying.perform(.seek(seconds)) } },
+            artwork: { [unowned self] key in artwork(for: key) },
+            haptic: { [unowned self] in feedback.play($0) },
+            requestConsent: { [unowned self] source in Task { await nowPlaying.requestConsent(for: source) } })
+    }
+
+    /// Decoded once per track; image decoding of a few hundred KB stays well under a frame.
+    private func artwork(for key: String) -> NSImage? {
+        if let artworkImage, artworkImage.key == key { return artworkImage.image }
+        guard let current = nowPlaying.artwork, current.key == key, let image = NSImage(data: current.data) else {
+            return nil
+        }
+        artworkImage = (key, image)
+        return image
     }
 
     private var timerActions: TimerActions {
