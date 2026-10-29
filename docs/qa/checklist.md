@@ -30,6 +30,16 @@ Başka bir çentik uygulaması (ör. Sapphire, Boring Notch) açıkken test etme
 
 ## Şimdi Çalıyor
 
+- [ ] `docs/qa/spikes/music-scripting.md` spike'ı (erişim grupları, sorgu çıktısı, akış/radyo)
+- [ ] Music çalarken compact'ta kapak + dalga; expanded'da başlık, sanatçı, konum çubuğu, önceki/oynat/sonraki
+- [ ] Konum çubuğunu sürükleyince parça o konuma atlar; 10 sn sınırlarında hafif dokunsal
+- [ ] Parça değişince 2 sn uyarı (bir kez)
+- [ ] Duraklatınca 10 dk sonra kaybolur
+- [ ] Music/Spotify kapalıyken hiçbir betik gönderilmez (Konsol: `com.kutluhangul.lunula`); uygulama kendiliğinden açılmaz
+- [ ] İzin akışı: `tccutil reset AppleEvents com.kutluhangul.lunula` → Music çal → adada tek uyarı → Ev'de izin kartı → İzin ver → sistem penceresi → kabul → kapak/başlık görünür; reddet → uyarı bu oturumda tekrar gelmez
+- [ ] Spotify (yalnızca `LUNULA_SPOTIFY` ile derlenince): süre doğru (ms), reklam gösterilmez
+- [ ] Müzik çalarken `measure-idle.sh` medyanı < %1
+
 ## Zamanlayıcı
 
 - [ ] ⌃⌥Space → Ev → "25 dk" → compact geri sayım + turuncu ilerleme ışığı
