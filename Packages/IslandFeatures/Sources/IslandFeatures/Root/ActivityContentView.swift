@@ -2,8 +2,7 @@ import IslandCore
 import IslandDesign
 import SwiftUI
 
-/// The single switch that picks a feature view per content kind. Feature tasks replace their branch
-/// (Integrator note); until then every branch draws the generic fallback (symbol + title).
+/// The single switch that picks a feature view per content kind and slot.
 struct ActivityContentView: View {
     enum Slot { case compactLeading, compactTrailing, expanded }
 
@@ -35,22 +34,12 @@ struct ActivityContentView: View {
             case .compactTrailing: CalendarCompactTrailing(event: event)
             case .expanded: CalendarExpandedCard(event: event)
             }
-        case .custom(let custom): fallback(symbol: custom.symbol ?? "circle.fill", title: custom.title)
-        }
-    }
-
-    @ViewBuilder private func fallback(symbol: String, title: String) -> some View {
-        switch slot {
-        case .compactLeading:
-            Image(systemName: symbol).font(TypeToken.body.font).foregroundStyle(Palette.textPrimary)
-        case .compactTrailing:
-            EmptyView()
-        case .expanded:
-            HStack(spacing: 8) {
-                Image(systemName: symbol).font(TypeToken.title.font)
-                Text(title).font(TypeToken.title.font).lineLimit(1)
+        case .custom(let custom):
+            switch slot {
+            case .compactLeading: CustomCompactLeading(snapshot: custom, accent: activity.accent)
+            case .compactTrailing: CustomCompactTrailing(snapshot: custom, accent: activity.accent)
+            case .expanded: CustomExpandedCard(snapshot: custom, accent: activity.accent)
             }
-            .foregroundStyle(Palette.textPrimary)
         }
     }
 }
