@@ -30,6 +30,12 @@ final class CompositionRoot {
     }()
     private var artworkImage: (key: String, image: NSImage)?
     private lazy var calendar = CalendarService(reader: EventKitReader(), time: time)
+    private lazy var weather = WeatherService(
+        provider: OpenMeteoProvider(),
+        cache: WeatherCache(
+            fileURL: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("weather.json")),
+        location: LocationService(), settings: settings, time: time)
     private lazy var feedback = SystemFeedbackPlayer(preferences: { [unowned self] in
         let muted = isMuted
         return (settings.settings.hapticsEnabled && !muted, settings.settings.soundsEnabled && !muted)
@@ -149,6 +155,7 @@ final class CompositionRoot {
             )
             .environment(\.timerActions, timerActions)
             .environment(\.nowPlayingActions, nowPlayingActions)
+            .environment(\.weatherInfo, WeatherInfo(current: { [unowned self] in weatherForHome }))
             .environment(
                 \.calendarActions,
                 CalendarActions(
@@ -183,6 +190,9 @@ final class CompositionRoot {
                 guard let self, let island else { return }
                 layoutHotZone(island.screen.id)
                 nowPlaying.setExpanded(islands.values.contains { $0.store.state.phase.isOpen })
+                if island.store.state.phase == .expanded(.home), settings.settings.enabledFeatures.contains(.weather) {
+                    Task { await weather.islandBecameVisible() }
+                }
                 observeHotZone(of: island)
             }
         }
@@ -208,9 +218,17 @@ final class CompositionRoot {
         HomeInputs(
             pendingPermission: nowPlaying.pendingConsent, hasNowPlaying: nowPlaying.snapshot != nil,
             hasImminentMeeting: calendar.activities.isEmpty == false,
-            hasRunningTimer: timer.current != nil, hasWeather: false,
+            hasRunningTimer: timer.current != nil, hasWeather: weatherForHome != nil,
             hasUpcomingEvent: calendar.nextEvent != nil,
             calendarAccessUndetermined: calendar.authorization == .notDetermined)
+    }
+
+    private var weatherForHome: (snapshot: WeatherSnapshot, units: UnitChoice)? {
+        guard settings.settings.enabledFeatures.contains(.weather), let snapshot = weather.snapshot else { return nil }
+        let units = UnitPreferences.resolve(
+            locale: .current, systemTemperatureSetting: UserDefaults.standard.string(forKey: "AppleTemperatureUnit"),
+            override: settings.settings.temperatureUnit)
+        return (snapshot, units)
     }
 
     private var nowPlayingActions: NowPlayingActions {
