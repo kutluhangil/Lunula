@@ -51,6 +51,10 @@ private func run(_ s: IslandState, _ events: IslandEvent...) -> IslandTransition
         #expect(t.state.phase == .expanded(.home))
         #expect(Set(t.effects).isSuperset(of: [.playHaptic(.alignment), .setMouseEventsIgnored(false)]))
     }
+    @Test func openingExpandedByClickOrSwipeMakesPanelKey() {
+        #expect(IslandReducer.reduce(compactState, .clicked(.island)).effects.contains(.makePanelKey(true)))
+        #expect(IslandReducer.reduce(compactState, .swipedDown).effects.contains(.makePanelKey(true)))
+    }
     @Test func clickOnBubbleOpensThatActivity() {
         #expect(IslandReducer.reduce(compactState, .clicked(.bubble("b"))).state.phase == .expanded(.activity("b")))
     }

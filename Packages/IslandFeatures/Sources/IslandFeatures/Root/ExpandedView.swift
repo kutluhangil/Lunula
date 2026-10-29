@@ -10,6 +10,7 @@ struct ExpandedView: View {
     let notch: NotchMetrics
     let send: @MainActor (IslandEvent) -> Void
     let openSettings: @MainActor () -> Void
+    @FocusState private var focused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,6 +41,8 @@ struct ExpandedView: View {
         .padding(.bottom, Spacing.expandedPadding)
         .focusable()
         .focusEffectDisabled()
+        .focused($focused)
+        .onAppear { focused = true }
         .onKeyPress(.escape) {
             send(.escapePressed)
             return .handled

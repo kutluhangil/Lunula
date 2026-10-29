@@ -51,8 +51,10 @@ public enum IslandReducer {
                 } else {
                     s.phase = .expanded(.home)
                 }
+                // Expanded takes keyboard focus (Esc, arrows); the panel is non-activating, so the app stays inactive.
                 fx = [
                     .cancel(.dwell), .cancel(.alertExpiry), .playHaptic(.alignment), .setMouseEventsIgnored(false),
+                    .makePanelKey(true),
                 ]
             default: break
             }
@@ -61,7 +63,7 @@ public enum IslandReducer {
             switch phase {
             case .idle, .compact, .peek:
                 s.phase = .expanded(.home)
-                fx = [.cancel(.dwell), .setMouseEventsIgnored(false)]
+                fx = [.cancel(.dwell), .setMouseEventsIgnored(false), .makePanelKey(true)]
             default: break
             }
 
