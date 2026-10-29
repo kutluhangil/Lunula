@@ -60,11 +60,11 @@ struct ExpandedView: View {
     @ViewBuilder private var content: some View {
         switch page {
         case .home:
-            HomePageView(inputs: home)
+            HomePageView(inputs: home).environment(\.islandLayout, layout)
         case .shelf:
             Text("shelf.empty", bundle: .module).font(TypeToken.body.font).foregroundStyle(Palette.textTertiary)
         case .activity(let id):
-            if let activity = ([layout.primary].compactMap { $0 } + layout.detached).first(where: { $0.id == id }) {
+            if let activity = layout.activity(id) {
                 ActivityContentView(activity: activity, slot: .expanded)
             }
         }

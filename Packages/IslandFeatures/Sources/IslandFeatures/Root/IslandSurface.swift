@@ -86,7 +86,7 @@ struct IslandSurface: View {
                     CompactLayoutView(activity: primary, notchWidth: notch.size.width)
                 }
             case .transient(let alert):
-                TransientRow(alert: alert, notchWidth: notch.size.width)
+                TransientAlertView(alert: alert, notchWidth: notch.size.width, notchHeight: notch.size.height)
             case .peek:
                 PeekView(layout: state.layout, notchHeight: notch.size.height)
             case .expanded(let page):
@@ -115,7 +115,8 @@ struct IslandSurface: View {
             switch state.phase {
             case .hidden, .idle: .idle
             case .compact: state.layout.primary == nil ? .idle : .compact(wing: IslandMetrics.wingMax)
-            case .transient: .compact(wing: IslandMetrics.wingMax)
+            case .transient(let alert):
+                TransientAlertView.needsButtons(alert) ? .peek : .compact(wing: IslandMetrics.wingMax)
             case .peek: state.layout.primary == nil ? .invite : .peek
             case .expanded: .expanded(width: expandedWidth, bodyHeight: expandedBodyHeight)
             }
@@ -131,20 +132,5 @@ struct IslandSurface: View {
         CGRect(
             x: island.maxX + IslandMetrics.bubbleGap + CGFloat(index) * (side + IslandMetrics.bubbleGap), y: 0,
             width: side, height: side)
-    }
-}
-
-/// Transient alert in the compact wings: symbol left, nothing right (feature tasks refine it).
-private struct TransientRow: View {
-    let alert: TransientAlert
-    let notchWidth: CGFloat
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Image(systemName: "bell.fill").font(TypeToken.body.font).foregroundStyle(Palette.textPrimary)
-                .frame(maxWidth: .infinity)
-            Color.clear.frame(width: notchWidth)
-            Color.clear.frame(maxWidth: .infinity)
-        }
     }
 }

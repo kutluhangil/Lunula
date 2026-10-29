@@ -18,7 +18,12 @@ struct ActivityContentView: View {
     var body: some View {
         switch activity.content {
         case .nowPlaying(let track): fallback(symbol: "music.note", title: track.title)
-        case .timer(let timer): fallback(symbol: "timer", title: timer.label ?? "")
+        case .timer(let timer):
+            switch slot {
+            case .compactLeading: TimerCompactLeading(snapshot: timer)
+            case .compactTrailing: TimerCompactTrailing(snapshot: timer)
+            case .expanded: TimerExpandedCard(snapshot: timer)
+            }
         case .calendar(let event): fallback(symbol: "calendar", title: event.title)
         case .custom(let custom): fallback(symbol: custom.symbol ?? "circle.fill", title: custom.title)
         }

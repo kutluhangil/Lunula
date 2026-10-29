@@ -8,16 +8,34 @@ struct HomeCardView: View {
 
     init(card: HomeCard) { self.card = card }
 
+    @Environment(\.islandLayout) private var layout
+
     var body: some View {
-        let (symbol, title) = Self.fallback(card)
-        VStack(alignment: .leading, spacing: 6) {
-            Image(systemName: symbol).font(TypeToken.title.font)
-            Text(title, bundle: .module).font(TypeToken.caption.font).foregroundStyle(Palette.textSecondary)
+        switch card {
+        case .timerQuickStart:
+            TimerQuickStartTile()
+        case .timer:
+            if case .timer(let snapshot)? = layout.activity(TimerSnapshot.activityID)?.content {
+                TimerExpandedCard(snapshot: snapshot)
+            } else {
+                fallbackCard
+            }
+        default:
+            fallbackCard
         }
-        .foregroundStyle(Palette.textPrimary)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(12)
-        .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+    }
+
+    private var fallbackCard: some View {
+        let (symbol, title) = Self.fallback(card)
+        return
+            VStack(alignment: .leading, spacing: 6) {
+                Image(systemName: symbol).font(TypeToken.title.font)
+                Text(title, bundle: .module).font(TypeToken.caption.font).foregroundStyle(Palette.textSecondary)
+            }
+            .foregroundStyle(Palette.textPrimary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(12)
+            .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
     }
 
     static func fallback(_ card: HomeCard) -> (String, LocalizedStringKey) {
@@ -32,4 +50,17 @@ struct HomeCardView: View {
         case .calendarAccess: ("calendar.badge.plus", "home.card.calendarAccess")
         }
     }
+}
+
+extension EnvironmentValues {
+    /// The current island layout, for home cards that show a live activity (timer, music).
+    @Entry var islandLayout = IslandLayout.empty
+}
+
+extension IslandLayout {
+    func activity(_ id: ActivityID) -> Activity? { ([primary].compactMap { $0 } + detached).first { $0.id == id } }
+}
+
+extension TimerSnapshot {
+    static let activityID: ActivityID = "timer"
 }
