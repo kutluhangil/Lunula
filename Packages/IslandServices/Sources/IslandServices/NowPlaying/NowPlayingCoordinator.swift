@@ -26,6 +26,8 @@ import Observation
 
     public private(set) var snapshot: NowPlayingSnapshot?
     public private(set) var accent: RGBAColor?
+    /// Raw artwork of the current track, fetched once per track (the accent is computed from the same bytes).
+    public private(set) var artwork: (key: String, data: Data)?
     public private(set) var permissions: [MediaSourceID: AutomationPermission] = [:]
     public private(set) var pendingConsent: MediaSourceID?
 
@@ -154,6 +156,7 @@ import Observation
         }
         if current?.artworkKey != previous?.artworkKey {
             accent = nil
+            artwork = nil
             if let current { loadAccent(for: current, from: activeSource ?? source) }
         }
         guard current != previous else { return }
@@ -165,7 +168,10 @@ import Observation
         guard let key = track.artworkKey else { return }
         let trackID = track.trackID
         Task {
-            let color = await accents.accent(for: key) { await source.artwork(for: trackID) }
+            let data = await source.artwork(for: trackID)
+            guard snapshot?.artworkKey == key else { return }
+            artwork = data.map { (key, $0) }
+            let color = await accents.accent(for: key) { data }
             guard snapshot?.artworkKey == key else { return }
             accent = color
             onActivitiesChange?()
