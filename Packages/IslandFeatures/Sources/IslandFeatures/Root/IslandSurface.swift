@@ -18,6 +18,7 @@ struct IslandSurface: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.weatherInfo) private var weather
+    @Environment(\.haloIntensity) private var haloIntensity
     @State private var budID: ActivityID?
     @State private var budProgress = 0.0
 
@@ -25,7 +26,7 @@ struct IslandSurface: View {
         let size = Self.islandSize(state: state, notch: notch)
         let island = Self.islandRect(size: size)
         let shape = state.phase.isOpen ? IslandShape.expanded : IslandShape.closed
-        let halo = homeHalo(HaloDerivation.state(phase: state.phase, layout: state.layout, now: now))
+        let halo = scaled(homeHalo(HaloDerivation.state(phase: state.phase, layout: state.layout, now: now)))
 
         ZStack(alignment: .topLeading) {
             ZStack {
@@ -99,6 +100,13 @@ struct IslandSurface: View {
         .transition(reduceMotion ? MotionToken.reducedTransition : .opacity)
     }
 
+    /// Applies the user's halo intensity; zero turns the halo off entirely.
+    private func scaled(_ halo: HaloState) -> HaloState {
+        var halo = halo
+        halo.intensityScale *= haloIntensity()
+        return halo.intensityScale > 0 ? halo : .off
+    }
+
     /// On the home page with nothing else lit, a faint time-of-day tint (spec §6.4 daylight).
     private func homeHalo(_ derived: HaloState) -> HaloState {
         guard derived.mode == .off, state.phase == .expanded(.home), let current = weather.current() else {
@@ -145,4 +153,9 @@ struct IslandSurface: View {
             x: island.maxX + IslandMetrics.bubbleGap + CGFloat(index) * (side + IslandMetrics.bubbleGap), y: 0,
             width: side, height: side)
     }
+}
+
+extension EnvironmentValues {
+    /// User's halo intensity (Settings › Appearance, 0…1); read in the body so changes apply live.
+    @Entry public var haloIntensity: @MainActor () -> Double = { 1 }
 }

@@ -196,6 +196,7 @@ final class CompositionRoot {
             .environment(\.nowPlayingActions, nowPlayingActions)
             .environment(\.weatherInfo, WeatherInfo(current: { [unowned self] in weatherForHome }))
             .environment(\.shelfActions, shelfActions)
+            .environment(\.haloIntensity, { [unowned self] in settings.settings.haloIntensity })
             .environment(\.privacyInfo, PrivacyInfo(current: { [unowned self] in deviceUsage.privacy }))
             .environment(
                 \.calendarActions,
