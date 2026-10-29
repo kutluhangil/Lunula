@@ -41,6 +41,10 @@ final class CompositionRoot {
     private let power = PowerMonitor()
     private lazy var downloads = DownloadsWatcher()
     private lazy var deviceUsage = DeviceUsageMonitor(reader: SystemDeviceUsageReader())
+    lazy var custom = CustomActivityController(time: time)
+    private lazy var router = URLRouter(
+        custom: custom, timer: timer, toggle: { [unowned self] in activeIsland()?.store.send(.toggleRequested) },
+        time: time)
     private lazy var weather = WeatherService(
         provider: OpenMeteoProvider(),
         cache: WeatherCache(
@@ -81,6 +85,7 @@ final class CompositionRoot {
             fileDrags.start()
         }
         if settings.settings.enabledFeatures.contains(.privacyIndicator) { deviceUsage.start() }
+        hub.register(custom, feature: .customActivities)
         hub.register(alerts: downloads, feature: .downloads)
         // Download alerts start only after the user turns them on in Settings (T9.2): watching ~/Downloads can
         // raise a privacy prompt, and prompts must never come unasked at launch.
@@ -120,6 +125,8 @@ final class CompositionRoot {
     private lazy var fullscreen = FullscreenMonitor(
         screens: { [unowned self] in screens },
         frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier })
+
+    func handle(_ url: URL) { router.handle(url) }
 
     // MARK: - Windows
 

@@ -8,6 +8,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
         CompositionRoot.shared.start()
     }
+
+    /// `lunula://` URLs (Terminal, scripts, agent hooks). `open -g` keeps the frontmost app in front.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls { CompositionRoot.shared.handle(url) }
+    }
 }
 
 /// Shown only while Lunula is active (the settings window): ⌘, ⌘Q, editing keys for text fields and ⌘W.
