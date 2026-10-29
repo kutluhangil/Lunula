@@ -35,7 +35,7 @@ struct NowPlayingExpandedCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity)
-        .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+        .islandCard()
     }
 
     private func control(_ symbol: String, _ label: LocalizedStringResource, _ action: @escaping @MainActor () -> Void)

@@ -13,6 +13,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls { CompositionRoot.shared.handle(url) }
     }
+
+    /// Opening Lunula again (Finder, Launchpad, Spotlight) shows Settings: there is no Dock icon and, by default,
+    /// no menu bar icon.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        CompositionRoot.shared.showSettings()
+        return false
+    }
 }
 
 /// Shown only while Lunula is active (the settings window): ⌘, ⌘Q, editing keys for text fields and ⌘W.

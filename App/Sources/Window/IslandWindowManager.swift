@@ -18,7 +18,9 @@ import SwiftUI
         for screen in selected {
             if let existing = controllers[screen.id] {
                 existing.layout(
-                    screen: screen, hotZoneRect: IslandMetrics.hotZone(around: NotchGeometry.metrics(for: screen).rect))
+                    screen: screen,
+                    hotZoneRect: IslandMetrics.hotZone(
+                        around: NotchGeometry.metrics(for: screen).rect, screenTop: screen.frame.maxY))
             } else {
                 controllers[screen.id] = IslandWindowController(screen: screen, content: make(screen))
             }

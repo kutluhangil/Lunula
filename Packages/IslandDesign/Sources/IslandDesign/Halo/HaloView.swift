@@ -47,6 +47,9 @@ public final class HaloHostView: NSView {
         fatalError("init(coder:) is not supported")
     }
 
+    /// AppKit syncs a hosted layer's geometryFlipped with the view; flipped keeps the y-down outline upright.
+    public override var isFlipped: Bool { true }
+
     public override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
         guard let window else { return }

@@ -20,4 +20,17 @@ import Testing
             ImageRenderer(content: IslandRootView.preview(phase: .idle).frame(width: 760, height: 300)).cgImage)
         #expect(PixelProbe.allPixelsAreBlackOrTransparent(img, tolerance: 0.02))
     }
+
+    /// Panel-local, top-left origin; the top row (y = 0, where a pointer rests on the screen edge) counts as inside.
+    @Test func hoverRegionFollowsTheVisibleIsland() {
+        var state = IslandState()
+        let notch = IslandRootView.previewNotch
+        state.phase = .expanded(.home)
+        let expanded = IslandRootView.hoverRegion(state: state, notch: notch)
+        #expect(expanded.contains { $0.contains(CGPoint(x: 380, y: 0)) && $0.width == 560 })
+        state.phase = .idle
+        let idle = IslandRootView.hoverRegion(state: state, notch: notch)
+        #expect(idle.contains { $0.contains(CGPoint(x: 380, y: 0)) })
+        #expect(!idle.contains { $0.contains(CGPoint(x: 380, y: 120)) })
+    }
 }

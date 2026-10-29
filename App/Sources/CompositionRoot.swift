@@ -169,6 +169,10 @@ final class CompositionRoot {
             island.panel.target = controller
             controller.hotZone.hotZoneView.delegate = island.router
             controller.scrollDelegate = island.router
+            controller.container.hoverRegion = { [unowned island] in
+                IslandRootView.hoverRegion(state: island.store.state, notch: island.notch)
+            }
+            controller.container.onHoverChange = { [weak router = island.router] in router?.islandHoverChanged($0) }
             controller.onResignKey = { [weak island] in island?.store.send(.clickedOutside) }
             island.hotZoneRect = nil
             layoutHotZone(id)
@@ -203,7 +207,6 @@ final class CompositionRoot {
         AnyView(
             IslandRootView(
                 store: island.store, notch: island.notch, home: { [unowned self] in homeInputs },
-                onHover: { [weak router = island.router] in router?.islandHoverChanged($0) },
                 openSettings: { [unowned self] in showSettings() }
             )
             .environment(\.timerActions, timerActions)
@@ -230,7 +233,8 @@ final class CompositionRoot {
     private func layoutHotZone(_ id: UInt32) {
         guard let island = islands[id], let controller = windows.controller(for: id) else { return }
         let rect = IslandMetrics.hotZone(
-            around: Self.restingGeometry(state: island.store.state, notch: island.notch).island)
+            around: Self.restingGeometry(state: island.store.state, notch: island.notch).island,
+            screenTop: island.screen.frame.maxY)
         guard rect != island.hotZoneRect else { return }
         island.hotZoneRect = rect
         controller.layout(screen: island.screen, hotZoneRect: rect)

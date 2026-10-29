@@ -64,7 +64,7 @@ struct HomeCardView: View {
             .foregroundStyle(Palette.textPrimary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(12)
-            .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+            .islandCard()
     }
 
     static func fallback(_ card: HomeCard) -> (String, LocalizedStringKey) {

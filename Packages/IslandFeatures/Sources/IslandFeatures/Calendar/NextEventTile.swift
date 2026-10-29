@@ -14,6 +14,6 @@ struct NextEventTile: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
-        .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+        .islandCard()
     }
 }

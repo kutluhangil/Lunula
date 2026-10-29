@@ -48,8 +48,14 @@ private let external = ScreenDescriptor.external
     }
     @Test func hotZoneExpands10HorizontallyAnd6Down() {
         #expect(
-            IslandMetrics.hotZone(around: CGRect(x: 100, y: 950, width: 188, height: 32))
+            IslandMetrics.hotZone(around: CGRect(x: 100, y: 950, width: 188, height: 32), screenTop: 982)
                 == CGRect(x: 90, y: 944, width: 208, height: 38))
+    }
+    /// A pill sits a few points below the top edge; the pointer resting on the edge must still reach it.
+    @Test func hotZoneReachesTheScreenTopEdge() {
+        #expect(
+            IslandMetrics.hotZone(around: CGRect(x: 100, y: 1413, width: 180, height: 24), screenTop: 1440)
+                == CGRect(x: 90, y: 1407, width: 200, height: 33))
     }
     @Test func panelFrameIs760x300TopCenteredAndInsideScreen() {
         let f = IslandMetrics.panelFrame(notch: notch, screen: mbp14)

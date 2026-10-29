@@ -40,9 +40,27 @@ import Testing
         let c = IslandWindowController(screen: .mbp14, content: AnyView(Color.clear))
         defer { c.close() }
         let notch = NotchGeometry.metrics(for: .mbp14)
-        let zone = IslandMetrics.hotZone(around: notch.rect)
+        let zone = IslandMetrics.hotZone(around: notch.rect, screenTop: ScreenDescriptor.mbp14.frame.maxY)
         c.layout(screen: .mbp14, hotZoneRect: zone)
         #expect(c.panel.frame == IslandMetrics.panelFrame(notch: notch, screen: .mbp14) && c.hotZone.frame == zone)
+    }
+
+    /// Hover comes from the container's own tracking against the island region, including the panel's top boundary.
+    @Test func containerReportsHoverAgainstTheIslandRegion() throws {
+        let c = IslandWindowController(screen: .mbp14, content: AnyView(Color.clear))
+        defer { c.close() }
+        var reports: [Bool] = []
+        c.container.hoverRegion = { [CGRect(x: 100, y: -4, width: 200, height: 40)] }
+        c.container.onHoverChange = { reports.append($0) }
+        let height = c.container.bounds.height
+        for y in [height, height - 10, height - 100] {
+            let event = try #require(
+                NSEvent.mouseEvent(
+                    with: .mouseMoved, location: NSPoint(x: 150, y: y), modifierFlags: [], timestamp: 0,
+                    windowNumber: c.panel.windowNumber, context: nil, eventNumber: 0, clickCount: 0, pressure: 0))
+            c.container.mouseMoved(with: event)
+        }
+        #expect(reports == [true, false])
     }
 
     @Test func scrollOverOpenIslandIsForwarded() throws {

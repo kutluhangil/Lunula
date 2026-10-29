@@ -30,7 +30,7 @@ import Testing
         for t in MotionToken.transitions { #expect(t.spec.bounce <= 0.12 && t.spec.duration <= 2.0, "\(t)") }
     }
     @Test func motionValuesMatchSpec() {
-        #expect(MotionToken.open.spec == MotionSpec(duration: 0.45, bounce: 0.10))
+        #expect(MotionToken.open.spec == MotionSpec(duration: 0.55, bounce: 0.04))
         #expect(MotionToken.close.spec == MotionSpec(duration: 0.35, bounce: 0))
         #expect(MotionToken.peek.spec == MotionSpec(duration: 0.30, bounce: 0.08))
         #expect(MotionToken.morph.spec == MotionSpec(duration: 0.40, bounce: 0.05))

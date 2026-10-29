@@ -8,7 +8,10 @@ struct HomePageView: View {
         let composed = HomeComposer.compose(inputs)
         HStack(spacing: 8) {
             if let hero = composed.hero { HomeCardView(card: hero).frame(maxWidth: .infinity) }
-            ForEach(composed.tiles, id: \.self) { HomeCardView(card: $0).frame(maxWidth: 140) }
+            // The quick-start tile needs room for three preset chips on one line.
+            ForEach(composed.tiles, id: \.self) {
+                HomeCardView(card: $0).frame(maxWidth: $0 == .timerQuickStart ? 200 : 140)
+            }
         }
     }
 }

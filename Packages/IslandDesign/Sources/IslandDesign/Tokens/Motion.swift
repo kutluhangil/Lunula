@@ -17,7 +17,7 @@ public enum MotionToken: CaseIterable, Sendable {
 
     public var spec: MotionSpec {
         switch self {
-        case .open: MotionSpec(duration: 0.45, bounce: 0.10)
+        case .open: MotionSpec(duration: 0.55, bounce: 0.04)  // soft: slower, almost no overshoot
         case .close: MotionSpec(duration: 0.35, bounce: 0)
         case .peek: MotionSpec(duration: 0.30, bounce: 0.08)
         case .morph: MotionSpec(duration: 0.40, bounce: 0.05)

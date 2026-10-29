@@ -25,7 +25,7 @@ struct WeatherTileView: View {
                 bundle: .module
             )
             .font(TypeToken.caption.font).monospacedDigit().foregroundStyle(Palette.textSecondary)
-            Text(LocalizedStringKey("weather.condition.\(snapshot.condition.rawValue)"), bundle: .module)
+            Text(LocalizedStringKey("weather.condition." + snapshot.condition.rawValue), bundle: .module)
                 .font(TypeToken.caption.font).foregroundStyle(Palette.textSecondary)
                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             if let place = snapshot.placeName {
@@ -35,6 +35,6 @@ struct WeatherTileView: View {
         .foregroundStyle(Palette.textPrimary)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
-        .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+        .islandCard()
     }
 }

@@ -24,7 +24,7 @@ import SwiftUI
         let notch = NotchGeometry.metrics(for: screen)
         let frame = IslandMetrics.panelFrame(notch: notch, screen: screen)
         panel = IslandPanel(contentRect: frame)
-        hotZone = HotZonePanel(contentRect: IslandMetrics.hotZone(around: notch.rect))
+        hotZone = HotZonePanel(contentRect: IslandMetrics.hotZone(around: notch.rect, screenTop: screen.frame.maxY))
 
         // A bare NSHostingView contentView collapses the panel to its (empty) content size; keep a fixed container.
         container = IslandContainerView(frame: NSRect(origin: .zero, size: frame.size))
@@ -41,7 +41,7 @@ import SwiftUI
             MainActor.assumeIsolated { self?.onResignKey?() }
         }
 
-        layout(screen: screen, hotZoneRect: IslandMetrics.hotZone(around: notch.rect))
+        layout(screen: screen, hotZoneRect: IslandMetrics.hotZone(around: notch.rect, screenTop: screen.frame.maxY))
         hotZone.orderFrontRegardless()
         panel.orderFrontRegardless()
     }
@@ -80,9 +80,38 @@ extension IslandWindowController: PanelControlling {
     }
 }
 
-/// Fixed-size panel content; forwards scroll events SwiftUI leaves unhandled to the pointer router.
+/// Fixed-size panel content; tracks hover against the island's region and forwards scroll events SwiftUI leaves
+/// unhandled to the pointer router.
 final class IslandContainerView: NSView {
     weak var scrollDelegate: HotZoneDelegate?
+    /// Panel-local rects with a top-left origin (IslandRootView.hoverRegion).
+    var hoverRegion: (@MainActor () -> [CGRect])?
+    var onHoverChange: (@MainActor (Bool) -> Void)?
+    private var isInside = false
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addTrackingArea(
+            NSTrackingArea(
+                rect: .zero, options: [.mouseEnteredAndExited, .mouseMoved, .activeAlways, .inVisibleRect],
+                owner: self))
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func mouseEntered(with event: NSEvent) { updateHover(event) }
+    override func mouseMoved(with event: NSEvent) { updateHover(event) }
+    override func mouseExited(with event: NSEvent) { updateHover(event) }
+
+    private func updateHover(_ event: NSEvent) {
+        let p = convert(event.locationInWindow, from: nil)
+        let point = CGPoint(x: p.x, y: bounds.height - p.y)
+        let inside = hoverRegion?().contains { $0.contains(point) } ?? false
+        guard inside != isInside else { return }
+        isInside = inside
+        onHoverChange?(inside)
+    }
 
     override func scrollWheel(with event: NSEvent) {
         guard let scrollDelegate else { return super.scrollWheel(with: event) }

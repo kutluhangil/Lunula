@@ -13,7 +13,6 @@ struct IslandSurface: View {
     let home: HomeInputs
     let now: Date
     let send: @MainActor (IslandEvent) -> Void
-    let onHover: @MainActor (Bool) -> Void
     let openSettings: @MainActor () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -39,7 +38,9 @@ struct IslandSurface: View {
             .accessibilityElement(children: .contain)
             .accessibilityLabel(Text(AccessibilityLabels.island(summary: Self.summary(state))))
             .accessibilityAddTraits(.isButton)
-            .onHover { onHover($0) }
+            // While open or peeking the panel takes the mouse instead of the hot zone; the reducer ignores clicks
+            // where they mean nothing (expanded), and controls inside keep their own taps.
+            .onTapGesture { send(.clicked(.island)) }
             .offset(x: island.minX)
 
             if halo.mode != .off {
@@ -57,6 +58,7 @@ struct IslandSurface: View {
             ForEach(Array(state.layout.detached.enumerated()), id: \.element.id) { index, activity in
                 let rect = Self.bubbleRect(index: index, island: island, side: notch.size.height)
                 BubbleView(activity: activity, side: rect.width)
+                    .onTapGesture { send(.clicked(.bubble(activity.id))) }
                     .offset(x: rect.minX, y: rect.minY)
                     .opacity(activity.id == budID ? 0 : 1)
                     .transition(reduceMotion ? MotionToken.reducedTransition : .opacity)
@@ -100,8 +102,14 @@ struct IslandSurface: View {
             }
         }
         .frame(width: size.width, height: size.height, alignment: .top)
-        .transition(reduceMotion ? MotionToken.reducedTransition : .opacity)
+        .transition(reduceMotion ? MotionToken.reducedTransition : Self.contentTransition)
     }
+
+    /// Content settles in just behind the shape (slight lift from the top edge) and leaves quickly.
+    private static let contentTransition = AnyTransition.asymmetric(
+        insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top))
+            .animation(.smooth(duration: 0.35).delay(0.08)),
+        removal: .opacity.animation(.smooth(duration: 0.12)))
 
     /// Applies the user's halo intensity; zero turns the halo off entirely.
     private func scaled(_ halo: HaloState) -> HaloState {

@@ -49,7 +49,7 @@ struct ActivitiesSettingsView: View {
     }
 
     static func titleKey(_ feature: IslandFeature) -> LocalizedStringKey {
-        LocalizedStringKey("settings.feature.\(feature.rawValue)")
+        LocalizedStringKey("settings.feature." + feature.rawValue)
     }
 
     static func settingsURL(_ feature: IslandFeature) -> URL {

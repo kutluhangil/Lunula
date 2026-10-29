@@ -18,7 +18,7 @@ struct CalendarAccessTile: View {
             .foregroundStyle(Palette.textPrimary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(12)
-            .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+            .islandCard()
         }
         .buttonStyle(.plain)
     }

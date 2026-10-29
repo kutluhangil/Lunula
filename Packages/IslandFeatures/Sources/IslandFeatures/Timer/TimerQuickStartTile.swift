@@ -44,12 +44,12 @@ struct TimerQuickStartTile: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
-        .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+        .islandCard()
     }
 
     private func chip(_ title: Text, action: @escaping @MainActor () -> Void) -> some View {
         Button(action: action) {
-            title.font(TypeToken.caption.font).monospacedDigit()
+            title.font(TypeToken.caption.font).monospacedDigit().lineLimit(1).fixedSize()
                 .padding(.horizontal, 8).padding(.vertical, 4)
                 .background(Palette.inkPressed, in: Capsule())
         }

@@ -26,6 +26,6 @@ struct CustomExpandedCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity)
-        .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+        .islandCard()
     }
 }

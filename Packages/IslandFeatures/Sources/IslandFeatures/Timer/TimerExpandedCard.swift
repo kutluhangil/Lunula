@@ -48,7 +48,7 @@ struct TimerExpandedCard: View {
             }
         }
         .padding(14)
-        .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+        .islandCard()
     }
 
     private func control(_ symbol: String, _ key: LocalizedStringKey, _ action: @escaping @MainActor () -> Void)

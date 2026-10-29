@@ -55,8 +55,10 @@ public enum IslandMetrics {
             height: side)
     }
 
-    public static func hotZone(around rect: CGRect) -> CGRect {
-        CGRect(x: rect.minX - 10, y: rect.minY - 6, width: rect.width + 20, height: rect.height + 6)
+    /// 10 pt wider on each side, 6 pt deeper, and always up to the screen's top edge where the pointer rests.
+    public static func hotZone(around rect: CGRect, screenTop: CGFloat) -> CGRect {
+        let minY = rect.minY - 6
+        return CGRect(x: rect.minX - 10, y: minY, width: rect.width + 20, height: max(rect.maxY, screenTop) - minY)
     }
 
     public static func panelFrame(notch: NotchMetrics, screen: ScreenDescriptor) -> CGRect {
