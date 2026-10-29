@@ -11,6 +11,7 @@ struct ExpandedView: View {
     let send: @MainActor (IslandEvent) -> Void
     let openSettings: @MainActor () -> Void
     @FocusState private var focused: Bool
+    @Environment(\.shelfActions) private var shelf
 
     var body: some View {
         VStack(spacing: 0) {
@@ -62,7 +63,7 @@ struct ExpandedView: View {
         case .home:
             HomePageView(inputs: home).environment(\.islandLayout, layout)
         case .shelf:
-            Text("shelf.empty", bundle: .module).font(TypeToken.body.font).foregroundStyle(Palette.textTertiary)
+            ShelfPage(items: shelf.items())
         case .activity(let id):
             if let activity = layout.activity(id) {
                 ActivityContentView(activity: activity, slot: .expanded)
