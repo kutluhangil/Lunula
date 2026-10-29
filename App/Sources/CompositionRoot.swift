@@ -40,6 +40,7 @@ final class CompositionRoot {
     private var shelfIcons: [UUID: NSImage] = [:]
     private let power = PowerMonitor()
     private lazy var downloads = DownloadsWatcher()
+    private lazy var deviceUsage = DeviceUsageMonitor(reader: SystemDeviceUsageReader())
     private lazy var weather = WeatherService(
         provider: OpenMeteoProvider(),
         cache: WeatherCache(
@@ -79,6 +80,7 @@ final class CompositionRoot {
             shelf.cleanUp()
             fileDrags.start()
         }
+        if settings.settings.enabledFeatures.contains(.privacyIndicator) { deviceUsage.start() }
         hub.register(alerts: downloads, feature: .downloads)
         if settings.settings.enabledFeatures.contains(.downloads) { downloads.start() }
         hub.register(alerts: power, feature: .battery)
@@ -175,6 +177,7 @@ final class CompositionRoot {
             .environment(\.nowPlayingActions, nowPlayingActions)
             .environment(\.weatherInfo, WeatherInfo(current: { [unowned self] in weatherForHome }))
             .environment(\.shelfActions, shelfActions)
+            .environment(\.privacyInfo, PrivacyInfo(current: { [unowned self] in deviceUsage.privacy }))
             .environment(
                 \.calendarActions,
                 CalendarActions(

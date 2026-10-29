@@ -1,6 +1,11 @@
 import SwiftUI
 
-/// 6 pt reserved right of the notch for the camera/microphone dots (T7.5); empty until then.
+/// Right of the notch: camera/microphone dots while in use (T7.5), otherwise a 6 pt spacer.
 struct PrivacySlot: View {
-    var body: some View { Color.clear.frame(width: 6) }
+    @Environment(\.privacyInfo) private var privacy
+
+    var body: some View {
+        let current = privacy.current()
+        if current == .none { Color.clear.frame(width: 6) } else { PrivacyDotView(privacy: current) }
+    }
 }

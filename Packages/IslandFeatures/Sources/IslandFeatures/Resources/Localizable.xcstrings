@@ -1106,6 +1106,40 @@
           }
         }
       }
+    },
+    "privacy.camera": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera in use"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera kullanılıyor"
+          }
+        }
+      }
+    },
+    "privacy.microphone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone in use"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon kullanılıyor"
+          }
+        }
+      }
     }
   }
 }
