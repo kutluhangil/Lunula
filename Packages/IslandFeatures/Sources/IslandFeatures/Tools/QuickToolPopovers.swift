@@ -268,6 +268,8 @@ struct SearchAndPalettePopover: View {
                     paletteButton("timer", "timer.pomodoro", timerActions.startPomodoro)
                     paletteButton("stopwatch", "timer.stopwatch", timerActions.startStopwatch)
                     paletteButton("eyedropper", "tools.eyedropper", quickTools.pickColor)
+                    paletteButton("keyboard.badge.ellipsis", "tools.keyboardLock", quickTools.startKeyboardCleaningLock)
+                    paletteButton("pip.exit", "tools.detachMenuBar", quickTools.toggleDetachedPopover)
                     paletteButton("gearshape", "a11y.openSettings", openSettings)
                 }
             }

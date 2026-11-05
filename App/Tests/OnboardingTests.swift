@@ -30,4 +30,20 @@ private final class RecordingLoginItem: LoginItemControlling {
         c.finish(launchAtLogin: false)
         #expect(settings.settings.hasCompletedOnboarding && finished && item.calls.isEmpty)
     }
+
+    @Test func onboardingWindowHasExactDimensions() {
+        let settings = SettingsStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
+        let item = RecordingLoginItem()
+        let c = OnboardingWindowController(
+            settings: settings, launchAtLogin: LaunchAtLoginService(item: item), onFinish: {}
+        )
+        guard let window = c.window else {
+            Issue.record("Window should exist")
+            return
+        }
+        #expect(window.contentRect(forFrameRect: window.frame).width == 420)
+        #expect(window.contentRect(forFrameRect: window.frame).height == 320)
+        #expect(window.titlebarAppearsTransparent == true)
+        #expect(window.styleMask.contains(.fullSizeContentView))
+    }
 }

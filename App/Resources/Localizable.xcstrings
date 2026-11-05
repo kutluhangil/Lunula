@@ -1096,13 +1096,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your notch becomes a small, quiet island: music, timers, meetings, weather and files, right where you look."
+            "value": "A quiet, fast island living around the notch. Works with zero permission prompts; detach to the menu bar whenever you want."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çentiğin küçük ve sessiz bir adaya dönüşür: müzik, zamanlayıcı, toplantı, hava ve dosyalar tam baktığın yerde."
+            "value": "Çentiğin çevresinde yaşayan, sessiz ve hızlı ada. İzin istemeden çalışır; dilediğin an menü çubuğundan ayırabilirsin."
           }
         }
       }
@@ -1613,6 +1613,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "İç kartlarda Liquid Glass yansıması"
+          }
+        }
+      }
+    },
+    "settings.appearance.doubleTapOption": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap Option (⌥) to toggle island"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çift Option (⌥) tuşuyla adayı aç/kapat"
+          }
+        }
+      }
+    },
+    "alert.callActive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call active"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görüşme etkin"
+          }
+        }
+      }
+    },
+    "lock.keyboard.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard Cleaning Lock"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavye Temizleme Kilidi"
+          }
+        }
+      }
+    },
+    "lock.keyboard.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press ⌘⎋ to unlock immediately"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anında açmak için ⌘⎋ tuşlarına bas"
+          }
+        }
+      }
+    },
+    "lock.keyboard.unlock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilidi aç"
           }
         }
       }

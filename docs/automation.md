@@ -19,6 +19,9 @@ Lunula'ya terminalden, betiklerden, Kestirmeler'den ve AI ajan kancalarından **
 | `lunula://activity/end` | `id` |
 | `lunula://timer/start` | `minutes` (1–600) |
 | `lunula://island/toggle` | — |
+| `lunula://ai/usage` | `provider` (zorunlu), `tokens` (zorunlu, tam sayı), `cost` (USD), `limit` (0–100 yüzde) |
+| `lunula://agent/approval` | `id` (zorunlu), `agent` (zorunlu), `command` (zorunlu) — kritik ada uyarısı ve İzin ver / Reddet düğmeleri açar |
+| `lunula://agent/resolve` | `id` (zorunlu) — terminalde yanıtlanan onayı adadan temizler |
 
 Aynı `id` ile tekrar `show` göndermek etkinliği günceller (ör. ilerlemeyi artırır).
 

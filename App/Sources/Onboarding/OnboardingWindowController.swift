@@ -1,5 +1,6 @@
 import AppKit
 import IslandCore
+import IslandDesign
 import IslandServices
 import SwiftUI
 
@@ -15,12 +16,20 @@ import SwiftUI
         launchAtLoginService = launchAtLogin
         self.onFinish = onFinish
         let window = NSWindow(
-            contentRect: .zero, styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: true)
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
         window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
+        window.backgroundColor = NSColor(Palette.basalt)
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.contentViewController = NSHostingController(
             rootView: OnboardingView { [weak self] in self?.finish(launchAtLogin: $0) })
+        window.setContentSize(NSSize(width: 420, height: 320))
         window.center()
     }
 

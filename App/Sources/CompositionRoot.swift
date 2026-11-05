@@ -56,6 +56,7 @@ final class CompositionRoot {
     private lazy var systemStats = SystemStatsService()
     private lazy var externalDrives = ExternalDriveMonitor()
     private lazy var capsLock = CapsLockMonitor()
+    private lazy var keyboardLock = KeyboardLockController()
     private lazy var lyrics = LyricsService()
     private lazy var downloads = DownloadsWatcher()
     private lazy var deviceUsage = DeviceUsageMonitor(reader: SystemDeviceUsageReader())
@@ -152,9 +153,14 @@ final class CompositionRoot {
         capsLock.labelProvider = { isOn in
             String(localized: isOn ? "alert.capsLockOn" : "alert.capsLockOff")
         }
+        capsLock.onOptionDoubleTap = { [unowned self] in
+            guard settings.settings.doubleTapOptionToToggle else { return }
+            activeIsland()?.store.send(.toggleRequested)
+        }
         hub.register(alerts: capsLock, feature: .customActivities)
         capsLock.start()
         pasteboardMonitor.start()
+        observePrivacyCallActivity()
         applySettings()  // first call syncs the windows
         if OnboardingWindowController.shouldShow(settings.settings) {
             onboarding = OnboardingWindowController(
@@ -605,9 +611,41 @@ final class CompositionRoot {
                         .environment(\.quickTools, quickToolsActions))
                 statusItem.togglePopover(rootView: view)
             },
+            startKeyboardCleaningLock: { [unowned self] in
+                keyboardLock.lock()
+            },
             activeLyricLine: { [unowned self] snapshot in
                 SyncedLyricsParser.activeLine(in: lyrics.lines, at: snapshot.position(at: time.now))
             })
+    }
+
+    private func observePrivacyCallActivity() {
+        withObservationTracking {
+            _ = deviceUsage.privacy
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+                if let appName = CallActivityDetector.activeCallApp(
+                    privacy: deviceUsage.privacy, runningBundleIDs: running)
+                {
+                    if case .success(let req) = CustomActivityRequest.make(
+                        id: "active-call",
+                        title: appName,
+                        subtitle: String(localized: "alert.callActive"),
+                        symbol: "phone.wave.2.fill",
+                        accentHex: "32D74B",
+                        progress: nil,
+                        duration: nil)
+                    {
+                        custom.show(req)
+                    }
+                } else {
+                    custom.end(id: "active-call")
+                }
+                observePrivacyCallActivity()
+            }
+        }
     }
 
     private func sampleScreenColor() {
@@ -807,21 +845,12 @@ final class CompositionRoot {
 
     func showSettings() {
         if settingsWindow == nil {
-            var tabs = SettingsTab.baseTabs(settings: settings, launchAtLogin: launchAtLogin)
-            tabs.insert(
-                SettingsTab(
-                    id: "activities", titleKey: "settings.tab.activities", symbol: "square.stack",
-                    makeView: { [unowned self] in
-                        AnyView(
-                            ActivitiesSettingsView(
-                                settings: settings, permission: { [unowned self] in permissionState($0) },
-                                request: { [unowned self] in requestPermission($0) }))
-                    }), at: 1)
-            tabs.insert(
-                SettingsTab(
-                    id: "appearance", titleKey: "settings.tab.appearance", symbol: "paintbrush",
-                    makeView: { [unowned self] in AnyView(AppearanceSettingsView(settings: settings)) }), at: 2)
-            settingsWindow = SettingsWindowController(tabs: tabs)
+            settingsWindow = SettingsWindowController(
+                settings: settings,
+                launchAtLogin: launchAtLogin,
+                permission: { [unowned self] in permissionState($0) },
+                request: { [unowned self] in requestPermission($0) }
+            )
         }
         settingsWindow?.show()
     }

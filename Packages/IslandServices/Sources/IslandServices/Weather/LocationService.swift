@@ -15,10 +15,11 @@ public final class LocationService: NSObject, LocationProviding, CLLocationManag
 
     public func currentCoordinate() async throws -> (latitude: Double, longitude: Double) {
         try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.main.async { self.begin(continuation) }
+            Task { @MainActor in self.begin(continuation) }
         }
     }
 
+    @MainActor
     private func begin(_ continuation: CheckedContinuation<(latitude: Double, longitude: Double), Error>) {
         self.continuation?.resume(throwing: CancellationError())
         self.continuation = continuation

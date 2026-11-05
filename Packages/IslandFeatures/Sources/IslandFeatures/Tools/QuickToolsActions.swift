@@ -109,6 +109,7 @@ public struct QuickToolsActions {
     public var hideNotchBar: @MainActor () -> Bool = { false }
     public var useGlassCards: @MainActor () -> Bool = { false }
     public var toggleDetachedPopover: @MainActor () -> Void = {}
+    public var startKeyboardCleaningLock: @MainActor () -> Void = {}
     public var activeLyricLine: @MainActor (NowPlayingSnapshot) -> String? = { _ in nil }
 
     public init(
@@ -161,6 +162,7 @@ public struct QuickToolsActions {
         hideNotchBar: @escaping @MainActor () -> Bool = { false },
         useGlassCards: @escaping @MainActor () -> Bool = { false },
         toggleDetachedPopover: @escaping @MainActor () -> Void = {},
+        startKeyboardCleaningLock: @escaping @MainActor () -> Void = {},
         activeLyricLine: @escaping @MainActor (NowPlayingSnapshot) -> String? = { _ in nil }
     ) {
         self.isKeepAwakeActive = isKeepAwakeActive
@@ -212,6 +214,7 @@ public struct QuickToolsActions {
         self.hideNotchBar = hideNotchBar
         self.useGlassCards = useGlassCards
         self.toggleDetachedPopover = toggleDetachedPopover
+        self.startKeyboardCleaningLock = startKeyboardCleaningLock
         self.activeLyricLine = activeLyricLine
     }
 }

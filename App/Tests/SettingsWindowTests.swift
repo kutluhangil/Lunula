@@ -15,19 +15,39 @@ private final class FakeLoginItem: LoginItemControlling {
 }
 
 @MainActor @Suite struct SettingsWindowTests {
-    @Test func windowHasGeneralAndAboutTabs() {
+    @Test func windowHasExactDimensionsAndBasaltBackground() {
         let settings = SettingsStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
         let c = SettingsWindowController(
-            tabs: SettingsTab.baseTabs(
-                settings: settings, launchAtLogin: LaunchAtLoginService(item: FakeLoginItem(status: .notRegistered))))
+            settings: settings,
+            launchAtLogin: LaunchAtLoginService(item: FakeLoginItem(status: .notRegistered))
+        )
+        guard let window = c.window else {
+            Issue.record("Window should exist")
+            return
+        }
+        #expect(window.contentRect(forFrameRect: window.frame).width == 680)
+        #expect(window.contentRect(forFrameRect: window.frame).height == 540)
+        #expect(window.titlebarAppearsTransparent == true)
+        #expect(window.styleMask.contains(.fullSizeContentView))
+    }
+
+    @Test func fiveTabsAreDefinedWithCorrectTitlesAndSymbols() {
         #expect(
-            (c.contentViewController as? NSTabViewController)?.tabViewItems.map { $0.identifier as? String } == [
-                "general", "about",
+            SettingsTabID.allCases.map(\.rawValue) == [
+                "general", "appearance", "activities", "tools", "about",
+            ])
+        #expect(
+            SettingsTabID.allCases.map(\.shortTitle) == [
+                "Genel", "Görünüm", "Etkinlikler", "Araçlar", "Hakkında",
             ])
     }
 
-    @Test func tabStyleIsToolbar() {
-        let c = SettingsWindowController(tabs: [])
-        #expect((c.contentViewController as? NSTabViewController)?.tabStyle == .toolbar)
+    @Test func allTabsProducesAllFiveTabs() {
+        let settings = SettingsStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
+        let tabs = SettingsTab.allTabs(
+            settings: settings,
+            launchAtLogin: LaunchAtLoginService(item: FakeLoginItem(status: .notRegistered))
+        )
+        #expect(tabs.map(\.id) == ["general", "appearance", "activities", "tools", "about"])
     }
 }

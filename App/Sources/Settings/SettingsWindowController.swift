@@ -1,31 +1,67 @@
 import AppKit
+import IslandCore
+import IslandDesign
+import IslandServices
 import SwiftUI
 
-/// Toolbar-style preferences window: one NSHostingController per tab.
-@MainActor final class SettingsWindowController: NSWindowController {
-    init(tabs: [SettingsTab]) {
-        let tabController = NSTabViewController()
-        tabController.tabStyle = .toolbar
-        for tab in tabs {
-            let item = NSTabViewItem(viewController: NSHostingController(rootView: tab.makeView()))
-            item.identifier = tab.id
-            item.label = String(localized: tab.titleKey)
-            item.image = NSImage(systemSymbolName: tab.symbol, accessibilityDescription: nil)
-            tabController.addTabViewItem(item)
-        }
-        let window = NSWindow(contentViewController: tabController)
+/// Window controller for the unified 680 × 540 pt Lunula settings window matching Claude Design.
+@MainActor public final class SettingsWindowController: NSWindowController {
+    public let settingsStore: SettingsStore?
+    public let tabs: [SettingsTab]
+
+    public init(
+        settings: SettingsStore,
+        launchAtLogin: LaunchAtLoginService,
+        permission: @escaping @MainActor (IslandFeature) -> PermissionState? = { _ in nil },
+        request: @escaping @MainActor (IslandFeature) -> Void = { _ in }
+    ) {
+        self.settingsStore = settings
+        self.tabs = SettingsTab.allTabs(
+            settings: settings,
+            launchAtLogin: launchAtLogin,
+            permission: permission,
+            request: request
+        )
+
+        let rootView = SettingsWindowView(
+            settings: settings,
+            launchAtLogin: launchAtLogin,
+            permission: permission,
+            request: request
+        )
+        let hosting = NSHostingController(rootView: rootView)
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 540),
+            styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
         window.title = String(localized: "settings.window.title")
-        window.styleMask = [.titled, .closable]
-        window.toolbarStyle = .preference
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
+        window.backgroundColor = NSColor(Palette.basalt)
         window.isReleasedWhenClosed = false
+        window.contentViewController = hosting
+        window.setContentSize(NSSize(width: 680, height: 540))
         window.center()
+
         super.init(window: window)
+    }
+
+    /// Convenience initializer supporting explicit tab arrays.
+    public convenience init(tabs: [SettingsTab]) {
+        let dummySettings = SettingsStore(
+            defaults: UserDefaults(suiteName: "lunula.settings.preview.\(UUID().uuidString)")!)
+        let dummyLogin = LaunchAtLoginService()
+        self.init(settings: dummySettings, launchAtLogin: dummyLogin)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    func show() {
+    public func show() {
         NSApp.activate()
         window?.center()
         showWindow(nil)

@@ -56,6 +56,10 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var hideNotchBar = false
     /// Adds a subtle specular Liquid Glass highlight to inner cards while keeping the island core opaque #000000.
     public var useGlassCards = false
+    /// Double-tapping Option (⌥) toggles the island ("Knock to Control" double-tap-a-key mode).
+    public var doubleTapOptionToToggle = true
+    /// Tools enabled in the expanded island top bar.
+    public var enabledQuickTools: Set<String> = ["awake", "mic", "out", "drop", "notes", "clip"]
 
     public static let `default` = IslandSettings()
 
@@ -73,6 +77,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         case haloIntensity, disabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
         case showMenuBarIcon, muteUntil, hasCompletedOnboarding, downloadsAlertsOptedIn
         case notifiedCompetitors, fullChargeThreshold, timerMascot, pillVerticalOffset, hideNotchBar, useGlassCards
+        case doubleTapOptionToToggle, enabledQuickTools
     }
 
     /// Missing, unknown or malformed keys fall back to the default per key, so old or future data never breaks.
@@ -111,6 +116,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         pillVerticalOffset = min(max(value(.pillVerticalOffset, d.pillVerticalOffset), 0), 8)
         hideNotchBar = value(.hideNotchBar, d.hideNotchBar)
         useGlassCards = value(.useGlassCards, d.useGlassCards)
+        doubleTapOptionToToggle = value(.doubleTapOptionToToggle, d.doubleTapOptionToToggle)
+        enabledQuickTools = value(.enabledQuickTools, d.enabledQuickTools)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -138,5 +145,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(pillVerticalOffset, forKey: .pillVerticalOffset)
         try c.encode(hideNotchBar, forKey: .hideNotchBar)
         try c.encode(useGlassCards, forKey: .useGlassCards)
+        try c.encode(doubleTapOptionToToggle, forKey: .doubleTapOptionToToggle)
+        try c.encode(enabledQuickTools, forKey: .enabledQuickTools)
     }
 }
