@@ -67,4 +67,12 @@ import Testing
                 from: b(0, plugged: false, hasBattery: false), to: b(0, plugged: true, hasBattery: false), session: &s
             ).isEmpty)
     }
+
+    @Test func customFullChargeThresholdTriggersAt80Percent() {
+        var s = BatteryAlertSession()
+        #expect(
+            BatteryAlertRules.alerts(
+                from: b(79, plugged: true), to: b(80, plugged: true), session: &s, fullChargeThreshold: 80
+            ).map(\.kind) == [.batteryFull])
+    }
 }

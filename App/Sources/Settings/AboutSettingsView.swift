@@ -2,9 +2,12 @@ import SwiftUI
 
 struct AboutSettingsView: View {
     /// Third-party notices; T6.3 appends the Open-Meteo attribution.
-    static let attributions: [(name: String, license: String)] = [
-        ("KeyboardShortcuts", "MIT"), ("Hava durumu verileri: Open-Meteo.com", "CC BY 4.0"),
-    ]
+    static var attributions: [(name: String, license: String)] {
+        [
+            ("KeyboardShortcuts", "MIT"),
+            (String(localized: "settings.about.openMeteo"), "CC BY 4.0"),
+        ]
+    }
 
     private var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"

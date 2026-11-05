@@ -4,14 +4,18 @@ import SwiftUI
 public struct IslandShape: Shape, Sendable {
     public var shoulderRadius: CGFloat
     public var cornerRadius: CGFloat
+    public var topCornerRadius: CGFloat
 
-    public init(shoulderRadius: CGFloat, cornerRadius: CGFloat) {
+    public init(shoulderRadius: CGFloat, cornerRadius: CGFloat, topCornerRadius: CGFloat = 0) {
         self.shoulderRadius = shoulderRadius
         self.cornerRadius = cornerRadius
+        self.topCornerRadius = topCornerRadius
     }
 
     public static let closed = IslandShape(shoulderRadius: Radii.closedShoulder, cornerRadius: Radii.closedCorner)
     public static let expanded = IslandShape(shoulderRadius: Radii.expandedShoulder, cornerRadius: Radii.expandedCorner)
+    public static let pill = IslandShape(
+        shoulderRadius: 0, cornerRadius: Radii.pillCorner, topCornerRadius: Radii.pillCorner)
 
     public var animatableData: AnimatablePair<CGFloat, CGFloat> {
         get { AnimatablePair(shoulderRadius, cornerRadius) }
@@ -22,8 +26,9 @@ public struct IslandShape: Shape, Sendable {
         let s = max(0, min(shoulderRadius, rect.height, rect.width / 4))
         let body = rect.insetBy(dx: s, dy: 0)
         let c = max(0, min(cornerRadius, body.width / 2, body.height))
+        let topC = s > 0 ? 0 : max(0, min(topCornerRadius, body.width / 2, body.height / 2))
         let bodyPath = UnevenRoundedRectangle(
-            topLeadingRadius: 0, bottomLeadingRadius: c, bottomTrailingRadius: c, topTrailingRadius: 0,
+            topLeadingRadius: topC, bottomLeadingRadius: c, bottomTrailingRadius: c, topTrailingRadius: topC,
             style: .continuous
         ).path(in: body).cgPath
         guard s > 0 else { return Path(bodyPath) }

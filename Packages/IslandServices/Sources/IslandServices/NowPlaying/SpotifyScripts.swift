@@ -10,6 +10,13 @@ enum SpotifyScripts {
         """)
 
     static func command(_ command: PlaybackCommand) -> String {
-        PlayerScripts.wrap(bundleID, PlayerScripts.command(command))
+        let body: String =
+            switch command {
+            case .toggleShuffle: "set shuffling to not shuffling"
+            case .cycleRepeat: "set repeating to not repeating"
+            case .toggleFavorite: ""
+            default: PlayerScripts.command(command)
+            }
+        return PlayerScripts.wrap(bundleID, body)
     }
 }

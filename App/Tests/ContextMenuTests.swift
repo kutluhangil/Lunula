@@ -21,6 +21,6 @@ import Testing
     }
 
     @Test func shortcutDefaultIsControlOptionSpace() {
-        #expect(KeyboardShortcuts.Name.toggleIsland.defaultShortcut == .init(.space, modifiers: [.control, .option]))
+        #expect(KeyboardShortcuts.Name.toggleIsland.initialShortcut == .init(.space, modifiers: [.control, .option]))
     }
 }

@@ -14,6 +14,7 @@ import SwiftUI
             tabController.addTabViewItem(item)
         }
         let window = NSWindow(contentViewController: tabController)
+        window.title = String(localized: "settings.window.title")
         window.styleMask = [.titled, .closable]
         window.toolbarStyle = .preference
         window.isReleasedWhenClosed = false

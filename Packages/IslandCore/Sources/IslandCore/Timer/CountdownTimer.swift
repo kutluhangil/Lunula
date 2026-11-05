@@ -20,16 +20,23 @@ public struct CountdownTimer: Equatable, Sendable, Codable {
         self.pausedTotal = 0
     }
 
-    public func remaining(at now: Date) -> TimeInterval {
+    public func elapsed(at now: Date) -> TimeInterval {
         let currentPause = pausedAt.map { now.timeIntervalSince($0) } ?? 0
-        return max(0, duration - (now.timeIntervalSince(startedAt) - pausedTotal - currentPause))
+        return max(0, now.timeIntervalSince(startedAt) - pausedTotal - currentPause)
     }
 
-    public func isFinished(at now: Date) -> Bool { remaining(at: now) <= 0 }
+    public func remaining(at now: Date) -> TimeInterval {
+        max(0, duration - elapsed(at: now))
+    }
+
+    public func isFinished(at now: Date) -> Bool {
+        phase == .stopwatch ? false : remaining(at: now) <= 0
+    }
 
     /// `nil` while paused.
     public func endDate() -> Date? {
-        pausedAt == nil ? startedAt.addingTimeInterval(duration + pausedTotal) : nil
+        guard pausedAt == nil else { return nil }
+        return phase == .stopwatch ? .distantFuture : startedAt.addingTimeInterval(duration + pausedTotal)
     }
 
     public mutating func pause(at now: Date) {
@@ -43,8 +50,15 @@ public struct CountdownTimer: Equatable, Sendable, Codable {
     }
 
     public func snapshot(at now: Date, cycle: Int?, totalCycles: Int?) -> TimerSnapshot {
-        TimerSnapshot(
+        let pausedValue: TimeInterval? =
+            if pausedAt == nil {
+                nil
+            } else {
+                phase == .stopwatch ? elapsed(at: now) : remaining(at: now)
+            }
+        return TimerSnapshot(
             timerID: id, label: label, phase: phase, duration: duration, endsAt: endDate(),
-            pausedRemaining: pausedAt == nil ? nil : remaining(at: now), cycle: cycle, totalCycles: totalCycles)
+            pausedRemaining: pausedValue, cycle: cycle, totalCycles: totalCycles,
+            startedAt: pausedAt == nil ? startedAt.addingTimeInterval(pausedTotal) : nil)
     }
 }

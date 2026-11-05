@@ -1,7 +1,7 @@
 import KeyboardShortcuts
 
 extension KeyboardShortcuts.Name {
-    static let toggleIsland = Self("toggleIsland", default: .init(.space, modifiers: [.control, .option]))
+    static let toggleIsland = Self("toggleIsland", initial: .init(.space, modifiers: [.control, .option]))
 }
 
 @MainActor enum GlobalShortcut {

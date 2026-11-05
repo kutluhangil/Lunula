@@ -4,6 +4,10 @@ import IslandCore
 public enum PlaybackCommand: Equatable, Sendable {
     case playPause, next, previous
     case seek(TimeInterval)
+    case toggleShuffle
+    case cycleRepeat
+    case toggleFavorite
+    case setVolume(Int)
 }
 
 public enum AutomationPermission: Equatable, Sendable {
@@ -42,6 +46,11 @@ enum PlayerScripts {
         case .next: "next track"
         case .previous: "previous track"
         case .seek(let seconds): "set player position to \(String(format: "%g", max(0, seconds)))"
+        case .toggleShuffle: "set shuffle enabled to not shuffle enabled"
+        case .cycleRepeat:
+            "if song repeat is off then\nset song repeat to all\nelse if song repeat is all then\nset song repeat to one\nelse\nset song repeat to off\nend if"
+        case .toggleFavorite: "set favorited of current track to not (favorited of current track)"
+        case .setVolume(let level): "set sound volume to \(min(max(level, 0), 100))"
         }
     }
 

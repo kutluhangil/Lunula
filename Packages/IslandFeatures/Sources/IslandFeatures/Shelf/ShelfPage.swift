@@ -15,7 +15,14 @@ struct ShelfPage: View {
     var body: some View {
         Group {
             if items.isEmpty {
-                ShelfEmptyView()
+                ShelfEmptyView(isTargeted: targeted)
+                    .contextMenu {
+                        Button {
+                            actions.stageClipboardImage()
+                        } label: {
+                            Text("shelf.stageClipboard", bundle: .module)
+                        }
+                    }
             } else {
                 ScrollView {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
@@ -32,11 +39,11 @@ struct ShelfPage: View {
                     }
                 }
                 .scrollIndicators(.never)
+                .background(
+                    targeted ? Palette.inkPressed : .clear,
+                    in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
             }
         }
-        .background(
-            targeted ? Palette.inkPressed : .clear, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous)
-        )
         .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
             Task { @MainActor in actions.add(await Self.urls(from: providers)) }
             return true
@@ -59,6 +66,38 @@ struct ShelfPage: View {
             actions.share(ids)
         } label: {
             Text("shelf.share", bundle: .module)
+        }
+        Divider()
+        Menu {
+            ForEach(["png", "jpeg", "heic", "tiff", "pdf"], id: \.self) { fmt in
+                Button(fmt.uppercased()) {
+                    actions.convertImage(item.id, fmt)
+                }
+            }
+        } label: {
+            Text("shelf.convert", bundle: .module)
+        }
+        Button {
+            actions.compressToZip(ids)
+        } label: {
+            Text("shelf.compressZip", bundle: .module)
+        }
+        if item.name.lowercased().hasSuffix(".zip") {
+            Button {
+                actions.expandArchive(item.id)
+            } label: {
+                Text("shelf.expandZip", bundle: .module)
+            }
+        }
+        Button {
+            actions.copyTextOCR(item.id)
+        } label: {
+            Text("shelf.ocrCopy", bundle: .module)
+        }
+        Button {
+            actions.stageClipboardImage()
+        } label: {
+            Text("shelf.stageClipboard", bundle: .module)
         }
         Divider()
         Button(role: .destructive) {

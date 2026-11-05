@@ -33,6 +33,28 @@ public enum IslandURLParser {
             return .success(.startTimer(minutes: minutes))
         case "island/toggle":
             return .success(.toggleIsland)
+        case "ai/usage":
+            let provider = (query["provider"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !provider.isEmpty else { return .failure(.missingParameter("provider")) }
+            guard let rawTokens = query["tokens"] else { return .failure(.missingParameter("tokens")) }
+            guard let tokens = Int(rawTokens), tokens >= 0 else { return .failure(.invalidParameter("tokens")) }
+            let cost = query["cost"].flatMap(Double.init) ?? 0
+            guard !cost.isNaN, cost >= 0 else { return .failure(.invalidParameter("cost")) }
+            let limit = query["limit"].flatMap(Int.init) ?? 0
+            return .success(
+                .updateAIUsage(
+                    provider: provider, tokensUsed: tokens, costUSD: cost,
+                    windowLimitPercent: min(max(limit, 0), 100)))
+        case "agent/approval":
+            if let failure = CustomActivityRequest.validateID(query["id"]) { return .failure(failure) }
+            let agent = (query["agent"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !agent.isEmpty else { return .failure(.missingParameter("agent")) }
+            let command = (query["command"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !command.isEmpty else { return .failure(.missingParameter("command")) }
+            return .success(.requestAgentApproval(id: query["id"] ?? "", agent: agent, command: command))
+        case "agent/resolve":
+            if let failure = CustomActivityRequest.validateID(query["id"]) { return .failure(failure) }
+            return .success(.resolveAgentApproval(id: query["id"] ?? ""))
         default:
             return .failure(.unknownCommand(path))
         }

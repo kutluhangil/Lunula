@@ -22,6 +22,10 @@ struct ArtworkImage: View {
         }
         .frame(width: side, height: side)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .strokeBorder(Palette.hairline, lineWidth: 0.5)
+        }
         .accessibilityHidden(true)
     }
 }

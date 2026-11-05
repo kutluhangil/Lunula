@@ -9,6 +9,21 @@ public enum WeatherLocationSetting: Codable, Equatable, Sendable {
     case city(name: String, latitude: Double, longitude: Double)
 }
 
+public enum TimerMascot: String, Codable, Equatable, Sendable, CaseIterable {
+    case none, hare, tortoise, cat, bird, flame
+
+    public var symbolName: String? {
+        switch self {
+        case .none: nil
+        case .hare: "hare.fill"
+        case .tortoise: "tortoise.fill"
+        case .cat: "cat.fill"
+        case .bird: "bird.fill"
+        case .flame: "flame.fill"
+        }
+    }
+}
+
 public struct IslandSettings: Codable, Equatable, Sendable {
     public var displayMode: DisplayMode = .notchedOnly
     public var hideInFullscreen = true
@@ -31,6 +46,16 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var downloadsAlertsOptedIn = false
     /// Competing notch apps already mentioned (CompetingApps), so each notice appears once.
     public var notifiedCompetitors: Set<String> = []
+    /// Full-charge alert threshold (80...100%).
+    public var fullChargeThreshold: Int = 100
+    /// Optional SF Symbol mascot shown next to running timers.
+    public var timerMascot: TimerMascot = .none
+    /// Vertical offset (0...8 pt) for pill mode on displays without a hardware notch.
+    public var pillVerticalOffset: Double = 0
+    /// Turns the top menu-bar strip #000000 on notched displays to visually hide the hardware notch.
+    public var hideNotchBar = false
+    /// Adds a subtle specular Liquid Glass highlight to inner cards while keeping the island core opaque #000000.
+    public var useGlassCards = false
 
     public static let `default` = IslandSettings()
 
@@ -47,7 +72,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         case displayMode, hideInFullscreen, criticalAlertsInFullscreen, launchAtLogin, hapticsEnabled, soundsEnabled
         case haloIntensity, disabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
         case showMenuBarIcon, muteUntil, hasCompletedOnboarding, downloadsAlertsOptedIn
-        case notifiedCompetitors
+        case notifiedCompetitors, fullChargeThreshold, timerMascot, pillVerticalOffset, hideNotchBar, useGlassCards
     }
 
     /// Missing, unknown or malformed keys fall back to the default per key, so old or future data never breaks.
@@ -81,6 +106,11 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         hasCompletedOnboarding = value(.hasCompletedOnboarding, d.hasCompletedOnboarding)
         downloadsAlertsOptedIn = value(.downloadsAlertsOptedIn, d.downloadsAlertsOptedIn)
         notifiedCompetitors = value(.notifiedCompetitors, d.notifiedCompetitors)
+        fullChargeThreshold = min(max(value(.fullChargeThreshold, d.fullChargeThreshold), 80), 100)
+        timerMascot = value(.timerMascot, d.timerMascot)
+        pillVerticalOffset = min(max(value(.pillVerticalOffset, d.pillVerticalOffset), 0), 8)
+        hideNotchBar = value(.hideNotchBar, d.hideNotchBar)
+        useGlassCards = value(.useGlassCards, d.useGlassCards)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -103,5 +133,10 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
         try c.encode(downloadsAlertsOptedIn, forKey: .downloadsAlertsOptedIn)
         try c.encode(notifiedCompetitors, forKey: .notifiedCompetitors)
+        try c.encode(fullChargeThreshold, forKey: .fullChargeThreshold)
+        try c.encode(timerMascot, forKey: .timerMascot)
+        try c.encode(pillVerticalOffset, forKey: .pillVerticalOffset)
+        try c.encode(hideNotchBar, forKey: .hideNotchBar)
+        try c.encode(useGlassCards, forKey: .useGlassCards)
     }
 }

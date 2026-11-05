@@ -27,7 +27,7 @@ import Testing
         let notch = IslandRootView.previewNotch
         state.phase = .expanded(.home)
         let expanded = IslandRootView.hoverRegion(state: state, notch: notch)
-        #expect(expanded.contains { $0.contains(CGPoint(x: 380, y: 0)) && $0.width == 560 })
+        #expect(expanded.contains { $0.contains(CGPoint(x: 380, y: 0)) && $0.width == 520 })
         state.phase = .idle
         let idle = IslandRootView.hoverRegion(state: state, notch: notch)
         #expect(idle.contains { $0.contains(CGPoint(x: 380, y: 0)) })

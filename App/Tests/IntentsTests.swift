@@ -8,7 +8,7 @@ import Testing
 @MainActor @Suite struct IntentsTests {
     @Test func showActivityIntentAddsCustomActivity() async throws {
         let custom = CustomActivityController(time: ManualTime())
-        var intent = ShowActivityIntent()
+        let intent = ShowActivityIntent()
         intent.id = "deploy"
         intent.title = "Yayın"
         intent.accentHex = "34C759"
@@ -17,7 +17,7 @@ import Testing
     }
 
     @Test func invalidAccentHexThrows() async {
-        var intent = ShowActivityIntent()
+        let intent = ShowActivityIntent()
         intent.id = "x"
         intent.title = "t"
         intent.accentHex = "nothex"
@@ -27,7 +27,7 @@ import Testing
     }
 
     @Test func updateUnknownIDThrowsNotFound() async {
-        var intent = UpdateActivityIntent()
+        let intent = UpdateActivityIntent()
         intent.id = "missing"
         intent.title = "t"
         await #expect(throws: IntentError.self) {
@@ -37,7 +37,7 @@ import Testing
 
     @Test func startTimerIntentStartsTimer() async throws {
         let timer = TimerController(time: ManualTime(), defaults: UserDefaults(suiteName: UUID().uuidString)!)
-        var intent = StartTimerIntent()
+        let intent = StartTimerIntent()
         intent.minutes = 10
         _ = try await intent.perform(using: timer)
         #expect(timer.current?.duration == 600)

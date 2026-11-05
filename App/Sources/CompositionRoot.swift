@@ -41,11 +41,41 @@ final class CompositionRoot {
         send: { [unowned self] id, event in islands[id]?.store.send(event) })
     private var shelfIcons: [UUID: NSImage] = [:]
     private let power = PowerMonitor()
+    private lazy var keepAwake = KeepAwakeService(time: time)
+    private lazy var audioDevices = AudioDeviceService()
+    private lazy var quickNotes = QuickNotesStore(defaults: .standard, time: time)
+    private lazy var clipboardStore = ClipboardHistoryStore(defaults: .standard, time: time)
+    private lazy var pasteboardMonitor = PasteboardMonitor(store: clipboardStore)
+    private lazy var teleprompter = TeleprompterStore(defaults: .standard)
+    private lazy var appLauncher = AppLauncherStore(defaults: .standard)
+    private lazy var remindersStore = QuickRemindersStore(defaults: .standard, time: time)
+    private lazy var stocksStore = StocksWatchlistStore(defaults: .standard)
+    private lazy var stocksService = StocksService(store: stocksStore)
+    private lazy var aiUsageStore = AIUsageStore(defaults: .standard, time: time)
+    private lazy var focusHistory = FocusHistoryStore(defaults: .standard)
+    private lazy var systemStats = SystemStatsService()
+    private lazy var externalDrives = ExternalDriveMonitor()
+    private lazy var capsLock = CapsLockMonitor()
+    private lazy var lyrics = LyricsService()
     private lazy var downloads = DownloadsWatcher()
     private lazy var deviceUsage = DeviceUsageMonitor(reader: SystemDeviceUsageReader())
     lazy var custom = CustomActivityController(time: time)
     private lazy var router = URLRouter(
-        custom: custom, timer: timer, toggle: { [unowned self] in activeIsland()?.store.send(.toggleRequested) },
+        custom: custom, timer: timer,
+        aiUsage: aiUsageStore,
+        onAgentApprovalRequested: { [unowned self] req in
+            feedback.play(.alignment)
+            broadcast(
+                .alertRaised(
+                    TransientAlert(
+                        id: UUID(), kind: .custom,
+                        detail: .text(
+                            title: req.agentName,
+                            subtitle: req.commandSummary,
+                            symbol: "checkmark.shield.fill"),
+                        tint: .orange, duration: 4.0, priority: .critical)))
+        },
+        toggle: { [unowned self] in activeIsland()?.store.send(.toggleRequested) },
         time: time)
     private lazy var weather = WeatherService(
         provider: OpenMeteoProvider(),
@@ -77,8 +107,17 @@ final class CompositionRoot {
                     for (id, isFullscreen) in states { islands[id]?.store.send(.fullscreenChanged(isFullscreen)) }
                 }
             })
-        hub.onLayoutChange = { [unowned self] layout in broadcast(.activitiesChanged(layout)) }
-        hub.onAlert = { [unowned self] alert in broadcast(.alertRaised(alert)) }
+        hub.onLayoutChange = { [unowned self] layout in
+            lyrics.update(for: nowPlaying.snapshot)
+            broadcast(.activitiesChanged(layout))
+        }
+        hub.onAlert = { [unowned self] alert in
+            if alert.kind == .timerFinished {
+                focusHistory.recordCompletedMinutes(25, on: time.now)
+            }
+            broadcast(.alertRaised(alert))
+        }
+        power.fullChargeThreshold = { [unowned self] in settings.settings.fullChargeThreshold }
         hub.register(timer, feature: .timer)
         hub.register(alerts: timer, feature: .timer)
         hub.register(nowPlaying, feature: .nowPlaying)
@@ -108,6 +147,14 @@ final class CompositionRoot {
         if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
         hub.register(alerts: competing, feature: .customActivities)
         competing.start()
+        hub.register(alerts: externalDrives, feature: .customActivities)
+        externalDrives.start()
+        capsLock.labelProvider = { isOn in
+            String(localized: isOn ? "alert.capsLockOn" : "alert.capsLockOff")
+        }
+        hub.register(alerts: capsLock, feature: .customActivities)
+        capsLock.start()
+        pasteboardMonitor.start()
         applySettings()  // first call syncs the windows
         if OnboardingWindowController.shouldShow(settings.settings) {
             onboarding = OnboardingWindowController(
@@ -213,8 +260,9 @@ final class CompositionRoot {
             .environment(\.nowPlayingActions, nowPlayingActions)
             .environment(\.weatherInfo, WeatherInfo(current: { [unowned self] in weatherForHome }))
             .environment(\.shelfActions, shelfActions)
-            .environment(\.haloIntensity, { [unowned self] in settings.settings.haloIntensity })
+            .environment(\.haloIntensity, HaloIntensity(current: { [unowned self] in settings.settings.haloIntensity }))
             .environment(\.privacyInfo, PrivacyInfo(current: { [unowned self] in deviceUsage.privacy }))
+            .environment(\.quickTools, quickToolsActions)
             .environment(
                 \.calendarActions,
                 CalendarActions(
@@ -249,7 +297,9 @@ final class CompositionRoot {
                 guard let self, let island else { return }
                 Signposts.island.emitEvent("phase")
                 layoutHotZone(island.screen.id)
-                nowPlaying.setExpanded(islands.values.contains { $0.store.state.phase.isOpen })
+                let anyOpen = islands.values.contains { $0.store.state.phase.isOpen }
+                nowPlaying.setExpanded(anyOpen)
+                if anyOpen { pasteboardMonitor.checkNow() }
                 if island.store.state.phase == .expanded(.home), settings.settings.enabledFeatures.contains(.weather) {
                     Task { await weather.islandBecameVisible() }
                 }
@@ -263,8 +313,26 @@ final class CompositionRoot {
     {
         let request: IslandSizeRequest =
             switch state.phase {
-            case .transient: .compact(wing: IslandMetrics.wingMax)
-            default: state.layout.primary == nil ? .idle : .compact(wing: IslandMetrics.wingMax)
+            case .transient(let alert):
+                switch alert.kind {
+                case .downloadFinished:
+                    if case .file = alert.detail {
+                        .downloadAlert
+                    } else {
+                        .compact(wing: IslandMetrics.wingMax)
+                    }
+                case .charging, .unplugged, .batteryLow, .batteryFull:
+                    .compact(wing: IslandMetrics.wingNowPlaying)
+                default:
+                    .compact(wing: IslandMetrics.wingMax)
+                }
+            default:
+                if let primary = state.layout.primary {
+                    .compact(
+                        wing: primary.kind == .nowPlaying ? IslandMetrics.wingNowPlaying : IslandMetrics.wingTimer)
+                } else {
+                    .idle
+                }
             }
         let island = IslandMetrics.islandRect(size: IslandMetrics.size(for: request, notch: notch), notch: notch)
         let bubbles = state.layout.detached.enumerated().map { index, activity in
@@ -318,7 +386,251 @@ final class CompositionRoot {
                     case .available(let url) = shelf.status(of: item)
                 else { return nil }
                 return NSItemProvider(contentsOf: url)
+            },
+            convertImage: { [unowned self] id, rawFormat in
+                convertShelfImage(id: id, rawFormat: rawFormat)
+            },
+            compressToZip: { [unowned self] ids in
+                compressShelfItems(ids: ids)
+            },
+            expandArchive: { [unowned self] id in
+                expandShelfArchive(id: id)
+            },
+            copyTextOCR: { [unowned self] id in
+                copyShelfItemOCR(id: id)
+            },
+            stageClipboardImage: { [unowned self] in
+                stageClipboardImageToShelf()
             })
+    }
+
+    private func expandShelfArchive(id: UUID) {
+        guard let item = shelf.items.first(where: { $0.id == id }),
+            case .available(let url) = shelf.status(of: item)
+        else { return }
+        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ShelfExpanded")
+        let scoped = url.startAccessingSecurityScopedResource()
+        Task.detached { [weak self] in
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            guard let expanded = try? ShelfConverter.extractArchive(at: url, in: outDir) else { return }
+            await MainActor.run {
+                try? self?.shelf.add([expanded])
+                self?.feedback.play(.levelChange)
+            }
+        }
+    }
+
+    private func stageClipboardImageToShelf() {
+        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ShelfScreenshots")
+        guard let staged = try? ShelfConverter.stageClipboardImage(from: .general, in: outDir) else { return }
+        try? shelf.add([staged])
+        feedback.play(.levelChange)
+    }
+
+    private func convertShelfImage(id: UUID, rawFormat: String) {
+        guard let format = ShelfImageFormat(rawValue: rawFormat),
+            let item = shelf.items.first(where: { $0.id == id }),
+            case .available(let url) = shelf.status(of: item)
+        else { return }
+        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ShelfConverted")
+        let scoped = url.startAccessingSecurityScopedResource()
+        Task.detached { [weak self] in
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            guard let converted = try? ShelfConverter.convertImage(at: url, to: format, in: outDir) else { return }
+            await MainActor.run {
+                try? self?.shelf.add([converted])
+                self?.feedback.play(.levelChange)
+            }
+        }
+    }
+
+    private func compressShelfItems(ids: [UUID]) {
+        let urls = ids.compactMap { id -> URL? in
+            guard let item = shelf.items.first(where: { $0.id == id }),
+                case .available(let url) = shelf.status(of: item)
+            else { return nil }
+            return url
+        }
+        guard !urls.isEmpty else { return }
+        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ShelfArchives")
+        let scoped = urls.filter { $0.startAccessingSecurityScopedResource() }
+        Task.detached { [weak self] in
+            defer { for url in scoped { url.stopAccessingSecurityScopedResource() } }
+            guard let archive = try? ShelfConverter.createArchive(from: urls, in: outDir) else { return }
+            await MainActor.run {
+                try? self?.shelf.add([archive])
+                self?.feedback.play(.levelChange)
+            }
+        }
+    }
+
+    private func copyShelfItemOCR(id: UUID) {
+        guard let item = shelf.items.first(where: { $0.id == id }),
+            case .available(let url) = shelf.status(of: item)
+        else { return }
+        let scoped = url.startAccessingSecurityScopedResource()
+        Task.detached { [weak self] in
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            guard let text = try? ShelfConverter.extractText(from: url) else { return }
+            await MainActor.run {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(text, forType: .string)
+                self?.feedback.play(.alignment)
+                self?.broadcast(
+                    .alertRaised(
+                        TransientAlert(
+                            id: UUID(), kind: .custom,
+                            detail: .text(
+                                title: String(localized: "alert.ocrCopied"),
+                                subtitle: String(text.prefix(42)),
+                                symbol: "text.viewfinder"),
+                            tint: .neutral, duration: 2.2, priority: .normal)))
+            }
+        }
+    }
+
+    private var quickToolsActions: QuickToolsActions {
+        QuickToolsActions(
+            isKeepAwakeActive: { [unowned self] in keepAwake.isActive },
+            toggleKeepAwake: { [unowned self] in
+                keepAwake.toggle()
+                feedback.play(.alignment)
+            },
+            activateKeepAwake: { [unowned self] duration in
+                keepAwake.activate(duration: duration)
+                feedback.play(.alignment)
+            },
+            isMicMuted: { [unowned self] in audioDevices.isInputMuted },
+            toggleMicMute: { [unowned self] in
+                let muted = audioDevices.toggleInputMute()
+                feedback.play(.alignment)
+                broadcast(
+                    .alertRaised(
+                        TransientAlert(
+                            id: UUID(), kind: .custom,
+                            detail: .text(
+                                title: String(localized: muted ? "alert.micMuted" : "alert.micUnmuted"),
+                                subtitle: nil,
+                                symbol: muted ? "mic.slash.fill" : "mic.fill"),
+                            tint: muted ? .red : .green, duration: 1.8, priority: .normal)))
+            },
+            outputDevices: { [unowned self] in
+                audioDevices.outputDevices.map {
+                    AudioOutputDeviceItem(id: $0.id, name: $0.name, isCurrent: $0.isCurrent)
+                }
+            },
+            selectOutputDevice: { [unowned self] id in
+                audioDevices.selectOutputDevice(id)
+                feedback.play(.alignment)
+            },
+            pickColor: { [unowned self] in
+                sampleScreenColor()
+            },
+            notes: { [unowned self] in quickNotes.notes },
+            addNote: { [unowned self] text in quickNotes.add(text) },
+            removeNote: { [unowned self] id in quickNotes.remove(id) },
+            clipboardEntries: { [unowned self] in
+                pasteboardMonitor.checkNow()
+                return clipboardStore.entries
+            },
+            toggleClipboardPin: { [unowned self] id in clipboardStore.togglePin(id) },
+            removeClipboardEntry: { [unowned self] id in clipboardStore.remove(id) },
+            clearUnpinnedClipboard: { [unowned self] in clipboardStore.clearUnpinned() },
+            snippets: { [unowned self] in clipboardStore.snippets },
+            addSnippet: { [unowned self] title, body in clipboardStore.addSnippet(title: title, body: body) },
+            removeSnippet: { [unowned self] id in clipboardStore.removeSnippet(id) },
+            teleprompterScript: { [unowned self] in teleprompter.script },
+            setTeleprompterScript: { [unowned self] script in teleprompter.script = script },
+            teleprompterSpeed: { [unowned self] in teleprompter.pointsPerSecond },
+            setTeleprompterSpeed: { [unowned self] speed in teleprompter.pointsPerSecond = speed },
+            systemStats: { [unowned self] in
+                let s = systemStats.refresh()
+                externalDrives.refreshDrives()
+                return SystemStatsItem(
+                    cpuPercent: s.cpuPercent,
+                    memoryPercent: s.memoryPercent,
+                    memoryUsedGB: s.memoryUsedGB,
+                    memoryTotalGB: s.memoryTotalGB,
+                    wirelessBatteries: s.wirelessBatteries.map {
+                        WirelessBatteryItem(id: $0.id, name: $0.name, level: $0.level)
+                    },
+                    mountedDrives: externalDrives.drives.map {
+                        MountedDriveItem(name: $0.name, url: $0.url)
+                    })
+            },
+            ejectDrive: { [unowned self] url in
+                externalDrives.eject(url, safeDisconnectMessage: String(localized: "alert.safeToDisconnect"))
+            },
+            openURL: { url in NSWorkspace.shared.open(url) },
+            pinnedApps: { [unowned self] in appLauncher.apps },
+            launchApp: { path in
+                NSWorkspace.shared.openApplication(
+                    at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
+            },
+            pinnedShortcuts: { [unowned self] in appLauncher.shortcuts },
+            addShortcut: { [unowned self] name in appLauncher.addShortcut(name: name) },
+            removeShortcut: { [unowned self] id in appLauncher.removeShortcut(id) },
+            reminders: { [unowned self] in remindersStore.items },
+            addReminder: { [unowned self] title in remindersStore.add(title) },
+            toggleReminder: { [unowned self] id in remindersStore.toggle(id) },
+            removeReminder: { [unowned self] id in remindersStore.remove(id) },
+            stockQuotes: { [unowned self] in stocksStore.quotes },
+            refreshStocks: { [unowned self] in stocksService.refreshAll() },
+            addStockSymbol: { [unowned self] sym in stocksStore.addSymbol(sym) },
+            removeStockSymbol: { [unowned self] sym in stocksStore.removeSymbol(sym) },
+            aiProviders: { [unowned self] in aiUsageStore.providers },
+            pendingApprovals: { [unowned self] in aiUsageStore.pendingApprovals },
+            resolveApproval: { [unowned self] id, approved in
+                aiUsageStore.resolveApproval(id: id, approved: approved)
+                feedback.play(.alignment)
+                DistributedNotificationCenter.default().postNotificationName(
+                    NSNotification.Name("com.kutluhangul.lunula.agentDecision"),
+                    object: id,
+                    userInfo: ["id": id, "approved": approved],
+                    deliverImmediately: true)
+            },
+            focusStreakDays: { [unowned self] in focusHistory.streakDays(at: time.now) },
+            focusLast7Days: { [unowned self] in focusHistory.last7Days(at: time.now) },
+            timerMascot: { [unowned self] in settings.settings.timerMascot },
+            pillVerticalOffset: { [unowned self] in settings.settings.pillVerticalOffset },
+            hideNotchBar: { [unowned self] in settings.settings.hideNotchBar },
+            useGlassCards: { [unowned self] in settings.settings.useGlassCards },
+            toggleDetachedPopover: { [unowned self] in
+                let view = AnyView(
+                    DetachedMenuBarHubView()
+                        .environment(\.quickTools, quickToolsActions))
+                statusItem.togglePopover(rootView: view)
+            },
+            activeLyricLine: { [unowned self] snapshot in
+                SyncedLyricsParser.activeLine(in: lyrics.lines, at: snapshot.position(at: time.now))
+            })
+    }
+
+    private func sampleScreenColor() {
+        NSColorSampler().show { [weak self] picked in
+            Task { @MainActor [weak self] in
+                guard let self, let srgb = picked?.usingColorSpace(.sRGB) else { return }
+                let rgba = RGBAColor(
+                    red: Double(srgb.redComponent), green: Double(srgb.greenComponent),
+                    blue: Double(srgb.blueComponent))
+                let hex = rgba.hexString
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(hex, forType: .string)
+                feedback.play(.alignment)
+                broadcast(
+                    .alertRaised(
+                        TransientAlert(
+                            id: UUID(), kind: .custom,
+                            detail: .text(
+                                title: hex, subtitle: String(localized: "alert.colorCopied"),
+                                symbol: "eyedropper.halffull"),
+                            tint: .accent(rgba), duration: 2.4, priority: .normal)))
+            }
+        }
     }
 
     private var shelfModels: [ShelfItemModel] {
@@ -360,6 +672,10 @@ final class CompositionRoot {
             next: { [unowned self] in Task { await nowPlaying.perform(.next) } },
             previous: { [unowned self] in Task { await nowPlaying.perform(.previous) } },
             seek: { [unowned self] seconds in Task { await nowPlaying.perform(.seek(seconds)) } },
+            toggleShuffle: { [unowned self] in Task { await nowPlaying.perform(.toggleShuffle) } },
+            cycleRepeat: { [unowned self] in Task { await nowPlaying.perform(.cycleRepeat) } },
+            toggleFavorite: { [unowned self] in Task { await nowPlaying.perform(.toggleFavorite) } },
+            setVolume: { [unowned self] level in Task { await nowPlaying.perform(.setVolume(level)) } },
             artwork: { [unowned self] key in artwork(for: key) },
             haptic: { [unowned self] in feedback.play($0) },
             requestConsent: { [unowned self] source in Task { await nowPlaying.requestConsent(for: source) } })
@@ -379,6 +695,7 @@ final class CompositionRoot {
         TimerActions(
             start: { [unowned self] in timer.start(minutes: $0, label: nil) },
             startPomodoro: { [unowned self] in timer.startPomodoro() },
+            startStopwatch: { [unowned self] in timer.startStopwatch() },
             pause: { [unowned self] in timer.pause() }, resume: { [unowned self] in timer.resume() },
             cancel: { [unowned self] in timer.cancel() }, skip: { [unowned self] in timer.skip() })
     }
@@ -432,6 +749,9 @@ final class CompositionRoot {
         if let on = turned(.battery) { on ? power.start() : power.stop() }
         if let on = turned(.privacyIndicator) { on ? deviceUsage.start() : deviceUsage.stop() }
         if let on = turned(.shelf) { on ? fileDrags.start() : fileDrags.stop() }
+        if old.shelfRetentionDays != new.shelfRetentionDays, new.enabledFeatures.contains(.shelf) {
+            shelf.cleanUp()
+        }
         let downloadsWas = old.enabledFeatures.contains(.downloads) && old.downloadsAlertsOptedIn
         let downloadsNow = new.enabledFeatures.contains(.downloads) && new.downloadsAlertsOptedIn
         if downloadsWas != downloadsNow { downloadsNow ? downloads.start() : downloads.stop() }

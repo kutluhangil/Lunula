@@ -4,6 +4,7 @@ import SwiftUI
 public struct TimerActions {
     public var start: @MainActor (Double) -> Void = { _ in }
     public var startPomodoro: @MainActor () -> Void = {}
+    public var startStopwatch: @MainActor () -> Void = {}
     public var pause: @MainActor () -> Void = {}
     public var resume: @MainActor () -> Void = {}
     public var cancel: @MainActor () -> Void = {}
@@ -11,11 +12,13 @@ public struct TimerActions {
 
     public init(
         start: @escaping @MainActor (Double) -> Void, startPomodoro: @escaping @MainActor () -> Void,
+        startStopwatch: @escaping @MainActor () -> Void = {},
         pause: @escaping @MainActor () -> Void, resume: @escaping @MainActor () -> Void,
         cancel: @escaping @MainActor () -> Void, skip: @escaping @MainActor () -> Void
     ) {
         self.start = start
         self.startPomodoro = startPomodoro
+        self.startStopwatch = startStopwatch
         self.pause = pause
         self.resume = resume
         self.cancel = cancel

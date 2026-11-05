@@ -37,7 +37,7 @@ enum AlertPresentations {
                 return .init(symbol: "timer", titleKey: "alert.timerFinished", subtitle: nil)
             }
             switch phase {
-            case .simple: return .init(symbol: "timer", titleKey: "alert.timerFinished", subtitle: label)
+            case .simple, .stopwatch: return .init(symbol: "timer", titleKey: "alert.timerFinished", subtitle: label)
             case .focus: return .init(symbol: "cup.and.saucer.fill", titleKey: "alert.breakStarted", subtitle: label)
             case .shortBreak, .longBreak:
                 return .init(symbol: "brain.head.profile", titleKey: "alert.focusStarted", subtitle: label)

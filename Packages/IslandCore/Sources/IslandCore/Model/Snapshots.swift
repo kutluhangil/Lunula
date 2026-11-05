@@ -38,7 +38,7 @@ public struct NowPlayingSnapshot: Equatable, Sendable {
     }
 }
 
-public enum TimerPhase: String, Codable, Sendable { case simple, focus, shortBreak, longBreak }
+public enum TimerPhase: String, Codable, Sendable { case simple, focus, shortBreak, longBreak, stopwatch }
 
 /// `endsAt == nil` means the timer is paused.
 public struct TimerSnapshot: Equatable, Sendable {
@@ -50,10 +50,12 @@ public struct TimerSnapshot: Equatable, Sendable {
     public var pausedRemaining: TimeInterval?
     public var cycle: Int?
     public var totalCycles: Int?
+    /// Effective start date (accounting for pauses) used by drift-free stopwatch rendering.
+    public var startedAt: Date?
 
     public init(
         timerID: ActivityID, label: String?, phase: TimerPhase, duration: TimeInterval, endsAt: Date?,
-        pausedRemaining: TimeInterval?, cycle: Int?, totalCycles: Int?
+        pausedRemaining: TimeInterval?, cycle: Int?, totalCycles: Int?, startedAt: Date? = nil
     ) {
         self.timerID = timerID
         self.label = label
@@ -63,6 +65,7 @@ public struct TimerSnapshot: Equatable, Sendable {
         self.pausedRemaining = pausedRemaining
         self.cycle = cycle
         self.totalCycles = totalCycles
+        self.startedAt = startedAt
     }
 }
 

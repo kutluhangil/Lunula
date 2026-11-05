@@ -26,4 +26,13 @@ import Testing
         #expect(t.remaining(at: t0.addingTimeInterval(500)) == 1300)
         #expect(t.endDate() == t0.addingTimeInterval(1800))
     }
+    @Test func stopwatchCountsUpAndNeverFinishes() {
+        var sw = CountdownTimer(id: "sw", label: nil, phase: .stopwatch, duration: 0, startedAt: t0)
+        #expect(!sw.isFinished(at: t0.addingTimeInterval(3600)))
+        #expect(sw.elapsed(at: t0.addingTimeInterval(125)) == 125)
+        sw.pause(at: t0.addingTimeInterval(125))
+        #expect(sw.snapshot(at: t0.addingTimeInterval(200), cycle: nil, totalCycles: nil).pausedRemaining == 125)
+        sw.resume(at: t0.addingTimeInterval(225))
+        #expect(sw.elapsed(at: t0.addingTimeInterval(300)) == 200)
+    }
 }

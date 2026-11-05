@@ -20,6 +20,21 @@ struct MarqueeText: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .onGeometryChange(for: CGFloat.self, of: \.size.width) { boxWidth = $0 }
             .clipped()
+            .mask {
+                if textWidth > boxWidth, boxWidth > 24 {
+                    HStack(spacing: 0) {
+                        if hovering && !reduceMotion {
+                            LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                                .frame(width: 12)
+                        }
+                        Color.black
+                        LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                            .frame(width: 12)
+                    }
+                } else {
+                    Color.black
+                }
+            }
             .onHover { inside in
                 hovering = inside
                 let overflow = textWidth - boxWidth

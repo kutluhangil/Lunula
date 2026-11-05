@@ -7,4 +7,5 @@ DerivedData/
 xcuserdata/
 Config/Signing.xcconfig
 .DS_Store
+*.profraw
 .claude/worktrees/

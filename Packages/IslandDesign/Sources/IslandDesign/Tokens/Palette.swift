@@ -12,9 +12,9 @@ public enum Palette {
     public static let textPrimary = Color(.sRGB, red: 0xF5 / 255, green: 0xF5 / 255, blue: 0xF7 / 255)
     public static let textSecondary = Color.white.opacity(0.62)
     public static let textTertiary = Color.white.opacity(0.38)
-    public static let signalGreen = Color(nsColor: .systemGreen)
-    public static let signalOrange = Color(nsColor: .systemOrange)
-    public static let signalRed = Color(nsColor: .systemRed)
+    public static let signalGreen = darkAquaColor(.systemGreen)
+    public static let signalOrange = darkAquaColor(.systemOrange)
+    public static let signalRed = darkAquaColor(.systemRed)
 
     public static func tint(_ tint: SignalTint) -> Color {
         switch tint {
@@ -28,5 +28,16 @@ public enum Palette {
 
     public static func color(_ rgba: RGBAColor) -> Color {
         Color(.sRGB, red: rgba.red, green: rgba.green, blue: rgba.blue, opacity: rgba.alpha)
+    }
+
+    /// Resolves dynamic system colors in darkAqua so the #000000 island always gets dark-mode signal tints.
+    private static func darkAquaColor(_ systemColor: NSColor) -> Color {
+        var resolved = systemColor
+        NSAppearance(named: .darkAqua)?.performAsCurrentDrawingAppearance {
+            resolved = systemColor.usingColorSpace(.sRGB) ?? systemColor
+        }
+        return Color(
+            .sRGB, red: resolved.redComponent, green: resolved.greenComponent, blue: resolved.blueComponent,
+            opacity: resolved.alphaComponent)
     }
 }

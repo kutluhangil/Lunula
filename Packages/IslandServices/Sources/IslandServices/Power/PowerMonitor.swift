@@ -6,6 +6,7 @@ import Observation
 /// Battery state from IOKit power-source notifications (no polling, no permission) plus Low Power Mode.
 @MainActor @Observable public final class PowerMonitor: AlertProviding {
     @ObservationIgnored public var onAlert: (@MainActor (TransientAlert) -> Void)?
+    @ObservationIgnored public var fullChargeThreshold: @MainActor () -> Int = { 100 }
     @ObservationIgnored private var source: CFRunLoopSource?
     @ObservationIgnored private var session = BatteryAlertSession()
     @ObservationIgnored private var lowPowerObserver: NSObjectProtocol?
@@ -53,7 +54,11 @@ import Observation
             .first { $0[kIOPSTypeKey] as? String == kIOPSInternalBatteryType }
         let new = PowerSourceParser.snapshot(
             from: battery ?? [:], providingSource: providing, lowPowerMode: isLowPowerMode)
-        for alert in BatteryAlertRules.alerts(from: self.battery, to: new, session: &session) { onAlert?(alert) }
+        for alert in BatteryAlertRules.alerts(
+            from: self.battery, to: new, session: &session, fullChargeThreshold: fullChargeThreshold())
+        {
+            onAlert?(alert)
+        }
         self.battery = new
     }
 }

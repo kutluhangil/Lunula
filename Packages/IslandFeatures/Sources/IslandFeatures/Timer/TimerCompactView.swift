@@ -8,6 +8,7 @@ extension TimerPhase {
         case .simple: "timer"
         case .focus: "brain.head.profile"
         case .shortBreak, .longBreak: "cup.and.saucer"
+        case .stopwatch: "stopwatch"
         }
     }
 
@@ -17,15 +18,21 @@ extension TimerPhase {
         case .focus: "timer.phase.focus"
         case .shortBreak: "timer.phase.shortBreak"
         case .longBreak: "timer.phase.longBreak"
+        case .stopwatch: "timer.stopwatch"
         }
     }
 }
 
 struct TimerCompactLeading: View {
     let snapshot: TimerSnapshot
+    @Environment(\.quickTools) private var quickTools
 
     var body: some View {
-        Image(systemName: snapshot.phase.symbol).font(TypeToken.body.font).foregroundStyle(Palette.signalOrange)
+        Image(systemName: quickTools.timerMascot().symbolName ?? snapshot.phase.symbol)
+            .font(TypeToken.body.font)
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(Palette.signalOrange)
+            .frame(width: 16, height: 16)
     }
 }
 
@@ -47,7 +54,9 @@ struct TimerCountdownText: View {
     let snapshot: TimerSnapshot
 
     var body: some View {
-        if let endsAt = snapshot.endsAt {
+        if snapshot.phase == .stopwatch, let startedAt = snapshot.startedAt, snapshot.endsAt != nil {
+            Text(timerInterval: min(startedAt, .now)...Date.distantFuture, countsDown: false)
+        } else if let endsAt = snapshot.endsAt, snapshot.phase != .stopwatch {
             Text(timerInterval: Date.now...max(endsAt, .now), countsDown: true)
         } else {
             Text(Duration.seconds((snapshot.pausedRemaining ?? 0).rounded(.up)), format: .time(pattern: .minuteSecond))

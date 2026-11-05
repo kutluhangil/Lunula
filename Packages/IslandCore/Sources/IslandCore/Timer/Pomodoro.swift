@@ -36,7 +36,7 @@ public struct PomodoroProgress: Equatable, Sendable, Codable {
 
     public func duration(plan: PomodoroPlan) -> TimeInterval {
         switch phase {
-        case .focus, .simple: plan.focus
+        case .focus, .simple, .stopwatch: plan.focus
         case .shortBreak: plan.shortBreak
         case .longBreak: plan.longBreak
         }

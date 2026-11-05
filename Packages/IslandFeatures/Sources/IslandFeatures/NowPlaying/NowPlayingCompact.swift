@@ -23,8 +23,10 @@ struct NowPlayingCompactTrailing: View {
     var body: some View {
         Image(systemName: "waveform")
             .font(TypeToken.body.font)
+            .symbolRenderingMode(.hierarchical)
             .symbolEffect(.variableColor.iterative, options: .repeating, isActive: snapshot.isPlaying && !reduceMotion)
             .foregroundStyle(accent.map(Palette.color) ?? Palette.textPrimary)
+            .frame(width: 16, height: 16)
             .accessibilityLabel(Text(snapshot.isPlaying ? "nowPlaying.playing" : "nowPlaying.paused", bundle: .module))
     }
 }

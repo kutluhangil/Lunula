@@ -24,11 +24,33 @@ struct ActivitiesSettingsView: View {
                             titleKey: "settings.activities.permission", state: state, onRequest: { request(feature) },
                             onOpenSettings: { NSWorkspace.shared.open(Self.settingsURL(feature)) })
                     }
+                    if feature == .weather, isOn(feature) {
+                        Picker("settings.weather.unit", selection: valueBinding(\.temperatureUnit)) {
+                            Text("settings.weather.unit.system").tag(TemperatureUnitPreference.system)
+                            Text(verbatim: "°C").tag(TemperatureUnitPreference.celsius)
+                            Text(verbatim: "°F").tag(TemperatureUnitPreference.fahrenheit)
+                        }
+                    }
+                    if feature == .shelf, isOn(feature) {
+                        Toggle("settings.shelf.copies", isOn: valueBinding(\.shelfCopiesFiles))
+                        Picker("settings.shelf.retention", selection: valueBinding(\.shelfRetentionDays)) {
+                            Text("settings.shelf.retention.1").tag(Int?.some(1))
+                            Text("settings.shelf.retention.7").tag(Int?.some(7))
+                            Text("settings.shelf.retention.30").tag(Int?.some(30))
+                            Text("settings.shelf.retention.never").tag(Int?.none)
+                        }
+                    }
                 }
             }
         }
         .formStyle(.grouped)
         .frame(width: 460)
+    }
+
+    private func valueBinding<T>(_ keyPath: WritableKeyPath<IslandSettings, T>) -> Binding<T> {
+        Binding(
+            get: { settings.settings[keyPath: keyPath] },
+            set: { value in settings.update { $0[keyPath: keyPath] = value } })
     }
 
     private func isOn(_ feature: IslandFeature) -> Bool {

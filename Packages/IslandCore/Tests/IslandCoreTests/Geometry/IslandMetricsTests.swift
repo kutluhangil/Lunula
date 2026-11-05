@@ -25,6 +25,17 @@ private let external = ScreenDescriptor.external
     @Test func peekHasMinimumWidth340() {
         #expect(IslandMetrics.size(for: .peek, notch: notch) == CGSize(width: 340, height: 62))
     }
+    @Test func downloadAlertIs380x70() {
+        #expect(IslandMetrics.size(for: .downloadAlert, notch: notch) == CGSize(width: 380, height: 70))
+    }
+    @Test func compactNowPlayingAndTimerMatchDesignMatrix() {
+        #expect(
+            IslandMetrics.size(for: .compact(wing: IslandMetrics.wingNowPlaying), notch: notch)
+                == CGSize(width: 276, height: 32))
+        #expect(
+            IslandMetrics.size(for: .compact(wing: IslandMetrics.wingTimer), notch: notch)
+                == CGSize(width: 292, height: 32))
+    }
     @Test func expandedWidthAndBodyAreClamped() {
         #expect(
             IslandMetrics.size(for: .expanded(width: 500, bodyHeight: 100), notch: notch)

@@ -10,16 +10,24 @@ public enum IslandSizeRequest: Equatable, Sendable {
     case invite
     case compact(wing: CGFloat)
     case peek
+    case downloadAlert
     case expanded(width: CGFloat, bodyHeight: CGFloat)
 }
 
 public enum IslandMetrics {
+    public static let wingNowPlaying: CGFloat = 44
+    public static let wingTimer: CGFloat = 52
     public static let wingMax: CGFloat = 64
     public static let peekWing: CGFloat = 72
     public static let peekMinWidth: CGFloat = 340
     public static let peekExtraHeight: CGFloat = 30
+    public static let downloadAlertWidth: CGFloat = 380
+    public static let downloadAlertExtraHeight: CGFloat = 38
     public static let expandedWidthRange: ClosedRange<CGFloat> = 520...600
     public static let expandedBodyRange: ClosedRange<CGFloat> = 128...176
+    public static let expandedBodyCompact: CGFloat = 128
+    public static let expandedBodyHome: CGFloat = 160
+    public static let expandedBodyShelf: CGFloat = 176
     public static let bubbleGap: CGFloat = 8
     public static let panelSize = CGSize(width: 760, height: 300)
 
@@ -31,9 +39,13 @@ public enum IslandMetrics {
         case .invite:
             return CGSize(width: n.width + 16, height: n.height)
         case .compact(let wing):
+            guard notch.hasHardwareNotch else { return n }
             return CGSize(width: n.width + 2 * min(max(wing, 0), wingMax), height: n.height)
         case .peek:
             return CGSize(width: max(n.width + 2 * peekWing, peekMinWidth), height: n.height + peekExtraHeight)
+        case .downloadAlert:
+            return CGSize(
+                width: max(n.width + 2 * peekWing, downloadAlertWidth), height: n.height + downloadAlertExtraHeight)
         case .expanded(let width, let bodyHeight):
             return CGSize(
                 width: min(max(width, expandedWidthRange.lowerBound), expandedWidthRange.upperBound),

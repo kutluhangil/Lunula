@@ -49,8 +49,6 @@ struct HomeCardView: View {
             } else {
                 fallbackCard
             }
-        default:
-            fallbackCard
         }
     }
 

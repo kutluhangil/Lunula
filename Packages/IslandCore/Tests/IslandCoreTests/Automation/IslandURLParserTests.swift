@@ -57,4 +57,18 @@ import Testing
         #expect(parse("other://activity/show?id=a&title=t") == .failure(.wrongScheme))
         #expect(parse("lunula://foo/bar") == .failure(.unknownCommand("foo/bar")))
     }
+    @Test func parsesAIUsageAndAgentApprovals() {
+        #expect(
+            parse("lunula://ai/usage?provider=Claude%20Code&tokens=42000&cost=1.25&limit=45")
+                == .success(
+                    .updateAIUsage(
+                        provider: "Claude Code", tokensUsed: 42000, costUSD: 1.25, windowLimitPercent: 45)))
+        #expect(
+            parse("lunula://agent/approval?id=req-1&agent=Claude%20Code&command=git%20push")
+                == .success(
+                    .requestAgentApproval(id: "req-1", agent: "Claude Code", command: "git push")))
+        #expect(
+            parse("lunula://agent/resolve?id=req-1")
+                == .success(.resolveAgentApproval(id: "req-1")))
+    }
 }

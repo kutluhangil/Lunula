@@ -37,6 +37,9 @@ public enum IslandURLCommand: Equatable, Sendable {
     case endActivity(id: String)
     case startTimer(minutes: Double)
     case toggleIsland
+    case updateAIUsage(provider: String, tokensUsed: Int, costUSD: Double, windowLimitPercent: Int)
+    case requestAgentApproval(id: String, agent: String, command: String)
+    case resolveAgentApproval(id: String)
 }
 
 public enum IslandURLError: Error, Equatable, Sendable {

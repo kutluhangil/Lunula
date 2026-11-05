@@ -12,24 +12,36 @@ struct NowPlayingProgressBar: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let live = NowPlayingProgress.fraction(
-                position: NowPlayingProgress.position(snapshot, at: context.date), duration: snapshot.duration)
+            let position = NowPlayingProgress.position(snapshot, at: context.date)
+            let live = NowPlayingProgress.fraction(position: position, duration: snapshot.duration)
             let fraction = dragFraction ?? live
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Palette.inkPressed)
-                    Capsule().fill(accent.map(Palette.color) ?? Palette.textPrimary)
-                        .frame(width: proxy.size.width * fraction)
+            let elapsedSeconds =
+                if let dragFraction, let duration = snapshot.duration { dragFraction * duration } else { position }
+            HStack(spacing: 8) {
+                Text(IslandFormat.trackTime(elapsedSeconds))
+                    .font(TypeToken.caption.font.monospacedDigit())
+                    .foregroundStyle(Palette.textSecondary)
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Palette.inkPressed)
+                        Capsule().fill(accent.map(Palette.color) ?? Palette.textPrimary)
+                            .frame(width: proxy.size.width * fraction)
+                    }
+                    .frame(height: 4)
+                    .frame(maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in drag(to: value.location.x / max(proxy.size.width, 1)) }
+                            .onEnded { _ in commit() })
                 }
-                .frame(height: 4)
-                .frame(maxHeight: .infinity)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in drag(to: value.location.x / max(proxy.size.width, 1)) }
-                        .onEnded { _ in commit() })
+                .frame(height: 14)
+                if let duration = snapshot.duration {
+                    Text(IslandFormat.trackTime(duration))
+                        .font(TypeToken.caption.font.monospacedDigit())
+                        .foregroundStyle(Palette.textSecondary)
+                }
             }
-            .frame(height: 16)
         }
         .accessibilityElement()
         .accessibilityLabel(Text(AccessibilityLabels.seek))

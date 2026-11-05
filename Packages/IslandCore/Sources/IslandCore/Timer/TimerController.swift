@@ -63,6 +63,13 @@ import Observation
         begin(phaseTimer(progress, label: nil))
     }
 
+    public func startStopwatch(label: String? = nil) {
+        pomodoro = nil
+        begin(
+            CountdownTimer(
+                id: Self.activityID, label: label, phase: .stopwatch, duration: 0, startedAt: time.now))
+    }
+
     public func pause() {
         guard var timer = current else { return }
         timer.pause(at: time.now)
@@ -119,7 +126,7 @@ import Observation
 
     private func scheduleFinish() {
         finishToken?.cancel()
-        guard let end = current?.endDate() else { return }
+        guard let timer = current, timer.phase != .stopwatch, let end = timer.endDate() else { return }
         // Continuous clock: a deadline passed during sleep fires right after wake.
         finishToken = time.schedule(after: max(0, end.timeIntervalSince(time.now))) { [weak self] in self?.finish() }
     }

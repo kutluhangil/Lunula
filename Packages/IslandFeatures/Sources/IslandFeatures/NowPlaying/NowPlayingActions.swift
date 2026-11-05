@@ -8,6 +8,10 @@ public struct NowPlayingActions {
     public var next: @MainActor () -> Void = {}
     public var previous: @MainActor () -> Void = {}
     public var seek: @MainActor (TimeInterval) -> Void = { _ in }
+    public var toggleShuffle: @MainActor () -> Void = {}
+    public var cycleRepeat: @MainActor () -> Void = {}
+    public var toggleFavorite: @MainActor () -> Void = {}
+    public var setVolume: @MainActor (Int) -> Void = { _ in }
     public var artwork: @MainActor (String) -> NSImage? = { _ in nil }
     /// Scrubbing ticks (every 10 s boundary).
     public var haptic: @MainActor (HapticKind) -> Void = { _ in }
@@ -17,6 +21,10 @@ public struct NowPlayingActions {
     public init(
         playPause: @escaping @MainActor () -> Void, next: @escaping @MainActor () -> Void,
         previous: @escaping @MainActor () -> Void, seek: @escaping @MainActor (TimeInterval) -> Void,
+        toggleShuffle: @escaping @MainActor () -> Void = {},
+        cycleRepeat: @escaping @MainActor () -> Void = {},
+        toggleFavorite: @escaping @MainActor () -> Void = {},
+        setVolume: @escaping @MainActor (Int) -> Void = { _ in },
         artwork: @escaping @MainActor (String) -> NSImage?, haptic: @escaping @MainActor (HapticKind) -> Void,
         requestConsent: @escaping @MainActor (MediaSourceID) -> Void
     ) {
@@ -25,6 +33,10 @@ public struct NowPlayingActions {
         self.next = next
         self.previous = previous
         self.seek = seek
+        self.toggleShuffle = toggleShuffle
+        self.cycleRepeat = cycleRepeat
+        self.toggleFavorite = toggleFavorite
+        self.setVolume = setVolume
         self.artwork = artwork
         self.haptic = haptic
     }

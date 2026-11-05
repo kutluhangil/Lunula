@@ -14,10 +14,12 @@ public struct BatteryAlertSession: Equatable, Sendable {
 public enum BatteryAlertRules {
     static let lowThresholds: [(level: Int, priority: ActivityPriority)] = [(20, .high), (10, .critical)]
 
-    public static func alerts(from old: BatterySnapshot?, to new: BatterySnapshot, session: inout BatteryAlertSession)
-        -> [TransientAlert]
-    {
+    public static func alerts(
+        from old: BatterySnapshot?, to new: BatterySnapshot, session: inout BatteryAlertSession,
+        fullChargeThreshold: Int = 100
+    ) -> [TransientAlert] {
         guard new.hasBattery, let old else { return [] }
+        let threshold = min(max(fullChargeThreshold, 80), 100)
         var out: [TransientAlert] = []
         if new.isPluggedIn, !old.isPluggedIn {
             session.lowShown = []
@@ -32,7 +34,7 @@ public enum BatteryAlertRules {
                 session.lowShown.insert(t.level)
                 out.append(alert(.batteryLow, new.level, .orange, 2.6, t.priority))
             }
-        } else if (new.isCharged || new.level == 100) && !session.fullShownThisPlug {
+        } else if (new.isCharged || new.level >= threshold) && !session.fullShownThisPlug {
             session.fullShownThisPlug = true
             out.append(alert(.batteryFull, new.level, .green, 2.0, .normal))
         }

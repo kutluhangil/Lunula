@@ -22,4 +22,16 @@ import Testing
     @Test func transientPulses() {
         #expect(HaloDerivation.state(phase: .transient(.fixture()), layout: .empty, now: now).mode == .pulse)
     }
+
+    @Test func chargingTransientUsesFillMode() {
+        let charging = TransientAlert(
+            id: UUID(), kind: .charging, detail: .batteryLevel(54), tint: .green, duration: 2.6, priority: .normal)
+        #expect(
+            HaloDerivation.state(phase: .transient(charging), layout: .empty, now: now).mode == .fill(fraction: 0.54))
+    }
+
+    @Test func invitePeekWithoutPrimaryActivityUsesNeutralAmbient() {
+        #expect(
+            HaloDerivation.state(phase: .peek, layout: .empty, now: now).mode == .ambient(breathing: false))
+    }
 }

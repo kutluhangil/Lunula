@@ -5,6 +5,7 @@ import SwiftUI
 struct TimerExpandedCard: View {
     let snapshot: TimerSnapshot
     @Environment(\.timerActions) private var actions
+    @Environment(\.quickTools) private var quickTools
 
     init(snapshot: TimerSnapshot) { self.snapshot = snapshot }
 
@@ -18,7 +19,8 @@ struct TimerExpandedCard: View {
                         Text(snapshot.phase.titleKey, bundle: .module)
                     }
                 } icon: {
-                    Image(systemName: snapshot.phase.symbol).foregroundStyle(Palette.signalOrange)
+                    Image(systemName: quickTools.timerMascot().symbolName ?? snapshot.phase.symbol)
+                        .foregroundStyle(Palette.signalOrange)
                 }
                 .font(TypeToken.title.font)
                 .foregroundStyle(Palette.textPrimary)
@@ -43,7 +45,9 @@ struct TimerExpandedCard: View {
                     control("pause.fill", "timer.pause", actions.pause).accessibilityLabel(
                         Text(AccessibilityLabels.pauseTimer))
                 }
-                if snapshot.phase != .simple { control("forward.end.fill", "timer.skip", actions.skip) }
+                if snapshot.phase != .simple && snapshot.phase != .stopwatch {
+                    control("forward.end.fill", "timer.skip", actions.skip)
+                }
                 control("xmark", "timer.cancel", actions.cancel)
             }
         }

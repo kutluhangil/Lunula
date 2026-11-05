@@ -24,6 +24,7 @@ struct TimerQuickStartTile: View {
             }
             HStack(spacing: 6) {
                 chip(Text("timer.pomodoro", bundle: .module)) { actions.startPomodoro() }
+                chip(Text("timer.stopwatch", bundle: .module)) { actions.startStopwatch() }
                 chip(Text("timer.custom", bundle: .module)) { showsCustom.toggle() }
                     .popover(isPresented: $showsCustom) {
                         VStack(spacing: 10) {

@@ -7,6 +7,7 @@ public enum ActivityPriorityRules {
             return s.isPlaying ? .normal : .ambient
         case .timer(let t):
             guard let endsAt = t.endsAt else { return .ambient }
+            if t.phase == .stopwatch { return .normal }
             let remaining = endsAt.timeIntervalSince(now)
             return remaining <= 0 ? .critical : remaining <= 60 ? .high : .normal
         case .calendar(let e):
@@ -21,7 +22,7 @@ public enum ActivityPriorityRules {
         let boundaries: [Date]
         switch content {
         case .timer(let t):
-            guard let endsAt = t.endsAt else { return nil }
+            guard t.phase != .stopwatch, let endsAt = t.endsAt else { return nil }
             boundaries = [endsAt.addingTimeInterval(-60), endsAt]
         case .calendar(let e):
             boundaries = [-60, 60, 300].map { e.start.addingTimeInterval($0) }

@@ -5,8 +5,8 @@ import SwiftUI
 /// Pure rendering of one island state inside the fixed panel (spec §4.1): island at top centre, halo above the
 /// fill and outside the clip, detached activities as bubbles to the right.
 struct IslandSurface: View {
-    static let expandedWidth: CGFloat = 560
-    static let expandedBodyHeight: CGFloat = 152
+    static let expandedWidth: CGFloat = 520
+    static let expandedBodyHeight: CGFloat = IslandMetrics.expandedBodyHome
 
     let state: IslandState
     let notch: NotchMetrics
@@ -18,19 +18,31 @@ struct IslandSurface: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.weatherInfo) private var weather
     @Environment(\.haloIntensity) private var haloIntensity
+    @Environment(\.shelfActions) private var shelfActions
+    @Environment(\.privacyInfo) private var privacyInfo
+    @Environment(\.quickTools) private var quickTools
     @State private var budID: ActivityID?
     @State private var budProgress = 0.0
 
     var body: some View {
-        let size = Self.islandSize(state: state, notch: notch)
-        let island = Self.islandRect(size: size)
-        let shape = state.phase.isOpen ? IslandShape.expanded : IslandShape.closed
+        let size = Self.islandSize(state: state, notch: notch, shelfIsEmpty: shelfActions.items().isEmpty)
+        let island = Self.islandRect(
+            size: size, notch: notch, phase: state.phase, pillOffset: CGFloat(quickTools.pillVerticalOffset()))
+        let shape = Self.islandShape(phase: state.phase, hasPrimary: state.layout.primary != nil, notch: notch)
         let halo = scaled(homeHalo(HaloDerivation.state(phase: state.phase, layout: state.layout, now: now)))
+        let privacy = privacyInfo.current()
+        let isHidden = state.phase == .hidden || (!notch.hasHardwareNotch && state.phase == .idle)
 
         ZStack(alignment: .topLeading) {
+            if quickTools.hideNotchBar(), notch.hasHardwareNotch {
+                Palette.obsidian
+                    .frame(width: IslandMetrics.panelSize.width, height: notch.size.height)
+                    .allowsHitTesting(false)
+            }
             ZStack {
                 Palette.obsidian
                 content(size: size)
+                    .environment(\.islandCardGlass, quickTools.useGlassCards())
             }
             .frame(width: size.width, height: size.height)
             .clipShape(shape)
@@ -41,7 +53,7 @@ struct IslandSurface: View {
             // While open or peeking the panel takes the mouse instead of the hot zone; the reducer ignores clicks
             // where they mean nothing (expanded), and controls inside keep their own taps.
             .onTapGesture { send(.clicked(.island)) }
-            .offset(x: island.minX)
+            .offset(x: island.minX, y: island.minY)
 
             if halo.mode != .off {
                 let pad = HaloStyle.glowRadius
@@ -51,7 +63,7 @@ struct IslandSurface: View {
                     lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
                 )
                 .frame(width: size.width + 2 * pad, height: size.height + 2 * pad)
-                .offset(x: island.minX - pad, y: -pad)
+                .offset(x: island.minX - pad, y: island.minY - pad)
                 .allowsHitTesting(false)
             }
 
@@ -62,6 +74,16 @@ struct IslandSurface: View {
                     .offset(x: rect.minX, y: rect.minY)
                     .opacity(activity.id == budID ? 0 : 1)
                     .transition(reduceMotion ? MotionToken.reducedTransition : .opacity)
+            }
+
+            if privacy != .none {
+                let lastBubble = state.layout.detached.indices.last.map {
+                    Self.bubbleRect(index: $0, island: island, side: notch.size.height)
+                }
+                let rightEdge = lastBubble?.maxX ?? island.maxX
+                PrivacyDotView(privacy: privacy)
+                    .offset(x: rightEdge + 8, y: island.minY + (notch.size.height - 6) / 2)
+                    .allowsHitTesting(false)
             }
 
             if let budID, let index = state.layout.detached.firstIndex(where: { $0.id == budID }) {
@@ -75,9 +97,9 @@ struct IslandSurface: View {
             }
         }
         .frame(width: IslandMetrics.panelSize.width, height: IslandMetrics.panelSize.height, alignment: .topLeading)
-        .opacity(state.phase == .hidden ? 0 : 1)
+        .opacity(isHidden ? 0 : 1)
         .animation(
-            MotionToken.animation(state.phase.isOpen ? .open : .close, reduceMotion: reduceMotion), value: state.phase
+            MotionToken.animation(Self.motionToken(for: state.phase), reduceMotion: reduceMotion), value: state.phase
         )
         .animation(MotionToken.animation(.morph, reduceMotion: reduceMotion), value: state.layout)
         .onChange(of: state.layout.detached.map(\.id)) { old, new in startBud(old: old, new: new) }
@@ -90,12 +112,13 @@ struct IslandSurface: View {
                 EmptyView()
             case .compact:
                 if let primary = state.layout.primary {
-                    CompactLayoutView(activity: primary, notchWidth: notch.size.width)
+                    CompactLayoutView(
+                        activity: primary, notchWidth: notch.size.width, hasHardwareNotch: notch.hasHardwareNotch)
                 }
             case .transient(let alert):
                 TransientAlertView(alert: alert, notchWidth: notch.size.width, notchHeight: notch.size.height)
             case .peek:
-                PeekView(layout: state.layout, notchHeight: notch.size.height)
+                PeekView(layout: state.layout, notchWidth: notch.size.width, notchHeight: notch.size.height)
             case .expanded(let page):
                 ExpandedView(
                     page: page, layout: state.layout, home: home, notch: notch, send: send, openSettings: openSettings)
@@ -114,7 +137,7 @@ struct IslandSurface: View {
     /// Applies the user's halo intensity; zero turns the halo off entirely.
     private func scaled(_ halo: HaloState) -> HaloState {
         var halo = halo
-        halo.intensityScale *= haloIntensity()
+        halo.intensityScale *= haloIntensity.current()
         return halo.intensityScale > 0 ? halo : .off
     }
 
@@ -153,22 +176,93 @@ struct IslandSurface: View {
         }
     }
 
-    static func islandSize(state: IslandState, notch: NotchMetrics) -> CGSize {
+    static func motionToken(for phase: IslandPhase) -> MotionToken {
+        switch phase {
+        case .expanded: .open
+        case .peek: .peek
+        case .transient(let alert) where TransientAlertView.needsButtons(alert): .peek
+        default: .close
+        }
+    }
+
+    static func islandShape(phase: IslandPhase, hasPrimary: Bool = true, notch: NotchMetrics) -> IslandShape {
+        switch phase {
+        case .expanded:
+            return .expanded
+        case .peek where hasPrimary:
+            return .expanded
+        case .transient(let alert) where TransientAlertView.needsButtons(alert):
+            return .expanded
+        default:
+            return notch.hasHardwareNotch ? .closed : .pill
+        }
+    }
+
+    static func compactWing(for activity: Activity) -> CGFloat {
+        switch activity.kind {
+        case .nowPlaying: IslandMetrics.wingNowPlaying
+        case .timer, .calendar, .custom: IslandMetrics.wingTimer
+        }
+    }
+
+    static func compactWing(for alert: TransientAlert) -> CGFloat {
+        switch alert.kind {
+        case .charging, .unplugged, .batteryLow, .batteryFull:
+            IslandMetrics.wingNowPlaying
+        default:
+            IslandMetrics.wingMax
+        }
+    }
+
+    static func islandSize(state: IslandState, notch: NotchMetrics, shelfIsEmpty: Bool = false) -> CGSize {
         let request: IslandSizeRequest =
             switch state.phase {
-            case .hidden, .idle: .idle
-            case .compact: state.layout.primary == nil ? .idle : .compact(wing: IslandMetrics.wingMax)
+            case .hidden, .idle:
+                .idle
+            case .compact:
+                if let primary = state.layout.primary {
+                    .compact(wing: compactWing(for: primary))
+                } else {
+                    .idle
+                }
             case .transient(let alert):
-                TransientAlertView.needsButtons(alert) ? .peek : .compact(wing: IslandMetrics.wingMax)
-            case .peek: state.layout.primary == nil ? .invite : .peek
-            case .expanded: .expanded(width: expandedWidth, bodyHeight: expandedBodyHeight)
+                TransientAlertView.needsButtons(alert) ? .downloadAlert : .compact(wing: compactWing(for: alert))
+            case .peek:
+                state.layout.primary == nil ? .invite : .peek
+            case .expanded(let page):
+                switch page {
+                case .home:
+                    .expanded(width: expandedWidth, bodyHeight: IslandMetrics.expandedBodyHome)
+                case .shelf:
+                    .expanded(
+                        width: expandedWidth,
+                        bodyHeight: shelfIsEmpty
+                            ? IslandMetrics.expandedBodyCompact : IslandMetrics.expandedBodyShelf)
+                case .activity:
+                    .expanded(width: expandedWidth, bodyHeight: IslandMetrics.expandedBodyCompact)
+                }
             }
         return IslandMetrics.size(for: request, notch: notch)
     }
 
     /// Panel-local rect; the panel is centred on the notch, so the island is horizontally centred at the top.
-    static func islandRect(size: CGSize) -> CGRect {
-        CGRect(x: (IslandMetrics.panelSize.width - size.width) / 2, y: 0, width: size.width, height: size.height)
+    static func islandRect(
+        size: CGSize, notch: NotchMetrics? = nil, phase: IslandPhase = .idle, pillOffset: CGFloat = 0
+    ) -> CGRect {
+        let isPill =
+            if let notch, !notch.hasHardwareNotch {
+                switch phase {
+                case .idle, .compact, .transient: true
+                default: false
+                }
+            } else {
+                false
+            }
+        return CGRect(
+            x: (IslandMetrics.panelSize.width - size.width) / 2,
+            y: isPill ? 1 + max(0, pillOffset) : 0,
+            width: size.width,
+            height: size.height)
     }
 
     static func bubbleRect(index: Int, island: CGRect, side: CGFloat) -> CGRect {
@@ -178,7 +272,13 @@ struct IslandSurface: View {
     }
 }
 
+public struct HaloIntensity {
+    public var current: @MainActor () -> Double = { 1 }
+    public init(current: @escaping @MainActor () -> Double) { self.current = current }
+    init() {}
+}
+
 extension EnvironmentValues {
     /// User's halo intensity (Settings › Appearance, 0…1); read in the body so changes apply live.
-    @Entry public var haloIntensity: @MainActor () -> Double = { 1 }
+    @Entry public var haloIntensity = HaloIntensity()
 }

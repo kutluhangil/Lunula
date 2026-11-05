@@ -11,10 +11,26 @@ enum HaloDerivation {
         case .hidden, .idle:
             return .off
         case .transient(let alert):
+            if alert.kind == .charging, case .batteryLevel(let level) = alert.detail {
+                return HaloState(mode: .fill(fraction: Double(level) / 100), color: rgba(alert.tint))
+            }
             return HaloState(mode: .pulse, color: rgba(alert.tint))
-        case .compact, .peek, .expanded:
+        case .compact:
             guard let activity = layout.primary else { return .off }
             return state(for: activity, now: now)
+        case .peek:
+            guard let activity = layout.primary else {
+                return HaloState(mode: .ambient(breathing: false), color: rgba(.neutral))
+            }
+            return state(for: activity, now: now)
+        case .expanded(let page):
+            if let activity = layout.primary {
+                return state(for: activity, now: now)
+            }
+            if page == .shelf {
+                return HaloState(mode: .ambient(breathing: false), color: rgba(.neutral))
+            }
+            return .off
         }
     }
 
