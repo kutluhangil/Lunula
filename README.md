@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/media/hero.svg" alt="Lunula — a native macOS notch island" width="100%">
+<img src="docs/media/hero.svg" alt="Lunula — the island beside the notch: compact Now Playing, expanded player, focus timer and a file dropped onto the shelf" width="100%">
 
 <p>
   <img alt="macOS 26" src="https://img.shields.io/badge/macOS-26%20Tahoe-f5d27a?style=for-the-badge&labelColor=050407">
@@ -57,14 +57,27 @@ It is built under strict rules: **App Sandbox and Hardened Runtime from the firs
 
 ```mermaid
 flowchart LR
-  APP[App · NSPanel host] --> F[IslandFeatures<br/>NowPlaying · Timer · Calendar · Shelf · Weather · Alerts]
-  F --> S[IslandServices<br/>system bridges · providers]
+  APP[App · NSPanel host · wiring] --> F[IslandFeatures<br/>NowPlaying · Timer · Calendar · Shelf · Alerts]
+  APP --> S[IslandServices<br/>system bridges · providers · no SwiftUI]
   F --> D[IslandDesign<br/>Ada tokens · components]
-  S --> C[IslandCore<br/>pure logic · state machines]
-  F --> C
+  F --> C[IslandCore<br/>pure logic · Foundation only]
+  S --> C
 ```
 
-Four local Swift packages, generated into an Xcode project with XcodeGen so parallel work never fights over `.pbxproj`. An architecture guard script keeps the dependency direction one way.
+Four local Swift packages, generated into an Xcode project with XcodeGen so parallel work never fights over `.pbxproj`. Features never see Services directly; the app's composition root wires them together, and an architecture guard script enforces it.
+
+<img src="docs/media/divider.svg" width="100%" alt="">
+
+## Rules it is built under
+
+| Rule | How it is enforced |
+|---|---|
+| **Quiet when idle** | `Scripts/perf/measure-idle.sh --assert-idle` samples the running app with `top` and fails if the median CPU is above 0.1 % or there is more than one idle wake-up per second. |
+| **Sandboxed from day one** | App Sandbox and Hardened Runtime on every build; no private APIs, no telemetry, one small dependency. |
+| **Guarded architecture** | `check-architecture.sh` fails the build if IslandCore imports anything beyond Foundation and Observation, if Features import Services, if Services import SwiftUI, if a private API or process escape appears, or if code hops synchronously onto the main queue. |
+| **Reproducible project** | `Lunula.xcodeproj` is generated with XcodeGen, and CI checks that the generated plist and entitlements are committed. |
+| **No unsigned releases** | The release workflow refuses to run unless every signing secret is present, imports the Developer ID certificate into a temporary keychain and notarises the build. |
+| **Tested** | 89 test files across the four packages and the app, run in CI with a release build. |
 
 <img src="docs/media/divider.svg" width="100%" alt="">
 
@@ -90,5 +103,5 @@ Scripts/perf/measure-idle.sh --seconds 60 --assert-idle   # idle CPU and wake-up
 <div align="center">
 <br>
 <a href="https://github.com/kutluhangil"><img src="docs/media/signature.svg" width="100%" alt="Built by kutluhangil"></a>
-<sub>Sandboxed · no private API · no telemetry · MIT licensed.</sub>
+<sub>Sandboxed · no private API · no telemetry · MIT licensed · the track in the banner is invented.</sub>
 </div>
