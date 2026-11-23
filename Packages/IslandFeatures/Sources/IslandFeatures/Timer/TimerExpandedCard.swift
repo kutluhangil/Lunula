@@ -6,10 +6,16 @@ struct TimerExpandedCard: View {
     let snapshot: TimerSnapshot
     @Environment(\.timerActions) private var actions
     @Environment(\.quickTools) private var quickTools
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(snapshot: TimerSnapshot) { self.snapshot = snapshot }
 
     var body: some View {
+        let mascot = quickTools.timerMascot()
+        let animates = !reduceMotion && mascot != .none && snapshot.endsAt != nil
+        let streak = quickTools.focusStreakDays()
+        let focusDays = quickTools.focusLast7Days()
+
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Label {
@@ -19,8 +25,9 @@ struct TimerExpandedCard: View {
                         Text(snapshot.phase.titleKey, bundle: .module)
                     }
                 } icon: {
-                    Image(systemName: quickTools.timerMascot().symbolName ?? snapshot.phase.symbol)
+                    Image(systemName: mascot.symbolName ?? snapshot.phase.symbol)
                         .foregroundStyle(Palette.signalOrange)
+                        .symbolEffect(.pulse, options: .repeating, isActive: animates)
                 }
                 .font(TypeToken.title.font)
                 .foregroundStyle(Palette.textPrimary)
@@ -31,10 +38,24 @@ struct TimerExpandedCard: View {
                     .monospacedDigit()
                     .foregroundStyle(Palette.textPrimary)
 
-                if let cycle = snapshot.cycle, let total = snapshot.totalCycles {
-                    Text("timer.cycle \(cycle) \(total)", bundle: .module)
-                        .font(TypeToken.caption.font)
-                        .foregroundStyle(Palette.textSecondary)
+                HStack(spacing: 10) {
+                    if let cycle = snapshot.cycle, let total = snapshot.totalCycles {
+                        Text("timer.cycle \(cycle) \(total)", bundle: .module)
+                            .font(TypeToken.caption.font)
+                            .foregroundStyle(Palette.textSecondary)
+                    }
+                    if streak > 0 || focusDays.contains(where: { $0.minutes > 0 }) {
+                        let maxMins = max(focusDays.map(\.minutes).max() ?? 1, 25)
+                        HStack(alignment: .bottom, spacing: 3) {
+                            ForEach(focusDays, id: \.dayKey) { day in
+                                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                                    .fill(day.minutes > 0 ? Palette.signalOrange : Palette.inkPressed)
+                                    .frame(width: 5, height: max(3, CGFloat(day.minutes) / CGFloat(maxMins) * 14))
+                            }
+                        }
+                        .frame(height: 14, alignment: .bottom)
+                        .accessibilityLabel(Text("tools.focus.streak \(streak)", bundle: .module))
+                    }
                 }
             }
             Spacer(minLength: 0)

@@ -68,4 +68,32 @@ import Testing
         c.cancel()
         #expect(c.activities.isEmpty && make(d).current == nil)
     }
+
+    @Test func focusCompletionReportsActualMinutesAndSkipsBreaks() {
+        let c = make()
+        var recorded: [Int] = []
+        c.onFocusCompleted = { recorded.append($0) }
+        c.start(minutes: 10, label: nil)
+        time.advance(by: 601)
+        c.startPomodoro()
+        time.advance(by: 1501)  // 25 min focus finishes
+        time.advance(by: 301)  // 5 min short break finishes (should not count as focus)
+        #expect(recorded == [10, 25])
+    }
+
+    @Test func dynamicPomodoroPlanAppliesOnStart() {
+        @MainActor final class PlanBox {
+            var value: PomodoroPlan
+            init(_ value: PomodoroPlan) { self.value = value }
+        }
+        let box = PlanBox(
+            PomodoroPlan(focus: 1800, shortBreak: 600, longBreak: 1200, focusSessionsBeforeLongBreak: 2))
+        let d = UserDefaults(suiteName: UUID().uuidString)!
+        let c = TimerController(time: time, defaults: d, planProvider: { box.value })
+        c.startPomodoro()
+        #expect(c.current?.duration == 1800)
+        box.value.focus = 2700
+        c.startPomodoro()
+        #expect(c.current?.duration == 2700)
+    }
 }

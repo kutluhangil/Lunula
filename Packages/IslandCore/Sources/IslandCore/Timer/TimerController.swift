@@ -15,19 +15,26 @@ import Observation
 
     @ObservationIgnored private let time: IslandTime
     @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private let plan: PomodoroPlan
+    @ObservationIgnored private let planProvider: @MainActor () -> PomodoroPlan
     @ObservationIgnored private var finishToken: ScheduledToken?
     @ObservationIgnored public var onActivitiesChange: (@MainActor () -> Void)?
     @ObservationIgnored public var onAlert: (@MainActor (TransientAlert) -> Void)?
+    @ObservationIgnored public var onFocusCompleted: (@MainActor (Int) -> Void)?
 
     public private(set) var current: CountdownTimer?
     public private(set) var pomodoro: PomodoroProgress?
 
+    private var plan: PomodoroPlan { planProvider() }
+
     /// Reads persisted state only; `restore()` (after `onAlert` is bound) resumes scheduling and late alerts.
-    public init(time: IslandTime, defaults: UserDefaults, plan: PomodoroPlan = .standard) {
+    public convenience init(time: IslandTime, defaults: UserDefaults, plan: PomodoroPlan = .standard) {
+        self.init(time: time, defaults: defaults, planProvider: { plan })
+    }
+
+    public init(time: IslandTime, defaults: UserDefaults, planProvider: @escaping @MainActor () -> PomodoroPlan) {
         self.time = time
         self.defaults = defaults
-        self.plan = plan
+        self.planProvider = planProvider
         if let data = defaults.data(forKey: Self.defaultsKey),
             let saved = try? JSONDecoder().decode(Persisted.self, from: data)
         {
@@ -106,12 +113,19 @@ import Observation
             return
         }
         if let end = timer.endDate(), now.timeIntervalSince(end) <= Self.missedAlertWindow {
+            recordFocusCompletionIfApplicable(timer)
             onAlert?(Self.finishedAlert(timer))
         }
         cancel()
     }
 
     // MARK: - Private
+
+    private func recordFocusCompletionIfApplicable(_ timer: CountdownTimer) {
+        guard timer.phase == .simple || timer.phase == .focus else { return }
+        let minutes = max(1, Int(round(timer.duration / 60)))
+        onFocusCompleted?(minutes)
+    }
 
     private func begin(_ timer: CountdownTimer) {
         update(timer)
@@ -137,6 +151,7 @@ import Observation
             scheduleFinish()
             return
         }
+        recordFocusCompletionIfApplicable(timer)
         onAlert?(Self.finishedAlert(timer))
         if pomodoro != nil {
             advancePomodoro(label: timer.label)

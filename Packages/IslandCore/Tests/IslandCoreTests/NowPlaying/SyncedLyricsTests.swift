@@ -17,19 +17,33 @@ import Testing
         #expect(SyncedLyricsParser.activeLine(in: lines, at: 13.0) == "First line of the song")
         #expect(SyncedLyricsParser.activeLine(in: lines, at: 25.0) == "Second line of the song")
         #expect(SyncedLyricsParser.activeLine(in: lines, at: 65.0) == "Chorus begins")
+        let pair = SyncedLyricsParser.activeAndNextLines(in: lines, at: 13.0)
+        #expect(pair?.active == "First line of the song" && pair?.next == "Second line of the song")
+        let lastPair = SyncedLyricsParser.activeAndNextLines(in: lines, at: 65.0)
+        #expect(lastPair?.active == "Chorus begins" && lastPair?.next == nil)
     }
 
-    @MainActor @Test func quickNotesAddAndRemovePersist() {
+    @MainActor @Test func quickNotesAddPinAndRemovePersist() throws {
         let suiteName = "test.quicknotes.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let clock = ManualTime()
         let store = QuickNotesStore(defaults: defaults, time: clock)
         store.add("  Buy espresso beans  ")
-        #expect(store.notes.count == 1 && store.notes.first?.text == "Buy espresso beans")
-        let id = store.notes[0].id
-        store.remove(id)
-        #expect(store.notes.isEmpty)
+        store.add("Check release notes")
+        #expect(store.notes.count == 2 && store.notes[0].text == "Check release notes")
+
+        let firstID = store.notes[1].id
+        store.togglePin(firstID)
+        #expect(store.notes[0].id == firstID && store.notes[0].isPinned)
+
+        // Legacy payload without `isPinned` decodes cleanly as unpinned.
+        let legacyJSON = #"[{"id":"00000000-0000-0000-0000-000000000001","text":"Legacy","createdAt":0}]"#
+        let decoded = try JSONDecoder().decode([QuickNote].self, from: Data(legacyJSON.utf8))
+        #expect(decoded.first?.isPinned == false)
+
+        store.remove(firstID)
+        #expect(store.notes.count == 1)
     }
 
     @MainActor @Test func clipboardDetectsSmartKindsAndPreservesPinsOnClear() {
@@ -87,6 +101,11 @@ import Testing
 
         let launcher = AppLauncherStore(defaults: defaults)
         #expect(!launcher.apps.isEmpty)
+        launcher.addApp(name: "Safari", path: "/Applications/Safari.app")
+        #expect(launcher.apps.contains { $0.path == "/Applications/Safari.app" })
+        #expect(AppLauncherStore(defaults: defaults).apps.contains { $0.path == "/Applications/Safari.app" })
+        launcher.removeApp(path: "/Applications/Safari.app")
+        #expect(!launcher.apps.contains { $0.path == "/Applications/Safari.app" })
         launcher.addShortcut(name: "Morning Focus")
         #expect(launcher.shortcuts.first?.runURL?.scheme == "shortcuts")
 

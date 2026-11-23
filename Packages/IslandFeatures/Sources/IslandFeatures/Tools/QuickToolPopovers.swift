@@ -646,7 +646,28 @@ struct LauncherAndHubPopover: View {
                             .background(Palette.inkPressed, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            quickTools.removePinnedApp(app.path)
+                        } label: {
+                            Text("tools.hub.removeApp", bundle: .module)
+                        }
+                    }
                 }
+                Button(action: quickTools.pickAndPinApp) {
+                    Label {
+                        Text("tools.hub.addApp", bundle: .module)
+                    } icon: {
+                        Image(systemName: "plus")
+                    }
+                    .font(TypeToken.caption.font)
+                    .lineLimit(1)
+                    .foregroundStyle(Palette.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 5)
+                    .background(Palette.inkRaised, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
 
             Divider()
@@ -782,7 +803,7 @@ struct LauncherAndHubPopover: View {
                                     .font(TypeToken.caption.font)
                                     .fontWeight(.semibold)
                                 Text(q.session.rawValue.uppercased())
-                                    .font(.system(size: 9))
+                                    .font(TypeToken.caption.font)
                                     .foregroundStyle(.secondary)
                                 Spacer()
                                 Text(String(format: "%.2f", q.price))

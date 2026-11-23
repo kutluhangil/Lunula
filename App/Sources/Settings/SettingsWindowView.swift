@@ -4,7 +4,7 @@ import IslandDesign
 import IslandServices
 import SwiftUI
 
-/// Main unified container view for Lunula Settings matching Claude Design Artboard 2 & 4.
+/// Main unified container view for Lunula Settings.
 /// Strict 680 × 540 pt dimensions, 16 pt continuous corner radius, 32 pt custom title bar,
 /// 656 × 88 pt live interactive stage preview, 36 pt tab pill, and scrollable content.
 public struct SettingsWindowView: View {
@@ -12,6 +12,7 @@ public struct SettingsWindowView: View {
     let launchAtLogin: LaunchAtLoginService
     let permission: @MainActor (IslandFeature) -> PermissionState?
     let request: @MainActor (IslandFeature) -> Void
+    let searchWeatherCity: @MainActor (String) async -> [GeoPlace]
 
     @State private var selectedTab: SettingsTabID = .general
     @Namespace private var tabAnimation
@@ -21,33 +22,37 @@ public struct SettingsWindowView: View {
         launchAtLogin: LaunchAtLoginService,
         permission: @escaping @MainActor (IslandFeature) -> PermissionState? = { _ in nil },
         request: @escaping @MainActor (IslandFeature) -> Void = { _ in },
+        searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] },
         initialTab: SettingsTabID = .general
     ) {
         self.settings = settings
         self.launchAtLogin = launchAtLogin
         self.permission = permission
         self.request = request
+        self.searchWeatherCity = searchWeatherCity
         self._selectedTab = State(initialValue: initialTab)
     }
 
     private var stageLabel: String {
         switch selectedTab {
         case .general:
-            return settings.settings.hideNotchBar ? "Siyah menü çubuğu" : "Çentikli ekran"
+            return String(
+                localized: settings.settings.hideNotchBar
+                    ? "settings.preview.stage.blackBar" : "settings.preview.stage.notched")
         case .appearance:
             if settings.settings.useGlassCards {
-                return "Liquid Glass"
+                return String(localized: "settings.preview.stage.liquidGlass")
             } else if settings.settings.timerMascot != .none {
-                return "Zamanlayıcı maskotu"
+                return String(localized: "settings.preview.stage.mascot")
             } else {
-                return "Hâle ve ışık"
+                return String(localized: "settings.preview.stage.halo")
             }
         case .activities:
-            return "İndirme etkinliği"
+            return String(localized: "settings.preview.stage.downloads")
         case .tools:
-            return "Genişlemiş araçlar"
+            return String(localized: "settings.preview.stage.tools")
         case .about:
-            return "Canlı ada"
+            return String(localized: "settings.preview.stage.live")
         }
     }
 
@@ -76,22 +81,22 @@ public struct SettingsWindowView: View {
         VStack(spacing: 0) {
             // MARK: - Custom Titlebar (32 pt)
             HStack(spacing: 0) {
-                // Window traffic lights spacing
                 Color.clear
                     .frame(width: 72, height: 32)
 
                 Spacer(minLength: 0)
 
-                Text("Lunula Ayarları")
+                Text("settings.window.title")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Palette.textSecondary)
 
                 Spacer(minLength: 0)
 
-                Text("Önizleme · \(stageLabel)")
+                Text(String(localized: "settings.preview.prefix \(stageLabel)"))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Palette.textSecondary)
-                    .frame(width: 160, alignment: .trailing)
+                    .frame(width: 180, alignment: .trailing)
+                    .lineLimit(1)
             }
             .padding(.horizontal, 12)
             .frame(height: 32)
@@ -120,7 +125,7 @@ public struct SettingsWindowView: View {
                         HStack(spacing: 6) {
                             Image(systemName: tab.symbol)
                                 .font(.system(size: 12, weight: .medium))
-                            Text(tab.shortTitle)
+                            Text(tab.titleKey)
                                 .font(.system(size: 12, weight: .medium))
                         }
                         .frame(maxWidth: .infinity)
@@ -161,7 +166,9 @@ public struct SettingsWindowView: View {
                     case .appearance:
                         AppearanceSettingsView(settings: settings)
                     case .activities:
-                        ActivitiesSettingsView(settings: settings, permission: permission, request: request)
+                        ActivitiesSettingsView(
+                            settings: settings, permission: permission, request: request,
+                            searchWeatherCity: searchWeatherCity)
                     case .tools:
                         ToolsSettingsView(
                             settings: settings,

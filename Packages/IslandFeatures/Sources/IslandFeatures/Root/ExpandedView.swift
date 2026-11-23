@@ -5,22 +5,45 @@ import SwiftUI
 
 /// Expanded island: top band beside the camera (hero symbol left, pill tabs and quick tools right), then the page.
 struct ExpandedView: View {
+    private enum ActiveToolPopover: String, Identifiable {
+        case notes, clipboard, search, teleprompter, stats, hub
+        var id: String { rawValue }
+    }
+
     let page: IslandPage
     let layout: IslandLayout
     let home: HomeInputs
     let notch: NotchMetrics
+    var expandedWidth: CGFloat = IslandSurface.expandedWidth
     let send: @MainActor (IslandEvent) -> Void
     let openSettings: @MainActor () -> Void
     @FocusState private var focused: Bool
     @Environment(\.shelfActions) private var shelf
     @Environment(\.quickTools) private var quickTools
-    @State private var showsNotesPopover = false
-    @State private var showsClipboardPopover = false
-    @State private var showsSearchPopover = false
-    @State private var showsTeleprompterPopover = false
-    @State private var showsStatsPopover = false
-    @State private var showsHubPopover = false
+    @State private var activePopover: ActiveToolPopover?
+    @State private var showsOverflowPopover = false
     @State private var draftNote = ""
+
+    private var hasLeadingSymbol: Bool {
+        layout.primary != nil || page == .shelf
+    }
+
+    /// Computes how many 22 pt tool buttons fit inside the left wing without colliding with the notch camera.
+    static func maxInlineToolSlots(
+        notchWidth: CGFloat, hasLeadingSymbol: Bool, expandedWidth: CGFloat = IslandSurface.expandedWidth
+    ) -> Int {
+        let wing = (expandedWidth - 2 * Spacing.expandedPadding - notchWidth) / 2
+        let reserved: CGFloat = hasLeadingSymbol ? 22 : 0
+        return max(1, Int((wing - reserved) / 24))
+    }
+
+    /// Splits enabled tools into inline buttons and overflow menu items so the left wing never overflows.
+    static func partitionQuickTools(_ enabled: [String], maxSlots: Int) -> (inline: [String], overflow: [String]) {
+        guard maxSlots > 0 else { return ([], enabled) }
+        if enabled.count <= maxSlots { return (enabled, []) }
+        let inlineCount = max(0, maxSlots - 1)
+        return (Array(enabled.prefix(inlineCount)), Array(enabled.dropFirst(inlineCount)))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -86,11 +109,56 @@ struct ExpandedView: View {
     }
 
     @ViewBuilder private var headerQuickTools: some View {
-        let keepAwake = quickTools.isKeepAwakeActive()
-        let micMuted = quickTools.isMicMuted()
         let outputs = quickTools.outputDevices()
+        let enabled = quickTools.enabledQuickTools().filter { key in
+            key != QuickToolID.out.rawValue || !outputs.isEmpty
+        }
+        let slots = Self.maxInlineToolSlots(
+            notchWidth: notch.size.width, hasLeadingSymbol: hasLeadingSymbol, expandedWidth: expandedWidth)
+        let partition = Self.partitionQuickTools(enabled, maxSlots: slots)
 
         HStack(spacing: 2) {
+            ForEach(partition.inline, id: \.self) { key in
+                inlineToolButton(for: key, outputs: outputs)
+            }
+
+            if !partition.overflow.isEmpty {
+                Button {
+                    showsOverflowPopover.toggle()
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 12, weight: .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .frame(width: 22, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Palette.textSecondary)
+                .accessibilityLabel(Text("tools.more", bundle: .module))
+                .popover(isPresented: $showsOverflowPopover) {
+                    overflowToolsPopover(keys: partition.overflow, outputs: outputs)
+                }
+            }
+        }
+        .popover(item: $activePopover) { tool in
+            switch tool {
+            case .notes: quickNotesPopover
+            case .clipboard: ClipboardAndSnippetsPopover()
+            case .search: SearchAndPalettePopover(send: send, openSettings: openSettings)
+            case .teleprompter: TeleprompterPopover()
+            case .stats: SystemStatsPopover()
+            case .hub: LauncherAndHubPopover()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func inlineToolButton(for key: String, outputs: [AudioOutputDeviceItem]) -> some View {
+        let keepAwake = quickTools.isKeepAwakeActive()
+        let micMuted = quickTools.isMicMuted()
+
+        switch key {
+        case QuickToolID.awake.rawValue:
             Button(action: quickTools.toggleKeepAwake) {
                 Image(systemName: keepAwake ? "cup.and.saucer.fill" : "cup.and.saucer")
                     .font(.system(size: 12, weight: .medium))
@@ -132,6 +200,7 @@ struct ExpandedView: View {
                 }
             }
 
+        case QuickToolID.mic.rawValue:
             Button(action: quickTools.toggleMicMute) {
                 Image(systemName: micMuted ? "mic.slash.fill" : "mic.fill")
                     .font(.system(size: 12, weight: .medium))
@@ -143,33 +212,31 @@ struct ExpandedView: View {
             .foregroundStyle(micMuted ? Palette.signalRed : Palette.textSecondary)
             .accessibilityLabel(Text("tools.micMute", bundle: .module))
 
-            if !outputs.isEmpty {
-                Menu {
-                    ForEach(outputs) { dev in
-                        Button {
-                            quickTools.selectOutputDevice(dev.id)
-                        } label: {
-                            HStack {
-                                Text(dev.name)
-                                if dev.isCurrent {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
+        case QuickToolID.out.rawValue:
+            Menu {
+                ForEach(outputs) { dev in
+                    Button {
+                        quickTools.selectOutputDevice(dev.id)
+                    } label: {
+                        HStack {
+                            Text(dev.name)
+                            if dev.isCurrent { Image(systemName: "checkmark") }
                         }
                     }
-                } label: {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .font(.system(size: 12, weight: .medium))
-                        .symbolRenderingMode(.hierarchical)
-                        .frame(width: 22, height: 22)
                 }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .fixedSize()
-                .foregroundStyle(Palette.textSecondary)
-                .accessibilityLabel(Text("tools.audioOutput", bundle: .module))
+            } label: {
+                Image(systemName: "speaker.wave.2.fill")
+                    .font(.system(size: 12, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 22, height: 22)
             }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .foregroundStyle(Palette.textSecondary)
+            .accessibilityLabel(Text("tools.audioOutput", bundle: .module))
 
+        case QuickToolID.drop.rawValue:
             Button(action: quickTools.pickColor) {
                 Image(systemName: "eyedropper")
                     .font(.system(size: 12, weight: .medium))
@@ -181,8 +248,9 @@ struct ExpandedView: View {
             .foregroundStyle(Palette.textSecondary)
             .accessibilityLabel(Text("tools.eyedropper", bundle: .module))
 
+        case QuickToolID.notes.rawValue:
             Button {
-                showsNotesPopover.toggle()
+                activePopover = activePopover == .notes ? nil : .notes
             } label: {
                 Image(systemName: "note.text")
                     .font(.system(size: 12, weight: .medium))
@@ -193,12 +261,10 @@ struct ExpandedView: View {
             .buttonStyle(.plain)
             .foregroundStyle(quickTools.notes().isEmpty ? Palette.textSecondary : Palette.textPrimary)
             .accessibilityLabel(Text("tools.quickNotes", bundle: .module))
-            .popover(isPresented: $showsNotesPopover) {
-                quickNotesPopover
-            }
 
+        case QuickToolID.clip.rawValue:
             Button {
-                showsClipboardPopover.toggle()
+                activePopover = activePopover == .clipboard ? nil : .clipboard
             } label: {
                 Image(systemName: "doc.on.clipboard")
                     .font(.system(size: 12, weight: .medium))
@@ -209,12 +275,10 @@ struct ExpandedView: View {
             .buttonStyle(.plain)
             .foregroundStyle(Palette.textSecondary)
             .accessibilityLabel(Text("tools.clipboard", bundle: .module))
-            .popover(isPresented: $showsClipboardPopover) {
-                ClipboardAndSnippetsPopover()
-            }
 
+        case QuickToolID.search.rawValue:
             Button {
-                showsSearchPopover.toggle()
+                activePopover = activePopover == .search ? nil : .search
             } label: {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 12, weight: .medium))
@@ -225,12 +289,10 @@ struct ExpandedView: View {
             .buttonStyle(.plain)
             .foregroundStyle(Palette.textSecondary)
             .accessibilityLabel(Text("tools.search", bundle: .module))
-            .popover(isPresented: $showsSearchPopover) {
-                SearchAndPalettePopover(send: send, openSettings: openSettings)
-            }
 
+        case QuickToolID.prompt.rawValue:
             Button {
-                showsTeleprompterPopover.toggle()
+                activePopover = activePopover == .teleprompter ? nil : .teleprompter
             } label: {
                 Image(systemName: "text.aligncenter")
                     .font(.system(size: 12, weight: .medium))
@@ -241,12 +303,10 @@ struct ExpandedView: View {
             .buttonStyle(.plain)
             .foregroundStyle(Palette.textSecondary)
             .accessibilityLabel(Text("tools.teleprompter", bundle: .module))
-            .popover(isPresented: $showsTeleprompterPopover) {
-                TeleprompterPopover()
-            }
 
+        case QuickToolID.stats.rawValue:
             Button {
-                showsStatsPopover.toggle()
+                activePopover = activePopover == .stats ? nil : .stats
             } label: {
                 Image(systemName: "cpu")
                     .font(.system(size: 12, weight: .medium))
@@ -257,12 +317,10 @@ struct ExpandedView: View {
             .buttonStyle(.plain)
             .foregroundStyle(Palette.textSecondary)
             .accessibilityLabel(Text("tools.stats", bundle: .module))
-            .popover(isPresented: $showsStatsPopover) {
-                SystemStatsPopover()
-            }
 
+        case QuickToolID.stocks.rawValue:
             Button {
-                showsHubPopover.toggle()
+                activePopover = activePopover == .hub ? nil : .hub
             } label: {
                 Image(systemName: "square.grid.2x2")
                     .font(.system(size: 12, weight: .medium))
@@ -273,10 +331,131 @@ struct ExpandedView: View {
             .buttonStyle(.plain)
             .foregroundStyle(Palette.textSecondary)
             .accessibilityLabel(Text("tools.hub.apps", bundle: .module))
-            .popover(isPresented: $showsHubPopover) {
-                LauncherAndHubPopover()
+
+        case QuickToolID.kbd.rawValue:
+            Button(action: quickTools.startKeyboardCleaningLock) {
+                Image(systemName: "keyboard")
+                    .font(.system(size: 12, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Palette.textSecondary)
+            .accessibilityLabel(Text("tools.keyboardLock", bundle: .module))
+
+        default:
+            EmptyView()
+        }
+    }
+
+    private func overflowToolsPopover(keys: [String], outputs: [AudioOutputDeviceItem]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(keys, id: \.self) { key in
+                overflowToolRow(for: key, outputs: outputs)
             }
         }
+        .padding(8)
+        .frame(width: 210)
+    }
+
+    @ViewBuilder
+    private func overflowToolRow(for key: String, outputs: [AudioOutputDeviceItem]) -> some View {
+        switch key {
+        case QuickToolID.awake.rawValue:
+            overflowButton(
+                symbol: quickTools.isKeepAwakeActive() ? "cup.and.saucer.fill" : "cup.and.saucer",
+                key: "tools.keepAwake",
+                tint: quickTools.isKeepAwakeActive() ? Palette.signalOrange : Palette.textPrimary
+            ) {
+                showsOverflowPopover = false
+                quickTools.toggleKeepAwake()
+            }
+        case QuickToolID.mic.rawValue:
+            overflowButton(
+                symbol: quickTools.isMicMuted() ? "mic.slash.fill" : "mic.fill",
+                key: "tools.micMute",
+                tint: quickTools.isMicMuted() ? Palette.signalRed : Palette.textPrimary
+            ) {
+                showsOverflowPopover = false
+                quickTools.toggleMicMute()
+            }
+        case QuickToolID.out.rawValue:
+            Menu {
+                ForEach(outputs) { dev in
+                    Button {
+                        showsOverflowPopover = false
+                        quickTools.selectOutputDevice(dev.id)
+                    } label: {
+                        HStack {
+                            Text(dev.name)
+                            if dev.isCurrent { Image(systemName: "checkmark") }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "speaker.wave.2.fill").frame(width: 16)
+                    Text("tools.audioOutput", bundle: .module)
+                        .font(TypeToken.caption.font)
+                    Spacer()
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+            }
+            .menuStyle(.borderlessButton)
+        case QuickToolID.drop.rawValue:
+            overflowButton(symbol: "eyedropper", key: "tools.eyedropper") {
+                showsOverflowPopover = false
+                quickTools.pickColor()
+            }
+        case QuickToolID.notes.rawValue:
+            overflowButton(symbol: "note.text", key: "tools.quickNotes") { openFromOverflow(.notes) }
+        case QuickToolID.clip.rawValue:
+            overflowButton(symbol: "doc.on.clipboard", key: "tools.clipboard") { openFromOverflow(.clipboard) }
+        case QuickToolID.search.rawValue:
+            overflowButton(symbol: "magnifyingglass", key: "tools.search") { openFromOverflow(.search) }
+        case QuickToolID.prompt.rawValue:
+            overflowButton(symbol: "text.aligncenter", key: "tools.teleprompter") { openFromOverflow(.teleprompter) }
+        case QuickToolID.stats.rawValue:
+            overflowButton(symbol: "cpu", key: "tools.stats") { openFromOverflow(.stats) }
+        case QuickToolID.stocks.rawValue:
+            overflowButton(symbol: "square.grid.2x2", key: "tools.hub.apps") { openFromOverflow(.hub) }
+        case QuickToolID.kbd.rawValue:
+            overflowButton(symbol: "keyboard", key: "tools.keyboardLock") {
+                showsOverflowPopover = false
+                quickTools.startKeyboardCleaningLock()
+            }
+        default:
+            EmptyView()
+        }
+    }
+
+    private func openFromOverflow(_ tool: ActiveToolPopover) {
+        showsOverflowPopover = false
+        Task { @MainActor in activePopover = tool }
+    }
+
+    private func overflowButton(
+        symbol: String, key: LocalizedStringKey, tint: Color = Palette.textPrimary, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(tint)
+                    .frame(width: 16)
+                Text(key, bundle: .module)
+                    .font(TypeToken.caption.font)
+                    .foregroundStyle(Palette.textPrimary)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var quickNotesPopover: some View {
@@ -304,6 +483,18 @@ struct ExpandedView: View {
                                 Text(note.text)
                                     .font(TypeToken.caption.font)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                Button {
+                                    quickTools.toggleNotePin(note.id)
+                                } label: {
+                                    Image(systemName: note.isPinned ? "pin.fill" : "pin")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(note.isPinned ? Palette.signalOrange : .secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(
+                                    Text(
+                                        note.isPinned ? "tools.quickNotes.unpin" : "tools.quickNotes.pin",
+                                        bundle: .module))
                                 Button {
                                     NSPasteboard.general.clearContents()
                                     NSPasteboard.general.setString(note.text, forType: .string)

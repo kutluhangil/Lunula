@@ -28,29 +28,26 @@ public struct AppearanceSettingsView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // MARK: - Hâle ve ışık
+            // MARK: - Halo & light
             VStack(alignment: .leading, spacing: 8) {
-                Text("Hâle ve ışık")
+                Text("settings.appearance.section.halo")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Palette.textPrimary)
                     .padding(.horizontal, 4)
 
                 VStack(spacing: 0) {
-                    // Hâle yoğunluğu
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .firstTextBaseline) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Hâle yoğunluğu")
+                                Text("settings.appearance.halo")
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(Palette.textPrimary)
-                                Text(
-                                    "%100, durum tokenlarının kendisi (ortam 0.16 · aktif 0.32 · uyarı 0.55). %0 kapalı."
-                                )
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(Palette.textSecondary)
+                                Text("settings.appearance.halo.subtitle")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(Palette.textSecondary)
                             }
                             Spacer()
-                            Text("%\(Int(round(settings.settings.haloIntensity * 100)))")
+                            Text(settings.settings.haloIntensity, format: .percent.precision(.fractionLength(0)))
                                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundColor(Palette.textPrimary)
@@ -71,13 +68,12 @@ public struct AppearanceSettingsView: View {
 
                     Divider().background(Palette.hairline)
 
-                    // İç kartlarda Liquid Glass yansıması
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("İç kartlarda Liquid Glass yansıması")
+                            Text("settings.appearance.useGlassCards")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Ada çekirdeği #000000 kalır; yalnızca #111113 kartlar üstten ışık alır.")
+                            Text("settings.appearance.useGlassCards.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -99,17 +95,14 @@ public struct AppearanceSettingsView: View {
 
                     Divider().background(Palette.hairline)
 
-                    // Menü çubuğunu siyah şeritle gizle
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Menü çubuğunu siyah şeritle gizle")
+                            Text("settings.appearance.hideNotchBar")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text(
-                                "Çentikli ekranda menü şeridi siyaha döner; çentik kaybolur, hâle parlamaya devam eder."
-                            )
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(Palette.textSecondary)
+                            Text("settings.appearance.hideNotchBar.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
                         }
                         Spacer()
                         Toggle(
@@ -129,14 +122,13 @@ public struct AppearanceSettingsView: View {
 
                     Divider().background(Palette.hairline)
 
-                    // Kapsül dikey konumu
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .firstTextBaseline) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Kapsül dikey konumu")
+                                Text("settings.appearance.pillOffset")
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(Palette.textPrimary)
-                                Text("Çentiksiz ekranlarda 180 × 22 kapsülün üst kenara uzaklığı.")
+                                Text("settings.appearance.pillOffset.subtitle")
                                     .font(.system(size: 11, weight: .medium))
                                     .foregroundColor(Palette.textSecondary)
                             }
@@ -159,6 +151,33 @@ public struct AppearanceSettingsView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
+
+                    Divider().background(Palette.hairline)
+
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.appearance.expandedWidth")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textPrimary)
+                            Text("settings.appearance.expandedWidth.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                        }
+                        Spacer()
+                        LunulaSegmentPicker(
+                            selection: Binding(
+                                get: { Int(settings.settings.expandedWidth.rounded()) },
+                                set: { v in settings.update { $0.expandedWidth = Double(v) } }
+                            ),
+                            items: [
+                                (value: 520, label: "520 pt"),
+                                (value: 560, label: "560 pt"),
+                                (value: 600, label: "600 pt"),
+                            ]
+                        )
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44)
                 }
                 .background(Palette.inkRaised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -168,20 +187,21 @@ public struct AppearanceSettingsView: View {
                 )
             }
 
-            // MARK: - Zamanlayıcı maskotu
+            // MARK: - Timer mascot
             VStack(alignment: .leading, spacing: 8) {
-                Text("Zamanlayıcı maskotu")
+                Text("settings.appearance.timerMascot")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Palette.textPrimary)
                     .padding(.horizontal, 4)
 
                 HStack(spacing: 8) {
-                    mascotCard(title: "Varsayılan", symbol: "timer", mascot: .none)
-                    mascotCard(title: "Tavşan", symbol: "hare.fill", mascot: .hare)
-                    mascotCard(title: "Kaplumbağa", symbol: "tortoise.fill", mascot: .tortoise)
-                    mascotCard(title: "Kedi", symbol: "cat.fill", mascot: .cat)
-                    mascotCard(title: "Kuş", symbol: "bird.fill", mascot: .bird)
-                    mascotCard(title: "Alev", symbol: "flame.fill", mascot: .flame)
+                    mascotCard(titleKey: "settings.appearance.mascot.default", symbol: "timer", mascot: .none)
+                    mascotCard(titleKey: "settings.appearance.mascot.hare", symbol: "hare.fill", mascot: .hare)
+                    mascotCard(
+                        titleKey: "settings.appearance.mascot.tortoise", symbol: "tortoise.fill", mascot: .tortoise)
+                    mascotCard(titleKey: "settings.appearance.mascot.cat", symbol: "cat.fill", mascot: .cat)
+                    mascotCard(titleKey: "settings.appearance.mascot.bird", symbol: "bird.fill", mascot: .bird)
+                    mascotCard(titleKey: "settings.appearance.mascot.flame", symbol: "flame.fill", mascot: .flame)
                 }
                 .padding(12)
                 .background(Palette.inkRaised)
@@ -192,9 +212,9 @@ public struct AppearanceSettingsView: View {
                 )
             }
 
-            // MARK: - Geri bildirim
+            // MARK: - Feedback
             VStack(alignment: .leading, spacing: 8) {
-                Text("Geri bildirim")
+                Text("settings.appearance.section.feedback")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Palette.textPrimary)
                     .padding(.horizontal, 4)
@@ -202,10 +222,10 @@ public struct AppearanceSettingsView: View {
                 VStack(spacing: 0) {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Dokunsal geri bildirim")
+                            Text("settings.appearance.haptics")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Trackpad’de hafif tık: açılışta ve uyarılarda.")
+                            Text("settings.appearance.haptics.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -220,10 +240,10 @@ public struct AppearanceSettingsView: View {
 
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Sesler")
+                            Text("settings.appearance.sounds")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Zamanlayıcı bitişi ve uyarılar.")
+                            Text("settings.appearance.sounds.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -246,7 +266,7 @@ public struct AppearanceSettingsView: View {
 
     // MARK: - Mascot Card
 
-    private func mascotCard(title: String, symbol: String, mascot: TimerMascot) -> some View {
+    private func mascotCard(titleKey: LocalizedStringKey, symbol: String, mascot: TimerMascot) -> some View {
         let isSelected = settings.settings.timerMascot == mascot
 
         return Button {
@@ -261,7 +281,7 @@ public struct AppearanceSettingsView: View {
                     .foregroundColor(isSelected ? Palette.amberGold : Palette.textSecondary)
                     .frame(height: 24)
 
-                Text(title)
+                Text(titleKey)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(isSelected ? Palette.amberGold : Palette.textSecondary)
                     .lineLimit(1)

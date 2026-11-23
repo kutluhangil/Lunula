@@ -14,7 +14,11 @@ import Testing
     }
     @Test func warmingInterpolatesFromNeutralToAmber() throws {
         let neutral = RGBAColor(red: 0xF5 / 255, green: 0xF5 / 255, blue: 0xF7 / 255)
-        let o = try #require(NSColor.systemOrange.usingColorSpace(.sRGB))
+        var resolvedOrange: NSColor?
+        NSAppearance(named: .darkAqua)?.performAsCurrentDrawingAppearance {
+            resolvedOrange = NSColor.systemOrange.usingColorSpace(.sRGB)
+        }
+        let o = try #require(resolvedOrange)
         let amber = RGBAColor(red: o.redComponent, green: o.greenComponent, blue: o.blueComponent)
         let mid = RGBAColor(
             red: (neutral.red + amber.red) / 2, green: (neutral.green + amber.green) / 2,

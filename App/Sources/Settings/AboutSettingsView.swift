@@ -11,9 +11,9 @@ struct AboutSettingsView: View {
     }
 
     private var versionString: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "100"
-        return "Sürüm \(version) (\(build))"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+        return String(localized: "settings.about.versionFormat \(version) \(build)")
     }
 
     var body: some View {
@@ -23,7 +23,7 @@ struct AboutSettingsView: View {
                 lunulaEmblem
                     .frame(width: 72, height: 72)
 
-                Text("Lunula")
+                Text("app.name")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Palette.textPrimary)
 
@@ -33,9 +33,9 @@ struct AboutSettingsView: View {
                     .foregroundStyle(Palette.textSecondary)
 
                 HStack(spacing: 6) {
-                    metricBadge(title: "%100 Native · Swift 6", dotColor: Palette.textPrimary)
-                    metricBadge(title: "App Sandbox", dotColor: Palette.textPrimary)
-                    metricBadge(title: "Boşta < %0.1 CPU · 0 uyanma", dotColor: Palette.signalGreen)
+                    metricBadge(titleKey: "settings.about.badge.native", dotColor: Palette.textPrimary)
+                    metricBadge(titleKey: "settings.about.badge.sandbox", dotColor: Palette.textPrimary)
+                    metricBadge(titleKey: "settings.about.badge.idle", dotColor: Palette.signalGreen)
                 }
                 .padding(.top, 4)
             }
@@ -44,7 +44,7 @@ struct AboutSettingsView: View {
 
             // MARK: - Licenses and Attributions Section
             VStack(alignment: .leading, spacing: 8) {
-                Text("Lisanslar ve atıflar")
+                Text("settings.about.licensesTitle")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Palette.textPrimary)
                     .padding(.horizontal, 4)
@@ -65,7 +65,7 @@ struct AboutSettingsView: View {
                     Divider().overlay(Color.white.opacity(0.08))
 
                     HStack {
-                        Text("Hava durumu verileri")
+                        Text("settings.about.weatherData")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(Palette.textPrimary)
                         Spacer()
@@ -93,7 +93,12 @@ struct AboutSettingsView: View {
     }
 
     private var lunulaEmblem: some View {
-        ZStack {
+        let crescentGradient = LinearGradient(
+            colors: [Palette.warmCream, Palette.amberGold],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        return ZStack {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.black)
                 .overlay(
@@ -101,28 +106,16 @@ struct AboutSettingsView: View {
                         .stroke(Color.white.opacity(0.10), lineWidth: 0.5)
                 )
 
-            // Blur glow behind crescent
+            // Blur glow behind crescent (even-odd fill cuts out the inner circle)
             crescentShape
-                .fill(
-                    LinearGradient(
-                        colors: [Palette.warmCream, Palette.amberGold],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(crescentGradient, style: FillStyle(eoFill: true))
                 .frame(width: 44, height: 44)
                 .opacity(0.55)
                 .blur(radius: 4)
 
             // Crisp sharp crescent
             crescentShape
-                .fill(
-                    LinearGradient(
-                        colors: [Palette.warmCream, Palette.amberGold],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(crescentGradient, style: FillStyle(eoFill: true))
                 .frame(width: 44, height: 44)
         }
     }
@@ -131,12 +124,12 @@ struct AboutSettingsView: View {
         CrescentMoonShape()
     }
 
-    private func metricBadge(title: String, dotColor: Color) -> some View {
+    private func metricBadge(titleKey: LocalizedStringKey, dotColor: Color) -> some View {
         HStack(spacing: 6) {
             Circle()
                 .fill(dotColor)
                 .frame(width: 6, height: 6)
-            Text(title)
+            Text(titleKey)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Palette.textPrimary)
         }
@@ -147,13 +140,12 @@ struct AboutSettingsView: View {
     }
 }
 
-/// A crescent moon created by subtracting a secondary offset circle from a base circle.
+/// A crescent moon created by subtracting a secondary offset circle from a base circle via even-odd fill.
 private struct CrescentMoonShape: Shape {
     func path(in rect: CGRect) -> Path {
         var outer = Path()
         outer.addEllipse(in: rect)
 
-        // The subtracting circle cut out from the upper right
         let cutRadius = rect.width * 0.477  // 21 / 44
         let cutX = rect.midX + rect.width * (5.0 / 44.0)
         let cutY = rect.midY - rect.height * (4.0 / 44.0)
@@ -167,7 +159,6 @@ private struct CrescentMoonShape: Shape {
         var inner = Path()
         inner.addEllipse(in: cutRect)
 
-        // Even-odd fill rule subtracts inner from outer
         var crescent = Path()
         crescent.addPath(outer)
         crescent.addPath(inner)

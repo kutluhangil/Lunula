@@ -11,23 +11,27 @@ public enum SettingsTabID: String, CaseIterable, Identifiable, Sendable {
 
     public var id: String { rawValue }
 
-    public var shortTitle: String {
+    public var titleKey: LocalizedStringResource {
         switch self {
-        case .general: "Genel"
-        case .appearance: "Görünüm"
-        case .activities: "Etkinlikler"
-        case .tools: "Araçlar"
-        case .about: "Hakkında"
+        case .general: "settings.tab.general"
+        case .appearance: "settings.tab.appearance"
+        case .activities: "settings.tab.activities"
+        case .tools: "settings.tab.tools"
+        case .about: "settings.tab.about"
         }
+    }
+
+    public var shortTitle: String {
+        String(localized: titleKey)
     }
 
     public var fullTitle: String {
         switch self {
-        case .general: "Genel"
-        case .appearance: "Görünüm ve Hâle"
-        case .activities: "Etkinlikler ve İzinler"
-        case .tools: "Araçlar ve Otomasyon"
-        case .about: "Hakkında"
+        case .general: String(localized: "settings.tab.full.general")
+        case .appearance: String(localized: "settings.tab.full.appearance")
+        case .activities: String(localized: "settings.tab.full.activities")
+        case .tools: String(localized: "settings.tab.full.tools")
+        case .about: String(localized: "settings.tab.full.about")
         }
     }
 
@@ -64,13 +68,13 @@ public struct SettingsTab: Identifiable {
         [
             SettingsTab(
                 id: SettingsTabID.general.rawValue,
-                titleKey: "settings.tab.general",
+                titleKey: SettingsTabID.general.titleKey,
                 symbol: SettingsTabID.general.symbol,
                 makeView: { AnyView(GeneralSettingsView(settings: settings, launchAtLogin: launchAtLogin)) }
             ),
             SettingsTab(
                 id: SettingsTabID.about.rawValue,
-                titleKey: "settings.tab.about",
+                titleKey: SettingsTabID.about.titleKey,
                 symbol: SettingsTabID.about.symbol,
                 makeView: { AnyView(AboutSettingsView()) }
             ),
@@ -81,38 +85,42 @@ public struct SettingsTab: Identifiable {
         settings: SettingsStore,
         launchAtLogin: LaunchAtLoginService,
         permission: @escaping @MainActor (IslandFeature) -> PermissionState? = { _ in nil },
-        request: @escaping @MainActor (IslandFeature) -> Void = { _ in }
+        request: @escaping @MainActor (IslandFeature) -> Void = { _ in },
+        searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] }
     ) -> [SettingsTab] {
         [
             SettingsTab(
                 id: SettingsTabID.general.rawValue,
-                titleKey: "settings.tab.general",
+                titleKey: SettingsTabID.general.titleKey,
                 symbol: SettingsTabID.general.symbol,
                 makeView: { AnyView(GeneralSettingsView(settings: settings, launchAtLogin: launchAtLogin)) }
             ),
             SettingsTab(
                 id: SettingsTabID.appearance.rawValue,
-                titleKey: "settings.tab.appearance",
+                titleKey: SettingsTabID.appearance.titleKey,
                 symbol: SettingsTabID.appearance.symbol,
                 makeView: { AnyView(AppearanceSettingsView(settings: settings)) }
             ),
             SettingsTab(
                 id: SettingsTabID.activities.rawValue,
-                titleKey: "settings.tab.activities",
+                titleKey: SettingsTabID.activities.titleKey,
                 symbol: SettingsTabID.activities.symbol,
                 makeView: {
-                    AnyView(ActivitiesSettingsView(settings: settings, permission: permission, request: request))
+                    AnyView(
+                        ActivitiesSettingsView(
+                            settings: settings, permission: permission, request: request,
+                            searchWeatherCity: searchWeatherCity))
                 }
             ),
             SettingsTab(
                 id: SettingsTabID.tools.rawValue,
-                titleKey: "settings.tab.tools",
+                titleKey: SettingsTabID.tools.titleKey,
                 symbol: SettingsTabID.tools.symbol,
                 makeView: { AnyView(ToolsSettingsView(settings: settings)) }
             ),
             SettingsTab(
                 id: SettingsTabID.about.rawValue,
-                titleKey: "settings.tab.about",
+                titleKey: SettingsTabID.about.titleKey,
                 symbol: SettingsTabID.about.symbol,
                 makeView: { AnyView(AboutSettingsView()) }
             ),

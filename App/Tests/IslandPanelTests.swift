@@ -102,6 +102,15 @@ import Testing
         #expect(m.sync(screens: [.mbp14], mode: .allDisplays) { _ in AnyView(EmptyView()) }.keys.sorted() == [1])
         m.controller(for: 1)?.close()
     }
+
+    @Test func notchBackdropCoversFullDisplayTopBand() {
+        let notch = NotchGeometry.metrics(for: .mbp14)
+        let rect = IslandWindowController.backdropRect(screen: .mbp14, notch: notch)
+        #expect(rect.minX == ScreenDescriptor.mbp14.frame.minX)
+        #expect(rect.width == ScreenDescriptor.mbp14.frame.width)
+        #expect(rect.height == notch.size.height)
+        #expect(rect.maxY == ScreenDescriptor.mbp14.frame.maxY)
+    }
 }
 
 @MainActor private final class ScrollSpy: HotZoneDelegate {

@@ -4,7 +4,7 @@ import IslandDesign
 import IslandServices
 import SwiftUI
 
-/// Window controller for the unified 680 × 540 pt Lunula settings window matching Claude Design.
+/// Window controller for the unified 680 × 540 pt Lunula settings window.
 @MainActor public final class SettingsWindowController: NSWindowController {
     public let settingsStore: SettingsStore?
     public let tabs: [SettingsTab]
@@ -13,21 +13,24 @@ import SwiftUI
         settings: SettingsStore,
         launchAtLogin: LaunchAtLoginService,
         permission: @escaping @MainActor (IslandFeature) -> PermissionState? = { _ in nil },
-        request: @escaping @MainActor (IslandFeature) -> Void = { _ in }
+        request: @escaping @MainActor (IslandFeature) -> Void = { _ in },
+        searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] }
     ) {
         self.settingsStore = settings
         self.tabs = SettingsTab.allTabs(
             settings: settings,
             launchAtLogin: launchAtLogin,
             permission: permission,
-            request: request
+            request: request,
+            searchWeatherCity: searchWeatherCity
         )
 
         let rootView = SettingsWindowView(
             settings: settings,
             launchAtLogin: launchAtLogin,
             permission: permission,
-            request: request
+            request: request,
+            searchWeatherCity: searchWeatherCity
         )
         let hosting = NSHostingController(rootView: rootView)
 

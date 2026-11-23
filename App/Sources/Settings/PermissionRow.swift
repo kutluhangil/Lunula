@@ -78,7 +78,7 @@ public struct PermissionRow: View {
             } else if state == .denied {
                 Button(action: onOpenSettings) {
                     HStack(spacing: 4) {
-                        Text(String(localized: "settings.general.openLoginItems"))
+                        Text(String(localized: "permission.row.openSettings"))
                         Image(systemName: "arrow.up.forward")
                             .font(.system(size: 9, weight: .semibold))
                     }

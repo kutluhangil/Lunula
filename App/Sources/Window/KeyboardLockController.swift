@@ -125,7 +125,7 @@ private struct KeyboardLockOverlayView: View {
                     .foregroundStyle(Palette.signalOrange)
 
                 HStack(spacing: 8) {
-                    Text("Keystroke HUD:")
+                    Text("lock.keyboard.hudLabel")
                         .font(TypeToken.caption.font)
                         .foregroundStyle(Palette.textSecondary)
                     Text(model.lastKeystrokeLabel)

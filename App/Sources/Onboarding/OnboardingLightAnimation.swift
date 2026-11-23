@@ -26,21 +26,6 @@ struct OnboardingLightAnimation: View {
             // Background
             Color.black
 
-            // Decorative window traffic light dots
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(Color(red: 1.0, green: 0.37, blue: 0.34))
-                    .frame(width: 12, height: 12)
-                Circle()
-                    .fill(Color(red: 0.23, green: 0.23, blue: 0.24))
-                    .frame(width: 12, height: 12)
-                Circle()
-                    .fill(Color(red: 0.23, green: 0.23, blue: 0.24))
-                    .frame(width: 12, height: 12)
-            }
-            .padding(.leading, 12)
-            .padding(.top, 12)
-
             // Centered animated notch contour
             VStack {
                 ZStack {

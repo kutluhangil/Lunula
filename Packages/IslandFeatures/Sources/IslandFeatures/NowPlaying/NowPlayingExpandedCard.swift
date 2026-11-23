@@ -28,16 +28,29 @@ struct NowPlayingExpandedCard: View {
                     .lineLimit(1)
                 NowPlayingProgressBar(snapshot: snapshot, accent: accent)
                     .padding(.top, 6)
-                if let lyric = quickTools.activeLyricLine(snapshot), !lyric.isEmpty {
-                    HStack(spacing: 4) {
-                        Image(systemName: "music.mic")
-                            .font(.system(size: 10, weight: .medium))
-                        Text(lyric)
-                            .font(TypeToken.caption.font)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
+                if let pair = quickTools.activeLyricLines(snapshot)
+                    ?? quickTools.activeLyricLine(snapshot).map({ ($0, nil) }),
+                    !pair.active.isEmpty
+                {
+                    VStack(alignment: .leading, spacing: 1) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "music.mic")
+                                .font(.system(size: 11, weight: .medium))
+                            Text(pair.active)
+                                .font(TypeToken.body.font)
+                                .foregroundStyle(Palette.textPrimary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
+                        if let next = pair.next, !next.isEmpty {
+                            Text(next)
+                                .font(TypeToken.caption.font)
+                                .foregroundStyle(Palette.textSecondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .padding(.leading, 15)
+                        }
                     }
-                    .foregroundStyle(Palette.textSecondary)
                     .padding(.top, 2)
                 }
             }

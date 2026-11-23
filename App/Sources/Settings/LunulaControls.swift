@@ -253,11 +253,11 @@ public struct LunulaTickedSlider: View {
 
             // 9 tick marks (0...8)
             HStack {
-                ForEach(0...8, id: \.self) { _ in
+                ForEach(0...8, id: \.self) { index in
                     RoundedRectangle(cornerRadius: 1)
                         .fill(Palette.textTertiary)
                         .frame(width: 2, height: 4)
-                    if true {
+                    if index < 8 {
                         Spacer()
                     }
                 }

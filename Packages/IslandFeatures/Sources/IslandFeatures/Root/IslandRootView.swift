@@ -27,8 +27,11 @@ public struct IslandRootView: View {
     /// Where the pointer counts as over the island (panel-local, top-left origin): the island and its bubbles,
     /// reaching above the top edge so a pointer resting on the screen edge is inside. Hover is tracked in AppKit
     /// against this region because SwiftUI's onHover reports spurious exits while the island resizes.
-    public static func hoverRegion(state: IslandState, notch: NotchMetrics) -> [CGRect] {
-        let island = IslandSurface.islandRect(size: IslandSurface.islandSize(state: state, notch: notch))
+    public static func hoverRegion(
+        state: IslandState, notch: NotchMetrics, expandedWidth: CGFloat = 520
+    ) -> [CGRect] {
+        let island = IslandSurface.islandRect(
+            size: IslandSurface.islandSize(state: state, notch: notch, expandedWidth: expandedWidth))
         let bubbles = state.layout.detached.indices.map {
             IslandSurface.bubbleRect(index: $0, island: island, side: notch.size.height)
         }

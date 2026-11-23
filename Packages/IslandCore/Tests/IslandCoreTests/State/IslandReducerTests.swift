@@ -173,4 +173,19 @@ private func run(_ s: IslandState, _ events: IslandEvent...) -> IslandTransition
         #expect(fs.phase == .idle && fs.isFullscreen)
         #expect(IslandReducer.reduce(fs, .optionsChanged(IslandOptions())).state.phase == .hidden)
     }
+
+    @Test func disabledGestureOptionsBlockPeekAndSwipes() {
+        var s = IslandState()
+        s.options.hoverToPeekEnabled = false
+        s.options.swipeGesturesEnabled = false
+        let entered = IslandReducer.reduce(s, .pointerEnteredHotZone)
+        #expect(entered.effects.isEmpty)
+        let dwelled = IslandReducer.reduce(entered.state, .pointerDwellElapsed(speed: 100))
+        #expect(dwelled.state.phase == .idle)
+        let swipedDown = IslandReducer.reduce(s, .swipedDown)
+        #expect(swipedDown.state.phase == .idle)
+        let expanded = IslandReducer.reduce(s, .clicked(.island)).state
+        #expect(IslandReducer.reduce(expanded, .swipedUp).state.phase == .expanded(.home))
+        #expect(IslandReducer.reduce(expanded, .clickedOutside).state.phase == .idle)
+    }
 }

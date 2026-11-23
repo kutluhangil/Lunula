@@ -8,6 +8,9 @@ import SwiftUI
     let hotZone: HotZonePanel
     let container: IslandContainerView
     private let host: NSHostingView<AnyView>
+    private var notchBackdrop: NSPanel?
+    private var lastScreen: ScreenDescriptor
+    private var backdropRequested = false
     private var resignKeyObserver: NSObjectProtocol?
 
     /// Scroll gestures over the open island (the hot zone is covered then); swipe up closes it.
@@ -21,6 +24,7 @@ import SwiftUI
 
     init(screen: ScreenDescriptor, content: AnyView) {
         screenID = screen.id
+        lastScreen = screen
         let notch = NotchGeometry.metrics(for: screen)
         let frame = IslandMetrics.panelFrame(notch: notch, screen: screen)
         panel = IslandPanel(contentRect: frame)
@@ -47,10 +51,62 @@ import SwiftUI
     }
 
     func layout(screen: ScreenDescriptor, hotZoneRect: CGRect) {
+        lastScreen = screen
         let notch = NotchGeometry.metrics(for: screen)
         panel.setFrame(IslandMetrics.panelFrame(notch: notch, screen: screen), display: false)
         hotZone.setFrame(hotZoneRect, display: false)
         if panel.isVisible { hotZone.order(.below, relativeTo: panel.windowNumber) }
+        updateNotchBackdropFrame(screen: screen, notch: notch)
+    }
+
+    /// Shows or hides a full-screen-width #000000 strip behind the menu bar to blend the hardware notch.
+    func setNotchBackdropVisible(_ visible: Bool) {
+        backdropRequested = visible
+        let notch = NotchGeometry.metrics(for: lastScreen)
+        let shouldShow = visible && notch.hasHardwareNotch
+        if shouldShow {
+            let strip = ensureNotchBackdrop(screen: lastScreen, notch: notch)
+            updateNotchBackdropFrame(screen: lastScreen, notch: notch)
+            strip.orderFrontRegardless()
+        } else {
+            notchBackdrop?.orderOut(nil)
+        }
+    }
+
+    private func ensureNotchBackdrop(screen: ScreenDescriptor, notch: NotchMetrics) -> NSPanel {
+        if let existing = notchBackdrop { return existing }
+        let strip = NSPanel(
+            contentRect: Self.backdropRect(screen: screen, notch: notch),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false)
+        strip.isOpaque = true
+        strip.backgroundColor = .black
+        strip.hasShadow = false
+        strip.ignoresMouseEvents = true
+        strip.isMovable = false
+        strip.hidesOnDeactivate = false
+        strip.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        strip.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue - 1)
+        notchBackdrop = strip
+        return strip
+    }
+
+    private func updateNotchBackdropFrame(screen: ScreenDescriptor, notch: NotchMetrics) {
+        guard let strip = notchBackdrop else { return }
+        guard backdropRequested && notch.hasHardwareNotch else {
+            strip.orderOut(nil)
+            return
+        }
+        strip.setFrame(Self.backdropRect(screen: screen, notch: notch), display: false)
+    }
+
+    static func backdropRect(screen: ScreenDescriptor, notch: NotchMetrics) -> CGRect {
+        CGRect(
+            x: screen.frame.minX,
+            y: screen.frame.maxY - notch.size.height,
+            width: screen.frame.width,
+            height: notch.size.height)
     }
 
     /// Swaps the SwiftUI root, e.g. when the notch geometry of this display changed.
@@ -59,6 +115,8 @@ import SwiftUI
     func close() {
         if let resignKeyObserver { NotificationCenter.default.removeObserver(resignKeyObserver) }
         resignKeyObserver = nil
+        notchBackdrop?.close()
+        notchBackdrop = nil
         hotZone.close()
         panel.close()
     }

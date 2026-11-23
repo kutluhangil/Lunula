@@ -3,49 +3,65 @@ import IslandCore
 import IslandDesign
 import SwiftUI
 
-/// Tab 4: Quick tools grid, cross-tab jump links, and `lunula://` agent hooks.
+/// Tab 4: Quick tools grid (toggle + drag-to-reorder), cross-tab jump links, and `lunula://` agent hooks.
 struct ToolsSettingsView: View {
     @Bindable var settings: SettingsStore
     var onSelectTab: ((SettingsTabID) -> Void)?
 
     @State private var copiedIndex: Int?
+    @State private var targetedToolKey: String?
 
     private struct ToolItem: Identifiable {
         let key: String
-        let title: String
+        let titleKey: LocalizedStringKey
         let symbol: String
         let hasShortcutBadge: Bool
         var id: String { key }
     }
 
-    private let tools: [ToolItem] = [
-        ToolItem(key: "awake", title: "Uyanık Tut", symbol: "cup.and.saucer.fill", hasShortcutBadge: false),
-        ToolItem(key: "mic", title: "Mikrofonu sustur", symbol: "mic.slash.fill", hasShortcutBadge: false),
-        ToolItem(key: "out", title: "Ses çıkışı", symbol: "speaker.wave.2.fill", hasShortcutBadge: false),
-        ToolItem(key: "drop", title: "Renk damlalığı", symbol: "eyedropper", hasShortcutBadge: false),
-        ToolItem(key: "notes", title: "Hızlı notlar", symbol: "note.text", hasShortcutBadge: false),
-        ToolItem(key: "clip", title: "Pano ve şablonlar", symbol: "doc.on.clipboard", hasShortcutBadge: false),
-        ToolItem(key: "search", title: "Ara, hesapla, komut", symbol: "magnifyingglass", hasShortcutBadge: false),
-        ToolItem(key: "prompt", title: "Teleprompter", symbol: "quote.bubble", hasShortcutBadge: false),
-        ToolItem(key: "stats", title: "Sistem istatistikleri", symbol: "gauge.with.needle", hasShortcutBadge: false),
-        ToolItem(
-            key: "stocks", title: "Başlatıcı ve Borsa", symbol: "chart.line.uptrend.xyaxis", hasShortcutBadge: false),
-        ToolItem(key: "kbd", title: "Klavye temizleme", symbol: "keyboard", hasShortcutBadge: true),
+    private static let catalog: [String: ToolItem] = [
+        "awake": ToolItem(
+            key: "awake", titleKey: "settings.tools.item.awake", symbol: "cup.and.saucer.fill", hasShortcutBadge: false),
+        "mic": ToolItem(
+            key: "mic", titleKey: "settings.tools.item.mic", symbol: "mic.slash.fill", hasShortcutBadge: false),
+        "out": ToolItem(
+            key: "out", titleKey: "settings.tools.item.out", symbol: "speaker.wave.2.fill", hasShortcutBadge: false),
+        "drop": ToolItem(
+            key: "drop", titleKey: "settings.tools.item.drop", symbol: "eyedropper", hasShortcutBadge: false),
+        "notes": ToolItem(
+            key: "notes", titleKey: "settings.tools.item.notes", symbol: "note.text", hasShortcutBadge: false),
+        "clip": ToolItem(
+            key: "clip", titleKey: "settings.tools.item.clip", symbol: "doc.on.clipboard", hasShortcutBadge: false),
+        "search": ToolItem(
+            key: "search", titleKey: "settings.tools.item.search", symbol: "magnifyingglass", hasShortcutBadge: false),
+        "prompt": ToolItem(
+            key: "prompt", titleKey: "settings.tools.item.prompt", symbol: "quote.bubble", hasShortcutBadge: false),
+        "stats": ToolItem(
+            key: "stats", titleKey: "settings.tools.item.stats", symbol: "gauge.with.needle", hasShortcutBadge: false),
+        "stocks": ToolItem(
+            key: "stocks", titleKey: "settings.tools.item.stocks", symbol: "chart.line.uptrend.xyaxis",
+            hasShortcutBadge: false),
+        "kbd": ToolItem(
+            key: "kbd", titleKey: "settings.tools.item.kbd", symbol: "keyboard", hasShortcutBadge: true),
     ]
 
-    private let agentURLs: [(url: String, description: String)] = [
-        ("lunula://activity/show", "Özel bir etkinliği adada göster"),
-        ("lunula://ai/usage", "AI kullanım limitini kompakt adada göster"),
-        ("lunula://agent/approval", "Ajan onayını sor; tam ekranda da görünür"),
+    private var orderedTools: [ToolItem] {
+        QuickToolID.normalizedOrder(settings.settings.quickToolOrder).compactMap { Self.catalog[$0] }
+    }
+
+    private let agentURLs: [(url: String, descriptionKey: LocalizedStringKey)] = [
+        ("lunula://activity/show", "settings.tools.url.show"),
+        ("lunula://ai/usage", "settings.tools.url.aiUsage"),
+        ("lunula://agent/approval", "settings.tools.url.approval"),
     ]
 
     private var retentionText: String {
         switch settings.settings.shelfRetentionDays {
-        case nil: "Asla"
-        case 1: "1 gün"
-        case 7: "7 gün"
-        case 30: "30 gün"
-        case let days?: "\(days) gün"
+        case nil: String(localized: "settings.shelf.retention.never")
+        case 1: String(localized: "settings.shelf.retention.1")
+        case 7: String(localized: "settings.shelf.retention.7")
+        case 30: String(localized: "settings.shelf.retention.30")
+        case let days?: String(localized: "settings.common.days \(days)")
         }
     }
 
@@ -64,19 +80,20 @@ struct ToolsSettingsView: View {
         VStack(alignment: .leading, spacing: 20) {
             // MARK: - Section 1: Toolbar tools
             VStack(alignment: .leading, spacing: 8) {
-                Text("Genişlemiş ada araç çubuğu")
+                Text("settings.tools.section.toolbar")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Palette.textPrimary)
                     .padding(.horizontal, 4)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Seçili araçlar genişlemiş adanın üst çubuğunda durur. Sıra, sürükleyerek değişir.")
+                    Text("settings.tools.toolbar.subtitle")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Palette.textSecondary)
 
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                        ForEach(tools) { item in
+                        ForEach(orderedTools) { item in
                             let isEnabled = settings.settings.enabledQuickTools.contains(item.key)
+                            let isDropTarget = targetedToolKey == item.key
                             Button {
                                 toggleTool(item.key)
                             } label: {
@@ -84,7 +101,7 @@ struct ToolsSettingsView: View {
                                     Image(systemName: item.symbol)
                                         .font(.system(size: 13, weight: .medium))
                                         .frame(width: 16, height: 16)
-                                    Text(item.title)
+                                    Text(item.titleKey)
                                         .font(.system(size: 13, weight: .medium))
                                         .lineLimit(1)
                                         .truncationMode(.tail)
@@ -102,13 +119,23 @@ struct ToolsSettingsView: View {
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                                         .stroke(
-                                            isEnabled ? Color.white.opacity(0.24) : Color.white.opacity(0.10),
-                                            lineWidth: 0.5
+                                            isDropTarget
+                                                ? Palette.amberGold
+                                                : (isEnabled ? Color.white.opacity(0.24) : Color.white.opacity(0.10)),
+                                            lineWidth: isDropTarget ? 1.0 : 0.5
                                         )
                                 )
                                 .foregroundStyle(isEnabled ? Palette.textPrimary : Palette.textSecondary)
                             }
                             .buttonStyle(.plain)
+                            .draggable(item.key)
+                            .dropDestination(for: String.self) { dropped, _ in
+                                guard let draggedKey = dropped.first else { return false }
+                                return moveTool(draggedKey, to: item.key)
+                            } isTargeted: { targeted in
+                                targetedToolKey =
+                                    targeted ? item.key : (targetedToolKey == item.key ? nil : targetedToolKey)
+                            }
                         }
                     }
                 }
@@ -123,29 +150,31 @@ struct ToolsSettingsView: View {
 
             // MARK: - Section 2: Links to other tabs
             VStack(alignment: .leading, spacing: 8) {
-                Text("Diğer sekmelerde")
+                Text("settings.tools.section.otherTabs")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Palette.textPrimary)
                     .padding(.horizontal, 4)
 
                 VStack(spacing: 0) {
                     crossTabRow(
-                        title: "Çift ⌥ ile adayı aç/kapat",
-                        path: "Genel › Kısayollar",
-                        value: settings.settings.doubleTapOptionToToggle ? "Açık" : "Kapalı",
+                        titleKey: "settings.appearance.doubleTapOption",
+                        pathKey: "settings.tools.jump.doubleTap.path",
+                        value: String(
+                            localized: settings.settings.doubleTapOptionToToggle
+                                ? "settings.common.on" : "settings.common.off"),
                         targetTab: .general
                     )
                     Divider().overlay(Color.white.opacity(0.08))
                     crossTabRow(
-                        title: "Tam şarj uyarı eşiği",
-                        path: "Etkinlikler › Pil uyarıları",
-                        value: "%\(settings.settings.fullChargeThreshold)",
+                        titleKey: "settings.appearance.fullChargeThreshold",
+                        pathKey: "settings.tools.jump.charge.path",
+                        value: "\(settings.settings.fullChargeThreshold)%",
                         targetTab: .activities
                     )
                     Divider().overlay(Color.white.opacity(0.08))
                     crossTabRow(
-                        title: "Raf saklama süresi",
-                        path: "Etkinlikler › Raf",
+                        titleKey: "settings.tools.jump.shelf.title",
+                        pathKey: "settings.tools.jump.shelf.path",
                         value: retentionText,
                         targetTab: .activities
                     )
@@ -160,7 +189,7 @@ struct ToolsSettingsView: View {
 
             // MARK: - Section 3: lunula:// and Agent Hooks
             VStack(alignment: .leading, spacing: 8) {
-                Text("lunula:// ve ajan kancaları")
+                Text("settings.tools.section.hooks")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Palette.textPrimary)
                     .padding(.horizontal, 4)
@@ -176,7 +205,7 @@ struct ToolsSettingsView: View {
                                     Text(item.url)
                                         .font(.system(size: 11, design: .monospaced))
                                         .foregroundStyle(Palette.textPrimary)
-                                    Text(item.description)
+                                    Text(item.descriptionKey)
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundStyle(Palette.textSecondary)
                                 }
@@ -184,7 +213,7 @@ struct ToolsSettingsView: View {
                                 Button {
                                     copyToClipboard(text: item.url, index: index)
                                 } label: {
-                                    Text(copiedIndex == index ? "Kopyalandı" : "Kopyala")
+                                    Text(copiedIndex == index ? "settings.tools.copied" : "settings.tools.copy")
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundStyle(
                                             copiedIndex == index ? Palette.signalGreen : Palette.textPrimary
@@ -207,7 +236,7 @@ struct ToolsSettingsView: View {
                             .stroke(Color.white.opacity(0.10), lineWidth: 0.5)
                     )
 
-                    Text("Claude Code kancası · ~/.claude/settings.json")
+                    Text("settings.tools.claudeHookCaption")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Palette.textSecondary)
 
@@ -234,16 +263,18 @@ struct ToolsSettingsView: View {
         }
     }
 
-    private func crossTabRow(title: String, path: String, value: String, targetTab: SettingsTabID) -> some View {
+    private func crossTabRow(
+        titleKey: LocalizedStringKey, pathKey: LocalizedStringKey, value: String, targetTab: SettingsTabID
+    ) -> some View {
         Button {
             onSelectTab?(targetTab)
         } label: {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
+                    Text(titleKey)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Palette.textPrimary)
-                    Text(path)
+                    Text(pathKey)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Palette.textSecondary)
                 }
@@ -270,6 +301,18 @@ struct ToolsSettingsView: View {
                 s.enabledQuickTools.insert(key)
             }
         }
+    }
+
+    private func moveTool(_ draggedKey: String, to targetKey: String) -> Bool {
+        guard draggedKey != targetKey else { return false }
+        var order = QuickToolID.normalizedOrder(settings.settings.quickToolOrder)
+        guard let from = order.firstIndex(of: draggedKey), let to = order.firstIndex(of: targetKey) else {
+            return false
+        }
+        let item = order.remove(at: from)
+        order.insert(item, at: to)
+        settings.update { $0.quickToolOrder = order }
+        return true
     }
 
     private func copyToClipboard(text: String, index: Int) {

@@ -7,6 +7,7 @@ import IslandFeatures
 import IslandServices
 import OSLog
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The only place concrete services are created and wired together.
 @MainActor
@@ -19,7 +20,8 @@ final class CompositionRoot {
     private let launchAtLogin = LaunchAtLoginService()
     private let windows = IslandWindowManager()
     private lazy var hub = ActivityHub(time: time, settings: settings)
-    private lazy var timer = TimerController(time: time, defaults: .standard)
+    private lazy var timer = TimerController(
+        time: time, defaults: .standard, planProvider: { [unowned self] in settings.settings.pomodoroPlan })
     private lazy var nowPlaying: NowPlayingCoordinator = {
         let runner = ScriptRunner()
         var sources: [NowPlayingSource] = [MusicSource(runner: runner)]
@@ -113,10 +115,10 @@ final class CompositionRoot {
             broadcast(.activitiesChanged(layout))
         }
         hub.onAlert = { [unowned self] alert in
-            if alert.kind == .timerFinished {
-                focusHistory.recordCompletedMinutes(25, on: time.now)
-            }
             broadcast(.alertRaised(alert))
+        }
+        timer.onFocusCompleted = { [unowned self] minutes in
+            focusHistory.recordCompletedMinutes(minutes, on: time.now)
         }
         power.fullChargeThreshold = { [unowned self] in settings.settings.fullChargeThreshold }
         hub.register(timer, feature: .timer)
@@ -147,9 +149,11 @@ final class CompositionRoot {
         hub.register(calendar, feature: .calendar)
         if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
         hub.register(alerts: competing, feature: .customActivities)
-        competing.start()
         hub.register(alerts: externalDrives, feature: .customActivities)
-        externalDrives.start()
+        if settings.settings.enabledFeatures.contains(.customActivities) {
+            competing.start()
+            externalDrives.start()
+        }
         capsLock.labelProvider = { isOn in
             String(localized: isOn ? "alert.capsLockOn" : "alert.capsLockOff")
         }
@@ -158,7 +162,11 @@ final class CompositionRoot {
             activeIsland()?.store.send(.toggleRequested)
         }
         hub.register(alerts: capsLock, feature: .customActivities)
-        capsLock.start()
+        if settings.settings.enabledFeatures.contains(.customActivities)
+            || settings.settings.doubleTapOptionToToggle
+        {
+            capsLock.start()
+        }
         pasteboardMonitor.start()
         observePrivacyCallActivity()
         applySettings()  // first call syncs the windows
@@ -222,11 +230,15 @@ final class CompositionRoot {
             island.panel.target = controller
             controller.hotZone.hotZoneView.delegate = island.router
             controller.scrollDelegate = island.router
-            controller.container.hoverRegion = { [unowned island] in
-                IslandRootView.hoverRegion(state: island.store.state, notch: island.notch)
+            controller.container.hoverRegion = { [unowned self, unowned island] in
+                IslandRootView.hoverRegion(
+                    state: island.store.state, notch: island.notch,
+                    expandedWidth: CGFloat(settings.settings.expandedWidth))
             }
             controller.container.onHoverChange = { [weak router = island.router] in router?.islandHoverChanged($0) }
             controller.onResignKey = { [weak island] in island?.store.send(.clickedOutside) }
+            controller.setNotchBackdropVisible(
+                settings.settings.hideNotchBar && island.store.state.phase != .hidden)
             island.hotZoneRect = nil
             layoutHotZone(id)
         }
@@ -303,6 +315,8 @@ final class CompositionRoot {
                 guard let self, let island else { return }
                 Signposts.island.emitEvent("phase")
                 layoutHotZone(island.screen.id)
+                windows.controller(for: island.screen.id)?.setNotchBackdropVisible(
+                    settings.settings.hideNotchBar && island.store.state.phase != .hidden)
                 let anyOpen = islands.values.contains { $0.store.state.phase.isOpen }
                 nowPlaying.setExpanded(anyOpen)
                 if anyOpen { pasteboardMonitor.checkNow() }
@@ -538,6 +552,7 @@ final class CompositionRoot {
             },
             notes: { [unowned self] in quickNotes.notes },
             addNote: { [unowned self] text in quickNotes.add(text) },
+            toggleNotePin: { [unowned self] id in quickNotes.togglePin(id) },
             removeNote: { [unowned self] id in quickNotes.remove(id) },
             clipboardEntries: { [unowned self] in
                 pasteboardMonitor.checkNow()
@@ -577,6 +592,8 @@ final class CompositionRoot {
                 NSWorkspace.shared.openApplication(
                     at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
             },
+            pickAndPinApp: { [unowned self] in pickAppToPin() },
+            removePinnedApp: { [unowned self] path in appLauncher.removeApp(path: path) },
             pinnedShortcuts: { [unowned self] in appLauncher.shortcuts },
             addShortcut: { [unowned self] name in appLauncher.addShortcut(name: name) },
             removeShortcut: { [unowned self] id in appLauncher.removeShortcut(id) },
@@ -605,6 +622,7 @@ final class CompositionRoot {
             pillVerticalOffset: { [unowned self] in settings.settings.pillVerticalOffset },
             hideNotchBar: { [unowned self] in settings.settings.hideNotchBar },
             useGlassCards: { [unowned self] in settings.settings.useGlassCards },
+            expandedWidth: { [unowned self] in settings.settings.expandedWidth },
             toggleDetachedPopover: { [unowned self] in
                 let view = AnyView(
                     DetachedMenuBarHubView()
@@ -616,6 +634,12 @@ final class CompositionRoot {
             },
             activeLyricLine: { [unowned self] snapshot in
                 SyncedLyricsParser.activeLine(in: lyrics.lines, at: snapshot.position(at: time.now))
+            },
+            activeLyricLines: { [unowned self] snapshot in
+                SyncedLyricsParser.activeAndNextLines(in: lyrics.lines, at: snapshot.position(at: time.now))
+            },
+            enabledQuickTools: { [unowned self] in
+                settings.settings.orderedEnabledQuickTools
             })
     }
 
@@ -646,6 +670,19 @@ final class CompositionRoot {
                 observePrivacyCallActivity()
             }
         }
+    }
+
+    private func pickAppToPin() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let name = FileManager.default.displayName(atPath: url.path()).replacingOccurrences(of: ".app", with: "")
+        appLauncher.addApp(name: name, path: url.path())
     }
 
     private func sampleScreenColor() {
@@ -772,6 +809,12 @@ final class CompositionRoot {
         if appliedSettings?.islandOptions != current.islandOptions {
             broadcast(.optionsChanged(current.islandOptions))
         }
+        if appliedSettings?.hideNotchBar != current.hideNotchBar {
+            for (id, island) in islands {
+                windows.controller(for: id)?.setNotchBackdropVisible(
+                    current.hideNotchBar && island.store.state.phase != .hidden)
+            }
+        }
         statusItem.isVisible = current.showMenuBarIcon
         if let previous = appliedSettings { applyFeatureChanges(from: previous, to: current) }
     }
@@ -787,6 +830,16 @@ final class CompositionRoot {
         if let on = turned(.battery) { on ? power.start() : power.stop() }
         if let on = turned(.privacyIndicator) { on ? deviceUsage.start() : deviceUsage.stop() }
         if let on = turned(.shelf) { on ? fileDrags.start() : fileDrags.stop() }
+        if let on = turned(.customActivities) {
+            on ? competing.start() : competing.stop()
+            on ? externalDrives.start() : externalDrives.stop()
+        }
+        let capsWas = old.enabledFeatures.contains(.customActivities) || old.doubleTapOptionToToggle
+        let capsNow = new.enabledFeatures.contains(.customActivities) || new.doubleTapOptionToToggle
+        if capsWas != capsNow { capsNow ? capsLock.start() : capsLock.stop() }
+        if old.weatherLocation != new.weatherLocation, new.enabledFeatures.contains(.weather) {
+            Task { await weather.islandBecameVisible(force: true) }
+        }
         if old.shelfRetentionDays != new.shelfRetentionDays, new.enabledFeatures.contains(.shelf) {
             shelf.cleanUp()
         }
@@ -849,7 +902,11 @@ final class CompositionRoot {
                 settings: settings,
                 launchAtLogin: launchAtLogin,
                 permission: { [unowned self] in permissionState($0) },
-                request: { [unowned self] in requestPermission($0) }
+                request: { [unowned self] in requestPermission($0) },
+                searchWeatherCity: { [unowned self] query in
+                    let lang = Locale.current.language.languageCode?.identifier ?? "en"
+                    return await weather.search(query, language: lang)
+                }
             )
         }
         settingsWindow?.show()

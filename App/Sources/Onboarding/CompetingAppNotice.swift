@@ -10,10 +10,16 @@ import IslandCore
     init(settings: SettingsStore) { self.settings = settings }
 
     func start() {
+        guard observer == nil else { return }
         check()
         observer = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main
         ) { [weak self] _ in MainActor.assumeIsolated { self?.check() } }
+    }
+
+    func stop() {
+        if let observer { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
+        observer = nil
     }
 
     private func check() {

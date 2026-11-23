@@ -70,4 +70,11 @@ import Testing
         await settle()
         #expect(p.calls == 0)
     }
+
+    @Test func forcedRefreshBypassesFreshCache() async {
+        let p = FakeWeather()
+        let s = make(provider: p, cached: .fixture(fetchedAt: time.now.addingTimeInterval(-60)))
+        await s.islandBecameVisible(force: true)
+        #expect(p.calls == 1)
+    }
 }

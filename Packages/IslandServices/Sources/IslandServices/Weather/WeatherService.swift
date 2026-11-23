@@ -26,9 +26,9 @@ import Observation
         snapshot = cache.load()
     }
 
-    public func islandBecameVisible() async {
+    public func islandBecameVisible(force: Bool = false) async {
         let now = time.now
-        if let snapshot, WeatherCache.isFresh(snapshot, now: now) { return }
+        if !force, let snapshot, WeatherCache.isFresh(snapshot, now: now) { return }
         guard !inFlight else { return }
         inFlight = true
         defer { inFlight = false }

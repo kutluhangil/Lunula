@@ -26,12 +26,16 @@ extension TimerPhase {
 struct TimerCompactLeading: View {
     let snapshot: TimerSnapshot
     @Environment(\.quickTools) private var quickTools
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Image(systemName: quickTools.timerMascot().symbolName ?? snapshot.phase.symbol)
+        let mascot = quickTools.timerMascot()
+        let animates = !reduceMotion && mascot != .none && snapshot.endsAt != nil
+        Image(systemName: mascot.symbolName ?? snapshot.phase.symbol)
             .font(TypeToken.body.font)
             .symbolRenderingMode(.hierarchical)
             .foregroundStyle(Palette.signalOrange)
+            .symbolEffect(.pulse, options: .repeating, isActive: animates)
             .frame(width: 16, height: 16)
     }
 }

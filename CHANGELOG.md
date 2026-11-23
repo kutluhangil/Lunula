@@ -4,13 +4,15 @@
 
 First public build.
 
-- Notch island: closed / compact / peek / expanded, pill mode without a notch, per-display windows, fullscreen hiding, sleep/wake and display changes.
-- Now Playing (Apple Music; Spotify behind LUNULA_SPOTIFY), artwork accent halo, controls and seeking.
-- Timer and Pomodoro with relaunch and sleep persistence.
-- Calendar: next event, 10-minute countdown and Join button.
-- Weather (Open-Meteo) with daylight halo.
-- Shelf: drag-and-drop, AirDrop, sharing, drag magnet.
-- Signals: battery, download alerts (opt-in), camera/microphone indicator.
-- Automation: `lunula://` URLs, App Intents and Shortcuts.
-- Settings: general, activities and permissions, appearance, about; one-screen onboarding.
-- Turkish and English throughout; VoiceOver labels; Reduce Motion / Transparency / Increase Contrast.
+- Notch island: closed / compact / peek / expanded, pill mode without a notch, per-display windows, fullscreen hiding, sleep/wake and display changes, full-width black menu-bar strip to hide the notch, customizable expanded width (`520–600 pt`), customizable pill vertical offset, configurable hover-to-peek and swipe gestures.
+- Ada design system ("Obsidyen ve Işık"): opaque `#000000` island core, inset cards with optional Liquid Glass highlight, animated Core Animation halo, metaball detached bubbles, custom Lunula app icon.
+- Now Playing (Apple Music; Spotify behind `LUNULA_SPOTIFY`), artwork accent halo, controls, seeking, shuffle/repeat/favorite, two-line synced lyrics (LRCLIB).
+- Timer, configurable Pomodoro durations with 7-day focus streak chart (recording actual focus minutes, excluding breaks), drift-free stopwatch, optional animated timer mascots, relaunch and sleep persistence.
+- Calendar: next event, 10-minute countdown and Join button (Zoom, Meet, Teams, FaceTime, Webex).
+- Weather (Open-Meteo) with automatic location or manual city search and daylight halo.
+- Shelf: drag-and-drop, AirDrop, sharing, drag magnet, offline image converter (PNG/JPEG/HEIC/TIFF/PDF), native ZIP/AppleArchive compress & extract, Vision OCR text copy, clipboard screenshot staging.
+- Quick tools: Keep Awake (Caffeine), microphone mute & audio output switcher, color eyedropper, quick notes, zero-polling clipboard history & text snippets, search/math/command palette, teleprompter, system stats & wireless battery levels, external drive eject, app launcher & Shortcuts runner, quick reminders, stocks watchlist, detached menu bar popover, keyboard cleaning lock & keystroke HUD.
+- Signals: battery (configurable 80–100% full-charge threshold), download alerts (opt-in), camera/microphone privacy dots, Call Island, Caps Lock HUD, double-tap Option (⌥) island toggle.
+- Automation: `lunula://` URLs (activities, timer, toggle, AI usage, agent approvals), App Intents and Shortcuts.
+- Settings & onboarding: 680 × 540 five-tab Settings window with live preview stage, customizable & reorderable expanded toolbar, permission center, manual weather city picker; 420 × 320 one-screen onboarding with zero startup permission prompts.
+- Full Turkish and English localization across app and packages; VoiceOver labels; Reduce Motion / Transparency / Increase Contrast.

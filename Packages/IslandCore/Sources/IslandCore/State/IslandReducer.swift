@@ -11,7 +11,9 @@ public enum IslandReducer {
             switch phase {
             case .idle, .compact:
                 s.pointerInside = true
-                fx = [.schedule(.dwell, after: IslandTiming.dwell)]
+                if s.options.hoverToPeekEnabled {
+                    fx = [.schedule(.dwell, after: IslandTiming.dwell)]
+                }
             case .peek, .expanded, .transient:
                 s.pointerInside = true
                 fx = [.cancel(.exitGrace)]
@@ -19,7 +21,7 @@ public enum IslandReducer {
             }
 
         case .pointerDwellElapsed(let speed):
-            guard phase == .idle || phase == .compact, s.pointerInside else { break }
+            guard s.options.hoverToPeekEnabled, phase == .idle || phase == .compact, s.pointerInside else { break }
             if speed < IslandTiming.maxPeekSpeed {
                 s.phase = .peek
                 fx = [.setMouseEventsIgnored(false)]
@@ -60,6 +62,7 @@ public enum IslandReducer {
             }
 
         case .swipedDown:
+            guard s.options.swipeGesturesEnabled else { break }
             switch phase {
             case .idle, .compact, .peek:
                 s.phase = .expanded(.home)
@@ -67,7 +70,11 @@ public enum IslandReducer {
             default: break
             }
 
-        case .swipedUp, .clickedOutside:
+        case .swipedUp:
+            guard s.options.swipeGesturesEnabled, phase.isOpen else { break }
+            fx = [.cancel(.exitGrace)] + collapse(&s)
+
+        case .clickedOutside:
             guard phase.isOpen else { break }
             fx = [.cancel(.exitGrace)] + collapse(&s)
 

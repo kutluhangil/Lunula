@@ -52,4 +52,28 @@ import Testing
         let s = try JSONDecoder().decode(IslandSettings.self, from: Data(#"{"shelfRetentionDays":null}"#.utf8))
         #expect(s.shelfRetentionDays == nil)
     }
+
+    @Test func quickToolOrderNormalizesAndFiltersEnabledTools() throws {
+        let json = #"{"enabledQuickTools":["kbd","awake"],"quickToolOrder":["kbd","unknown","awake","kbd"]}"#
+        let s = try JSONDecoder().decode(IslandSettings.self, from: Data(json.utf8))
+        #expect(s.orderedEnabledQuickTools == ["kbd", "awake"])
+        #expect(s.quickToolOrder.count == QuickToolID.allCases.count)
+        #expect(s.quickToolOrder.prefix(2) == ["kbd", "awake"])
+    }
+
+    @Test func expandedWidthPomodoroAndGesturesRoundTripAndClamp() throws {
+        var s = IslandSettings.default
+        s.expandedWidth = 560
+        s.pomodoroPlan = PomodoroPlan(focus: 1800, shortBreak: 600, longBreak: 1200, focusSessionsBeforeLongBreak: 3)
+        s.hoverToPeekEnabled = false
+        s.swipeGesturesEnabled = false
+        let decoded = try JSONDecoder().decode(IslandSettings.self, from: JSONEncoder().encode(s))
+        #expect(decoded == s)
+        #expect(
+            decoded.islandOptions.hoverToPeekEnabled == false && decoded.islandOptions.swipeGesturesEnabled == false)
+
+        let clamped = try JSONDecoder().decode(
+            IslandSettings.self, from: Data(#"{"expandedWidth":900}"#.utf8))
+        #expect(clamped.expandedWidth == 600)
+    }
 }

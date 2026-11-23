@@ -25,7 +25,9 @@ struct IslandSurface: View {
     @State private var budProgress = 0.0
 
     var body: some View {
-        let size = Self.islandSize(state: state, notch: notch, shelfIsEmpty: shelfActions.items().isEmpty)
+        let expandedWidth = CGFloat(min(max(quickTools.expandedWidth(), 520), 600))
+        let size = Self.islandSize(
+            state: state, notch: notch, shelfIsEmpty: shelfActions.items().isEmpty, expandedWidth: expandedWidth)
         let island = Self.islandRect(
             size: size, notch: notch, phase: state.phase, pillOffset: CGFloat(quickTools.pillVerticalOffset()))
         let shape = Self.islandShape(phase: state.phase, hasPrimary: state.layout.primary != nil, notch: notch)
@@ -34,14 +36,9 @@ struct IslandSurface: View {
         let isHidden = state.phase == .hidden || (!notch.hasHardwareNotch && state.phase == .idle)
 
         ZStack(alignment: .topLeading) {
-            if quickTools.hideNotchBar(), notch.hasHardwareNotch {
-                Palette.obsidian
-                    .frame(width: IslandMetrics.panelSize.width, height: notch.size.height)
-                    .allowsHitTesting(false)
-            }
             ZStack {
                 Palette.obsidian
-                content(size: size)
+                content(size: size, expandedWidth: expandedWidth)
                     .environment(\.islandCardGlass, quickTools.useGlassCards())
             }
             .frame(width: size.width, height: size.height)
@@ -105,7 +102,7 @@ struct IslandSurface: View {
         .onChange(of: state.layout.detached.map(\.id)) { old, new in startBud(old: old, new: new) }
     }
 
-    @ViewBuilder private func content(size: CGSize) -> some View {
+    @ViewBuilder private func content(size: CGSize, expandedWidth: CGFloat) -> some View {
         Group {
             switch state.phase {
             case .hidden, .idle:
@@ -121,7 +118,8 @@ struct IslandSurface: View {
                 PeekView(layout: state.layout, notchWidth: notch.size.width, notchHeight: notch.size.height)
             case .expanded(let page):
                 ExpandedView(
-                    page: page, layout: state.layout, home: home, notch: notch, send: send, openSettings: openSettings)
+                    page: page, layout: state.layout, home: home, notch: notch, expandedWidth: expandedWidth,
+                    send: send, openSettings: openSettings)
             }
         }
         .frame(width: size.width, height: size.height, alignment: .top)
@@ -214,7 +212,10 @@ struct IslandSurface: View {
         }
     }
 
-    static func islandSize(state: IslandState, notch: NotchMetrics, shelfIsEmpty: Bool = false) -> CGSize {
+    static func islandSize(
+        state: IslandState, notch: NotchMetrics, shelfIsEmpty: Bool = false, expandedWidth: CGFloat = expandedWidth
+    ) -> CGSize {
+        let clampedWidth = min(max(expandedWidth, 520), 600)
         let request: IslandSizeRequest =
             switch state.phase {
             case .hidden, .idle:
@@ -232,14 +233,14 @@ struct IslandSurface: View {
             case .expanded(let page):
                 switch page {
                 case .home:
-                    .expanded(width: expandedWidth, bodyHeight: IslandMetrics.expandedBodyHome)
+                    .expanded(width: clampedWidth, bodyHeight: IslandMetrics.expandedBodyHome)
                 case .shelf:
                     .expanded(
-                        width: expandedWidth,
+                        width: clampedWidth,
                         bodyHeight: shelfIsEmpty
                             ? IslandMetrics.expandedBodyCompact : IslandMetrics.expandedBodyShelf)
                 case .activity:
-                    .expanded(width: expandedWidth, bodyHeight: IslandMetrics.expandedBodyCompact)
+                    .expanded(width: clampedWidth, bodyHeight: IslandMetrics.expandedBodyCompact)
                 }
             }
         return IslandMetrics.size(for: request, notch: notch)

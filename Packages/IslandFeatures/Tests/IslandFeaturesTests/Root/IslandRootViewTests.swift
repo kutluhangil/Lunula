@@ -33,4 +33,24 @@ import Testing
         #expect(idle.contains { $0.contains(CGPoint(x: 380, y: 0)) })
         #expect(!idle.contains { $0.contains(CGPoint(x: 380, y: 120)) })
     }
+
+    @Test func quickToolsPartitionPreventsNotchOverflow() {
+        let slots = ExpandedView.maxInlineToolSlots(notchWidth: 188, hasLeadingSymbol: true)
+        #expect(slots == 5)
+        let widerSlots = ExpandedView.maxInlineToolSlots(
+            notchWidth: 188, hasLeadingSymbol: true, expandedWidth: 600)
+        #expect(widerSlots > slots)
+        let part = ExpandedView.partitionQuickTools(["awake", "mic", "out", "drop", "notes", "clip"], maxSlots: slots)
+        #expect(part.inline == ["awake", "mic", "out", "drop"])
+        #expect(part.overflow == ["notes", "clip"])
+        let fits = ExpandedView.partitionQuickTools(["awake", "mic", "out"], maxSlots: slots)
+        #expect(fits.inline == ["awake", "mic", "out"] && fits.overflow.isEmpty)
+    }
+
+    @Test func hoverRegionRespectsCustomExpandedWidth() {
+        var state = IslandState()
+        state.phase = .expanded(.home)
+        let wide = IslandRootView.hoverRegion(state: state, notch: IslandRootView.previewNotch, expandedWidth: 600)
+        #expect(wide.contains { $0.width == 600 })
+    }
 }

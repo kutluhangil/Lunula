@@ -9,6 +9,28 @@ public enum WeatherLocationSetting: Codable, Equatable, Sendable {
     case city(name: String, latitude: Double, longitude: Double)
 }
 
+public enum QuickToolID: String, Codable, Equatable, Sendable, CaseIterable, Identifiable {
+    case awake, mic, out, drop, notes, clip, search, prompt, stats, stocks, kbd
+
+    public var id: String { rawValue }
+
+    public static let defaultOrder: [String] = allCases.map(\.rawValue)
+    public static let defaultEnabledOrder: [String] = ["awake", "mic", "out", "drop", "notes", "clip"]
+
+    public static func normalizedOrder(_ raw: [String]) -> [String] {
+        let valid = Set(defaultOrder)
+        var seen: Set<String> = []
+        var result: [String] = []
+        for key in raw where valid.contains(key) && seen.insert(key).inserted {
+            result.append(key)
+        }
+        for key in defaultOrder where seen.insert(key).inserted {
+            result.append(key)
+        }
+        return result
+    }
+}
+
 public enum TimerMascot: String, Codable, Equatable, Sendable, CaseIterable {
     case none, hare, tortoise, cat, bird, flame
 
@@ -58,8 +80,23 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var useGlassCards = false
     /// Double-tapping Option (⌥) toggles the island ("Knock to Control" double-tap-a-key mode).
     public var doubleTapOptionToToggle = true
+    /// Expanded island width in points (520...600 pt).
+    public var expandedWidth: Double = 520
+    /// Configurable Pomodoro focus, break, and cycle plan.
+    public var pomodoroPlan: PomodoroPlan = .standard
+    /// Hovering the notch/pill opens peek preview after dwell.
+    public var hoverToPeekEnabled = true
+    /// Two-finger vertical swipes open and close the island.
+    public var swipeGesturesEnabled = true
     /// Tools enabled in the expanded island top bar.
-    public var enabledQuickTools: Set<String> = ["awake", "mic", "out", "drop", "notes", "clip"]
+    public var enabledQuickTools: Set<String> = Set(QuickToolID.defaultEnabledOrder)
+    /// Display order of all quick tools in Settings and the expanded island top bar.
+    public var quickToolOrder: [String] = QuickToolID.defaultOrder
+
+    /// Enabled quick tools ordered according to `quickToolOrder`.
+    public var orderedEnabledQuickTools: [String] {
+        QuickToolID.normalizedOrder(quickToolOrder).filter { enabledQuickTools.contains($0) }
+    }
 
     public static let `default` = IslandSettings()
 
@@ -69,6 +106,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         var options = IslandOptions()
         options.hideInFullscreen = hideInFullscreen
         options.criticalAlertsInFullscreen = criticalAlertsInFullscreen
+        options.hoverToPeekEnabled = hoverToPeekEnabled
+        options.swipeGesturesEnabled = swipeGesturesEnabled
         return options
     }
 
@@ -77,7 +116,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         case haloIntensity, disabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
         case showMenuBarIcon, muteUntil, hasCompletedOnboarding, downloadsAlertsOptedIn
         case notifiedCompetitors, fullChargeThreshold, timerMascot, pillVerticalOffset, hideNotchBar, useGlassCards
-        case doubleTapOptionToToggle, enabledQuickTools
+        case doubleTapOptionToToggle, expandedWidth, pomodoroPlan, hoverToPeekEnabled, swipeGesturesEnabled
+        case enabledQuickTools, quickToolOrder
     }
 
     /// Missing, unknown or malformed keys fall back to the default per key, so old or future data never breaks.
@@ -117,7 +157,17 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         hideNotchBar = value(.hideNotchBar, d.hideNotchBar)
         useGlassCards = value(.useGlassCards, d.useGlassCards)
         doubleTapOptionToToggle = value(.doubleTapOptionToToggle, d.doubleTapOptionToToggle)
+        expandedWidth = min(max(value(.expandedWidth, d.expandedWidth), 520), 600)
+        let rawPlan = value(.pomodoroPlan, d.pomodoroPlan)
+        pomodoroPlan = PomodoroPlan(
+            focus: min(max(rawPlan.focus, 300), 5400),
+            shortBreak: min(max(rawPlan.shortBreak, 60), 1800),
+            longBreak: min(max(rawPlan.longBreak, 300), 3600),
+            focusSessionsBeforeLongBreak: min(max(rawPlan.focusSessionsBeforeLongBreak, 2), 8))
+        hoverToPeekEnabled = value(.hoverToPeekEnabled, d.hoverToPeekEnabled)
+        swipeGesturesEnabled = value(.swipeGesturesEnabled, d.swipeGesturesEnabled)
         enabledQuickTools = value(.enabledQuickTools, d.enabledQuickTools)
+        quickToolOrder = QuickToolID.normalizedOrder(value(.quickToolOrder, d.quickToolOrder))
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -146,6 +196,11 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(hideNotchBar, forKey: .hideNotchBar)
         try c.encode(useGlassCards, forKey: .useGlassCards)
         try c.encode(doubleTapOptionToToggle, forKey: .doubleTapOptionToToggle)
+        try c.encode(expandedWidth, forKey: .expandedWidth)
+        try c.encode(pomodoroPlan, forKey: .pomodoroPlan)
+        try c.encode(hoverToPeekEnabled, forKey: .hoverToPeekEnabled)
+        try c.encode(swipeGesturesEnabled, forKey: .swipeGesturesEnabled)
         try c.encode(enabledQuickTools, forKey: .enabledQuickTools)
+        try c.encode(QuickToolID.normalizedOrder(quickToolOrder), forKey: .quickToolOrder)
     }
 }

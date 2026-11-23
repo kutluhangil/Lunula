@@ -68,9 +68,9 @@ public struct QuickToolsActions {
     public var outputDevices: @MainActor () -> [AudioOutputDeviceItem] = { [] }
     public var selectOutputDevice: @MainActor (UInt32) -> Void = { _ in }
     public var pickColor: @MainActor () -> Void = {}
-    public var captureScreenRegion: @MainActor () -> Void = {}
     public var notes: @MainActor () -> [QuickNote] = { [] }
     public var addNote: @MainActor (String) -> Void = { _ in }
+    public var toggleNotePin: @MainActor (UUID) -> Void = { _ in }
     public var removeNote: @MainActor (UUID) -> Void = { _ in }
     public var clipboardEntries: @MainActor () -> [ClipboardEntry] = { [] }
     public var toggleClipboardPin: @MainActor (UUID) -> Void = { _ in }
@@ -88,6 +88,8 @@ public struct QuickToolsActions {
     public var openURL: @MainActor (URL) -> Void = { _ in }
     public var pinnedApps: @MainActor () -> [PinnedApp] = { [] }
     public var launchApp: @MainActor (String) -> Void = { _ in }
+    public var pickAndPinApp: @MainActor () -> Void = {}
+    public var removePinnedApp: @MainActor (String) -> Void = { _ in }
     public var pinnedShortcuts: @MainActor () -> [PinnedShortcut] = { [] }
     public var addShortcut: @MainActor (String) -> Void = { _ in }
     public var removeShortcut: @MainActor (UUID) -> Void = { _ in }
@@ -108,9 +110,12 @@ public struct QuickToolsActions {
     public var pillVerticalOffset: @MainActor () -> Double = { 0 }
     public var hideNotchBar: @MainActor () -> Bool = { false }
     public var useGlassCards: @MainActor () -> Bool = { false }
+    public var expandedWidth: @MainActor () -> Double = { 520 }
     public var toggleDetachedPopover: @MainActor () -> Void = {}
     public var startKeyboardCleaningLock: @MainActor () -> Void = {}
     public var activeLyricLine: @MainActor (NowPlayingSnapshot) -> String? = { _ in nil }
+    public var activeLyricLines: @MainActor (NowPlayingSnapshot) -> (active: String, next: String?)? = { _ in nil }
+    public var enabledQuickTools: @MainActor () -> [String] = { QuickToolID.defaultEnabledOrder }
 
     public init(
         isKeepAwakeActive: @escaping @MainActor () -> Bool = { false },
@@ -121,9 +126,9 @@ public struct QuickToolsActions {
         outputDevices: @escaping @MainActor () -> [AudioOutputDeviceItem] = { [] },
         selectOutputDevice: @escaping @MainActor (UInt32) -> Void = { _ in },
         pickColor: @escaping @MainActor () -> Void = {},
-        captureScreenRegion: @escaping @MainActor () -> Void = {},
         notes: @escaping @MainActor () -> [QuickNote] = { [] },
         addNote: @escaping @MainActor (String) -> Void = { _ in },
+        toggleNotePin: @escaping @MainActor (UUID) -> Void = { _ in },
         removeNote: @escaping @MainActor (UUID) -> Void = { _ in },
         clipboardEntries: @escaping @MainActor () -> [ClipboardEntry] = { [] },
         toggleClipboardPin: @escaping @MainActor (UUID) -> Void = { _ in },
@@ -141,6 +146,8 @@ public struct QuickToolsActions {
         openURL: @escaping @MainActor (URL) -> Void = { _ in },
         pinnedApps: @escaping @MainActor () -> [PinnedApp] = { [] },
         launchApp: @escaping @MainActor (String) -> Void = { _ in },
+        pickAndPinApp: @escaping @MainActor () -> Void = {},
+        removePinnedApp: @escaping @MainActor (String) -> Void = { _ in },
         pinnedShortcuts: @escaping @MainActor () -> [PinnedShortcut] = { [] },
         addShortcut: @escaping @MainActor (String) -> Void = { _ in },
         removeShortcut: @escaping @MainActor (UUID) -> Void = { _ in },
@@ -161,9 +168,12 @@ public struct QuickToolsActions {
         pillVerticalOffset: @escaping @MainActor () -> Double = { 0 },
         hideNotchBar: @escaping @MainActor () -> Bool = { false },
         useGlassCards: @escaping @MainActor () -> Bool = { false },
+        expandedWidth: @escaping @MainActor () -> Double = { 520 },
         toggleDetachedPopover: @escaping @MainActor () -> Void = {},
         startKeyboardCleaningLock: @escaping @MainActor () -> Void = {},
-        activeLyricLine: @escaping @MainActor (NowPlayingSnapshot) -> String? = { _ in nil }
+        activeLyricLine: @escaping @MainActor (NowPlayingSnapshot) -> String? = { _ in nil },
+        activeLyricLines: @escaping @MainActor (NowPlayingSnapshot) -> (active: String, next: String?)? = { _ in nil },
+        enabledQuickTools: @escaping @MainActor () -> [String] = { QuickToolID.defaultEnabledOrder }
     ) {
         self.isKeepAwakeActive = isKeepAwakeActive
         self.toggleKeepAwake = toggleKeepAwake
@@ -173,9 +183,9 @@ public struct QuickToolsActions {
         self.outputDevices = outputDevices
         self.selectOutputDevice = selectOutputDevice
         self.pickColor = pickColor
-        self.captureScreenRegion = captureScreenRegion
         self.notes = notes
         self.addNote = addNote
+        self.toggleNotePin = toggleNotePin
         self.removeNote = removeNote
         self.clipboardEntries = clipboardEntries
         self.toggleClipboardPin = toggleClipboardPin
@@ -193,6 +203,8 @@ public struct QuickToolsActions {
         self.openURL = openURL
         self.pinnedApps = pinnedApps
         self.launchApp = launchApp
+        self.pickAndPinApp = pickAndPinApp
+        self.removePinnedApp = removePinnedApp
         self.pinnedShortcuts = pinnedShortcuts
         self.addShortcut = addShortcut
         self.removeShortcut = removeShortcut
@@ -213,9 +225,12 @@ public struct QuickToolsActions {
         self.pillVerticalOffset = pillVerticalOffset
         self.hideNotchBar = hideNotchBar
         self.useGlassCards = useGlassCards
+        self.expandedWidth = expandedWidth
         self.toggleDetachedPopover = toggleDetachedPopover
         self.startKeyboardCleaningLock = startKeyboardCleaningLock
         self.activeLyricLine = activeLyricLine
+        self.activeLyricLines = activeLyricLines
+        self.enabledQuickTools = enabledQuickTools
     }
 }
 

@@ -9,7 +9,6 @@ public struct GeneralSettingsView: View {
     let launchAtLogin: LaunchAtLoginService
     var onDisplayModeChanged: ((DisplayMode) -> Void)?
     @State private var loginError = false
-    @State private var inputMonitoringState: PermissionState = .notRequested
 
     public init(
         settings: SettingsStore,
@@ -23,21 +22,20 @@ public struct GeneralSettingsView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // MARK: - Sistem ve başlangıç
+            // MARK: - System & startup
             VStack(alignment: .leading, spacing: 8) {
-                Text("Sistem ve başlangıç")
+                Text("settings.general.section.system")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Palette.textPrimary)
                     .padding(.horizontal, 4)
 
                 VStack(spacing: 0) {
-                    // Girişte başlat
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Girişte başlat")
+                            Text("settings.general.launchAtLogin")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Mac açıldığında Lunula sessizce başlar.")
+                            Text("settings.general.launchAtLogin.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -65,14 +63,16 @@ public struct GeneralSettingsView: View {
                                 .fill(Palette.amberGold)
                                 .frame(width: 6, height: 6)
 
-                            Text("Etkinleştirmek için Sistem Ayarları › Giriş Öğeleri’nde Lunula’ya izin ver.")
+                            Text("settings.general.loginApproval")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.amberGold)
 
                             Spacer()
 
-                            Button("Giriş Öğeleri’ni Aç") {
+                            Button {
                                 launchAtLogin.openSystemSettings()
+                            } label: {
+                                Text("settings.general.openLoginItemsButton")
                             }
                             .buttonStyle(.lunulaSecondary)
                         }
@@ -83,13 +83,12 @@ public struct GeneralSettingsView: View {
                     Divider()
                         .background(Palette.hairline)
 
-                    // Menü çubuğu simgesini göster
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Menü çubuğu simgesini göster")
+                            Text("settings.general.showMenuBarIcon")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Adadan ayrı, küçük bir menü çubuğu penceresi açar.")
+                            Text("settings.general.showMenuBarIcon.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -108,31 +107,31 @@ public struct GeneralSettingsView: View {
                 )
             }
 
-            // MARK: - Ekranlar
+            // MARK: - Displays
             VStack(alignment: .leading, spacing: 8) {
-                Text("Ekranlar")
+                Text("settings.general.section.displays")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Palette.textPrimary)
                     .padding(.horizontal, 4)
 
                 HStack(spacing: 8) {
                     displayModeCard(
-                        title: "Yalnızca çentikli ekranlar",
-                        subtitle: "Harici ekranda ada yok",
+                        titleKey: "settings.displayMode.notchedOnly",
+                        subtitleKey: "settings.displayMode.notchedOnly.subtitle",
                         mode: .notchedOnly,
                         illustration: AnyView(notchedOnlyIllustration)
                     )
 
                     displayModeCard(
-                        title: "Tüm ekranlar",
-                        subtitle: "Harici ekranda 180 × 22 kapsül",
+                        titleKey: "settings.displayMode.allDisplays",
+                        subtitleKey: "settings.displayMode.allDisplays.subtitle",
                         mode: .allDisplays,
                         illustration: AnyView(allDisplaysIllustration)
                     )
 
                     displayModeCard(
-                        title: "Yalnızca ana ekran",
-                        subtitle: "Menü çubuğunun olduğu ekran",
+                        titleKey: "settings.displayMode.mainDisplay",
+                        subtitleKey: "settings.displayMode.mainDisplay.subtitle",
                         mode: .mainDisplay,
                         illustration: AnyView(mainDisplayIllustration)
                     )
@@ -146,9 +145,9 @@ public struct GeneralSettingsView: View {
                 )
             }
 
-            // MARK: - Tam ekran
+            // MARK: - Full screen
             VStack(alignment: .leading, spacing: 8) {
-                Text("Tam ekran")
+                Text("settings.general.section.fullscreen")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Palette.textPrimary)
                     .padding(.horizontal, 4)
@@ -156,10 +155,10 @@ public struct GeneralSettingsView: View {
                 VStack(spacing: 0) {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Tam ekranda gizle")
+                            Text("settings.general.hideInFullscreen")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Oyun, film ve sunumda ada çekilir.")
+                            Text("settings.general.hideInFullscreen.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -175,10 +174,10 @@ public struct GeneralSettingsView: View {
 
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Tam ekranda önemli uyarılara izin ver")
+                            Text("settings.general.criticalAlertsInFullscreen")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Toplantı başlangıcı, biten zamanlayıcı, %10 pil ve ajan onayları.")
+                            Text("settings.general.criticalAlertsInFullscreen.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -199,9 +198,9 @@ public struct GeneralSettingsView: View {
                 )
             }
 
-            // MARK: - Kısayollar
+            // MARK: - Shortcuts
             VStack(alignment: .leading, spacing: 8) {
-                Text("Kısayollar")
+                Text("settings.general.section.shortcuts")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Palette.textPrimary)
                     .padding(.horizontal, 4)
@@ -209,10 +208,10 @@ public struct GeneralSettingsView: View {
                 VStack(spacing: 0) {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Adayı aç/kapat")
+                            Text("settings.general.toggleIsland")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Tıkla, yeni kısayola bas. Esc vazgeçer, ⌫ siler.")
+                            Text("settings.general.toggleIsland.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -227,10 +226,10 @@ public struct GeneralSettingsView: View {
 
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Çift Option (⌥) ile adayı aç/kapat")
+                            Text("settings.appearance.doubleTapOption")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
-                            Text("Option’a hızla iki kez bas. Giriş İzleme izni ister.")
+                            Text("settings.general.doubleTapOption.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
@@ -240,20 +239,57 @@ public struct GeneralSettingsView: View {
                     }
                     .padding(.horizontal, 12)
                     .frame(minHeight: 44)
+                }
+                .background(Palette.inkRaised)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Palette.hairline, lineWidth: 0.5)
+                )
+            }
 
-                    if settings.settings.doubleTapOptionToToggle {
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(Palette.signalGreen)
-                                .frame(width: 6, height: 6)
-                            Text("Giriş İzleme · İzin verildi")
+            // MARK: - Gestures
+            VStack(alignment: .leading, spacing: 8) {
+                Text("settings.general.section.gestures")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Palette.textPrimary)
+                    .padding(.horizontal, 4)
+
+                VStack(spacing: 0) {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.general.hoverToPeek")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textPrimary)
+                            Text("settings.general.hoverToPeek.subtitle")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
-                            Spacer()
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.bottom, 10)
+                        Spacer()
+                        Toggle("", isOn: binding(\.hoverToPeekEnabled))
+                            .toggleStyle(.lunulaSwitch)
                     }
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44)
+
+                    Divider()
+                        .background(Palette.hairline)
+
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.general.swipeGestures")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textPrimary)
+                            Text("settings.general.swipeGestures.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                        }
+                        Spacer()
+                        Toggle("", isOn: binding(\.swipeGesturesEnabled))
+                            .toggleStyle(.lunulaSwitch)
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44)
                 }
                 .background(Palette.inkRaised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -269,8 +305,8 @@ public struct GeneralSettingsView: View {
     // MARK: - Display Mode Card
 
     private func displayModeCard(
-        title: String,
-        subtitle: String,
+        titleKey: LocalizedStringKey,
+        subtitleKey: LocalizedStringKey,
         mode: DisplayMode,
         illustration: AnyView
     ) -> some View {
@@ -286,12 +322,12 @@ public struct GeneralSettingsView: View {
                 illustration
                     .frame(height: 56)
 
-                Text(title)
+                Text(titleKey)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(Palette.textPrimary)
                     .lineLimit(1)
 
-                Text(subtitle)
+                Text(subtitleKey)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(Palette.textSecondary)
                     .lineLimit(1)
@@ -313,7 +349,6 @@ public struct GeneralSettingsView: View {
 
     private var notchedOnlyIllustration: some View {
         ZStack {
-            // Laptop screen
             RoundedRectangle(cornerRadius: 4)
                 .fill(Palette.inkPressed)
                 .frame(width: 60, height: 38)
@@ -322,7 +357,6 @@ public struct GeneralSettingsView: View {
                         .stroke(Color.white.opacity(0.38), lineWidth: 0.75)
                 )
 
-            // Notch at top center
             UnevenRoundedRectangle(
                 topLeadingRadius: 0, bottomLeadingRadius: 2.5, bottomTrailingRadius: 2.5, topTrailingRadius: 0
             )
@@ -336,7 +370,6 @@ public struct GeneralSettingsView: View {
             )
             .offset(y: -17)
 
-            // Laptop base
             RoundedRectangle(cornerRadius: 1)
                 .fill(Palette.inkPressed)
                 .frame(width: 76, height: 4)
@@ -350,7 +383,6 @@ public struct GeneralSettingsView: View {
 
     private var allDisplaysIllustration: some View {
         HStack(spacing: 6) {
-            // Laptop
             ZStack {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Palette.inkPressed)
@@ -359,7 +391,6 @@ public struct GeneralSettingsView: View {
                         RoundedRectangle(cornerRadius: 3)
                             .stroke(Color.white.opacity(0.38), lineWidth: 0.75)
                     )
-                // Notch
                 UnevenRoundedRectangle(
                     topLeadingRadius: 0, bottomLeadingRadius: 2, bottomTrailingRadius: 2, topTrailingRadius: 0
                 )
@@ -368,7 +399,6 @@ public struct GeneralSettingsView: View {
                 .offset(y: -12.5)
             }
 
-            // External monitor
             ZStack {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Palette.inkPressed)
@@ -378,7 +408,6 @@ public struct GeneralSettingsView: View {
                             .stroke(Color.white.opacity(0.38), lineWidth: 0.75)
                     )
 
-                // 180 × 22 pill at top
                 Capsule()
                     .fill(Palette.textPrimary.opacity(0.85))
                     .frame(width: 16, height: 3.5)
@@ -389,7 +418,6 @@ public struct GeneralSettingsView: View {
 
     private var mainDisplayIllustration: some View {
         HStack(spacing: 6) {
-            // Main display with menu bar highlight
             ZStack {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Palette.inkPressed)
@@ -399,14 +427,12 @@ public struct GeneralSettingsView: View {
                             .stroke(Palette.textPrimary, lineWidth: 1)
                     )
 
-                // Menu bar highlight line
                 Rectangle()
                     .fill(Palette.textPrimary)
                     .frame(width: 48, height: 2)
                     .offset(y: -13)
             }
 
-            // Secondary display dashed
             ZStack {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Palette.inkRaised)

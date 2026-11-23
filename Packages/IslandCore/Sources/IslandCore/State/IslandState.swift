@@ -29,6 +29,8 @@ public enum IslandPhase: Hashable, Sendable {
 public struct IslandOptions: Equatable, Sendable {
     public var hideInFullscreen = true
     public var criticalAlertsInFullscreen = true
+    public var hoverToPeekEnabled = true
+    public var swipeGesturesEnabled = true
 
     public init() {}
 }

@@ -31,15 +31,23 @@ public enum SyncedLyricsParser {
     }
 
     public static func activeLine(in lines: [SyncedLyricLine], at position: TimeInterval) -> String? {
+        activeAndNextLines(in: lines, at: position)?.active
+    }
+
+    public static func activeAndNextLines(in lines: [SyncedLyricLine], at position: TimeInterval)
+        -> (active: String, next: String?)?
+    {
         guard !lines.isEmpty else { return nil }
-        var current: String?
-        for line in lines {
+        var currentIndex: Int?
+        for (index, line) in lines.enumerated() {
             if line.time <= position + 0.15 {
-                current = line.text
+                currentIndex = index
             } else {
                 break
             }
         }
-        return current
+        guard let idx = currentIndex else { return nil }
+        let next = idx + 1 < lines.count ? lines[idx + 1].text : nil
+        return (lines[idx].text, next)
     }
 }

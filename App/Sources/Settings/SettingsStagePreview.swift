@@ -61,7 +61,6 @@ public struct SettingsStagePreview: View {
 
     public var body: some View {
         ZStack {
-            // Stage background gradient: #2B3266 -> #4A2550 -> #0C0E15
             RadialGradient(
                 colors: [Color(red: 0x2B / 255, green: 0x32 / 255, blue: 0x66 / 255), Color.clear],
                 center: UnitPoint(x: 0.15, y: 0.0),
@@ -78,7 +77,6 @@ public struct SettingsStagePreview: View {
             )
             .background(Color(red: 0x0C / 255, green: 0x0E / 255, blue: 0x15 / 255))
 
-            // Mode Views
             if focus == .glass {
                 glassPreview
             } else if focus == .pill {
@@ -99,7 +97,6 @@ public struct SettingsStagePreview: View {
 
     private var notchTimerPreview: some View {
         ZStack(alignment: .top) {
-            // Menu bar strip
             if hideNotchBar {
                 Rectangle()
                     .fill(Palette.obsidian)
@@ -108,8 +105,8 @@ public struct SettingsStagePreview: View {
                 HStack {
                     HStack(spacing: 14) {
                         Text("Finder").fontWeight(.bold)
-                        Text("Dosya")
-                        Text("Düzen")
+                        Text("settings.preview.menu.file")
+                        Text("settings.preview.menu.edit")
                     }
                     .font(.system(size: 13, weight: .regular))
                     .foregroundColor(Palette.textPrimary)
@@ -117,7 +114,7 @@ public struct SettingsStagePreview: View {
 
                     Spacer()
 
-                    Text("Per 14:08")
+                    Text("settings.preview.menu.clock")
                         .font(.system(size: 13, weight: .regular))
                         .foregroundColor(Palette.textPrimary)
                         .padding(.trailing, 14)
@@ -125,16 +122,13 @@ public struct SettingsStagePreview: View {
                 .frame(height: 32)
             }
 
-            // Notch with halo & timer
             ZStack {
-                // Amber Halo Glow
                 IslandShape.closed
                     .stroke(Palette.amberGold, lineWidth: 20)
                     .frame(width: 304, height: 32)
                     .blur(radius: 14)
                     .opacity(glowOpacity)
 
-                // Island Body
                 IslandShape.closed
                     .fill(Palette.obsidian)
                     .frame(width: 304, height: 32)
@@ -143,7 +137,6 @@ public struct SettingsStagePreview: View {
                             .stroke(Palette.amberGold.opacity(rimOpacity), lineWidth: rimWidth)
                     )
 
-                // Content inside notch
                 HStack {
                     Image(systemName: mascotSymbol)
                         .font(.system(size: 14, weight: .semibold))
@@ -167,14 +160,12 @@ public struct SettingsStagePreview: View {
     private var glassPreview: some View {
         ZStack(alignment: .top) {
             ZStack {
-                // Outer glow
                 IslandShape.expanded
                     .stroke(Color.white, lineWidth: 20)
                     .frame(width: 404, height: 70)
                     .blur(radius: 14)
                     .opacity(glowOpacity)
 
-                // Body
                 IslandShape.expanded
                     .fill(Palette.obsidian)
                     .frame(width: 404, height: 70)
@@ -183,9 +174,7 @@ public struct SettingsStagePreview: View {
                             .stroke(Color.white.opacity(rimOpacity), lineWidth: rimWidth)
                     )
 
-                // Inner content
                 HStack(spacing: 12) {
-                    // 42 × 42 inner card
                     ZStack {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Palette.inkRaised)
@@ -224,20 +213,20 @@ public struct SettingsStagePreview: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("rapor.pdf")
+                            Text("settings.preview.download.file")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(Palette.textPrimary)
                                 .lineLimit(1)
 
                             Spacer()
 
-                            Text("İndirildi")
+                            Text("settings.preview.download.status")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textSecondary)
                         }
 
                         HStack(spacing: 8) {
-                            Text("Finder’da göster")
+                            Text("settings.preview.download.reveal")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
                                 .padding(.horizontal, 8)
@@ -245,7 +234,7 @@ public struct SettingsStagePreview: View {
                                 .background(Palette.inkPressed)
                                 .clipShape(Capsule())
 
-                            Text("Rafa ekle")
+                            Text("settings.preview.download.shelf")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(Palette.textPrimary)
                                 .padding(.horizontal, 8)
@@ -266,13 +255,12 @@ public struct SettingsStagePreview: View {
     private var pillPreview: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Capsule at vertical offset
                 HStack(spacing: 6) {
                     Image(systemName: mascotSymbol)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(Palette.amberGold)
 
-                    Text("Odak")
+                    Text("settings.preview.pill.focus")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(Palette.textSecondary)
 
@@ -297,7 +285,7 @@ public struct SettingsStagePreview: View {
                 Spacer()
 
                 HStack {
-                    Text("Çentiksiz harici ekran")
+                    Text("settings.preview.pill.external")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(Palette.textSecondary)
                         .padding(.leading, 14)

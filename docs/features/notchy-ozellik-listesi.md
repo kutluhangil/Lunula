@@ -47,7 +47,7 @@ Tasarım dili: [`docs/design/Lunula — Ada.pdf`](../design/Lunula%20—%20Ada.p
 
 ### 07. AirDrop from the Shelf `[x]`
 - **Teknik Mimari:** `NSSharingService(named: .sendViaAirDrop)` ve `NSSharingServicePicker`, çoklu seçim (`⌘`-tık) desteği, işlem sonunda dokunsal (`NSHapticFeedbackManager`) ve görsel geri bildirim.
-- **Tasarım & Animasyon:** Raf hücrelerinin bağlam menüsünde ve raf üst çubuğunda tek tıkla AirDrop paylaşımı.
+- **Tasarım & Animasyon:** Raf hücrelerinin bağlam menüsünde tek tıkla AirDrop ve sistem Paylaş menüsü.
 
 ### 08. Image Converter (Shelf) `[x]`
 - **Teknik Mimari:** `CGImageSource` + `CGImageDestination` (`ImageIO` ve `UniformTypeIdentifiers`) ile tamamen çevrimdışı, sandbox içi `PNG`, `JPEG`, `HEIC`, `TIFF` ve `PDF` dönüştürme.
@@ -95,28 +95,28 @@ Tasarım dili: [`docs/design/Lunula — Ada.pdf`](../design/Lunula%20—%20Ada.p
 
 ### 17. Keep Awake (Caffeine) `[x]`
 - **Teknik Mimari:** `IOPMAssertionCreateWithName` (`kIOPMAssertPreventUserIdleDisplaySleep` ve `kIOPMAssertPreventUserIdleSystemSleep`), `KeepAwakeController` ile **Süresiz**, **30 dk**, **1 saat**, **2 saat** modları; süre bitiminde `IslandTime` üzerinden otomatik kapanma.
-- **Tasarım & Animasyon:** Genişlemiş ada üst çubuğunda ve bağlam menüsünde tek tıkla çalışan kahve fincanı (`cup.and.saucer.fill`) anahtarı; etkin olduğunda `#FF9F0A` kehribar vurgu ve durum rozeti.
+- **Tasarım & Animasyon:** Genişlemiş ada üst çubuğunda (sağ tıkla süre menülü), Komut Paleti'nde ve ayrılmış menü çubuğu penceresinde tek tıkla çalışan kahve fincanı (`cup.and.saucer.fill`) anahtarı; etkin olduğunda `#FF9F0A` kehribar vurgu.
 
 ### 18. Audio Switcher & Mic Mute `[x]`
 - **Teknik Mimari:** `CoreAudio` (`kAudioHardwarePropertyDevices`, `kAudioHardwarePropertyDefaultOutputDevice`, `kAudioHardwarePropertyDefaultInputDevice`, `kAudioDevicePropertyMute`) üzerinden sistem genelinde giriş mikrofonunu tek tıkla susturma ve ses çıkış aygıtını (`Hoparlör`, `AirPods`, `Monitör`) değiştirme.
-- **Tasarım & Animasyon:** Genişlemiş ada üst/alt araç şeridinde mikrofon susturma (`mic.fill` / `mic.slash.fill` `#FF453A` kırmızı vurgu) ve ses çıkış seçici açılır menüsü.
+- **Tasarım & Animasyon:** Genişlemiş ada araç şeridinde mikrofon susturma (`mic.fill` / `mic.slash.fill` `#FF453A` kırmızı vurgu) ve ses çıkış seçici açılır menüsü.
 
 ### 19. Quick Notes `[x]`
-- **Teknik Mimari:** `QuickNotesStore` (`Application Support/Notes.json` içinde kalıcı), hızlı not ekleme, sabitleme ve kopyalama/silme.
-- **Tasarım & Animasyon:** Genişlemiş adada `Ev` ve `Raf` hap sekmelerinin yanında **`Notlar`** (`Notes`) sekmesi; `#111113` kart içinde anında yazılabilir metin alanı ve kayıtlı hızlı not fişleri (`#1C1C1F`).
+- **Teknik Mimari:** `QuickNotesStore` (`UserDefaults` içinde kalıcı), hızlı not ekleme, sabitleme (`isPinned`) ve kopyalama/silme.
+- **Tasarım & Animasyon:** Genişlemiş ada araç çubuğundaki `note.text` popover'ı içinde anında yazılabilir metin alanı, sabitleme/kopyalama/silme düğmeleri.
 
 ### 20. Color Eyedropper `[x]`
 - **Teknik Mimari:** AppKit `NSColorSampler` (Ekran Kaydı izni gerektirmez), seçilen pikseli sRGB `#RRGGBB` hex koduna çevirip `NSPasteboard.general`'a kopyalar ve `TransientAlert` olarak seçilen rengin kendi hâlesiyle (`SignalTint.accent`) gösterir.
-- **Tasarım & Animasyon:** Üst çubuktan veya bağlam menüsünden tetiklenen damlalık (`eyedropper`); renk seçildiğinde seçilen renkte parlayan `316 × 32 pt` ada uyarısı (`#32D74B Kopyalandı`).
+- **Tasarım & Animasyon:** Genişlemiş ada araç çubuğundan veya Komut Paleti'nden tetiklenen damlalık (`eyedropper`); renk seçildiğinde seçilen renkte parlayan `316 × 32 pt` ada uyarısı (`#32D74B Kopyalandı`).
 
 ### 21. 100% Native `[x]`
 - **Teknik Mimari:** Saf Swift 6 (`strict concurrency`), SwiftUI + AppKit + Core Animation (`HaloLayer`), boşta `< %0.1` CPU ve `< 1` wakeup/sn bütçesi.
 
 ### 22. Gestures & Hover Open `[x]`
-- **Teknik Mimari:** `SwipeDetector` (aşağı kaydır = aç, yukarı kaydır = kapat), `PageCycler` (sol/sağ ok veya yatay kaydırma ile sekmeler arası geçiş), Ayarlar'da hareket tercihleri.
+- **Teknik Mimari:** `SwipeDetector` (aşağı kaydır = aç, yukarı kaydır = kapat), `PageCycler` (sol/sağ ok ile sekmeler arası geçiş), Ayarlar › Genel › Hareketler altında `Üzerine gelince göz at` ve `İki parmak kaydırma hareketleri` anahtarları.
 
 ### 23. Developer API & Agent Activity `[x]`
-- **Teknik Mimari:** `lunula://show`, `lunula://update`, `lunula://end`, `lunula://timer`, `lunula://toggle` URL şeması (`IslandURLParser`, `RateLimiter` 10 istek / 10 sn) ve yerel `AppIntents` (`ShowActivityIntent`, `UpdateActivityIntent`, `EndActivityIntent`, `StartTimerIntent`, `ToggleIslandIntent`). Claude Code / Codex kancaları bu şemayla sıfır arka plan sunucusu maliyetiyle doğrudan canlı etkinlik oluşturur.
+- **Teknik Mimari:** `lunula://activity/show`, `lunula://activity/end`, `lunula://timer/start`, `lunula://island/toggle`, `lunula://ai/usage`, `lunula://agent/approval`, `lunula://agent/resolve` URL şeması (`IslandURLParser`, `RateLimiter` 10 istek / 10 sn) ve yerel `AppIntents` (`ShowActivityIntent`, `UpdateActivityIntent`, `EndActivityIntent`, `StartTimerIntent`, `ToggleIslandIntent`). Claude Code / Codex kancaları bu şemayla sıfır arka plan sunucusu maliyetiyle doğrudan canlı etkinlik oluşturur.
 
 ---
 
@@ -152,23 +152,22 @@ Tasarım dili: [`docs/design/Lunula — Ada.pdf`](../design/Lunula%20—%20Ada.p
 
 ## Kategori C — Kullanıcı Kararı Gerektiren Özellikler (`⚠️`)
 
-Bu özellikler teknik olarak yapılabilir ancak `AGENTS.md` içindeki **"No polling"**, **"App Sandbox"** veya **"No third-party dependency without approval"** kuralları için açık onayını gerektirir:
+Bu özellikler teknik olarak yapılabilir ancak `AGENTS.md` içindeki **"No polling"**, **"App Sandbox"** veya **"No third-party dependency without approval"** kuralları için açık onayını gerektirir (not: sıfır yoklamalı Pano/Şablonlar #42, `lunula://` AI Kullanım/Onay kancaları #41 ve `flagsChanged` Caps Lock HUD #43 Kategori B'de sandbox-uyumlu olarak tamamlandı):
 
-1. ⚠️ **Clipboard History / Smart Actions / Text Snippets (#42–#44):** macOS'ta `NSPasteboard` için sistem bildirimi yoktur; `changeCount` değerini 0.5–1.0 saniyede bir kontrol etmek gerekir. Ayrıca otomatik yapıştırma (`⌘V` simülasyonu) `CGEventPost` ve Erişilebilirlik izni ister.
-2. ⚠️ **AI Usage Tracker (#45):** Claude Code (`~/.claude`), Codex ve Cursor yerel logları App Sandbox dışındadır; kullanıcının `NSOpenPanel` ile klasör seçmesi (security-scoped bookmark) veya Keychain'e API anahtarı girmesi gerekir.
-3. ⚠️ **Screenshot Shelf & Screen Capture (#46–#47):** Masaüstü klasörünü izlemek için kullanıcı klasör izni veya `ScreenCaptureKit` için Ekran Kaydı izni gerekir.
-4. ⚠️ **Live Audio Spectrum (#48) & Sound Mixer (#49):** macOS 14.4+ `CATapDescription` (CoreAudio Process Tap) ses yakalama izni ister.
-5. ⚠️ **Caps Lock HUD (#50):** `NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged)` ile izin istemeden okunabilir; istenirse hemen Kategori A'ya alınabilir.
-6. ⚠️ **Automatic Updates (Sparkle) (#51) & Custom Idle Animation (Lottie) (#52):** Üçüncü parti paket (`Sparkle`, `lottie-ios`) eklenmesi `AGENTS.md` gereği senin onayına bağlıdır.
+1. ⚠️ **Arka Plan Pano Yoklaması ve Otomatik Yapıştırma:** Sıfır yoklamalı pano geçmişi (#42) eklendi; ancak ada kapalıyken sürekli arka plan takibi (`changeCount` yoklaması) ve otomatik yapıştırma (`⌘V` / `CGEventPost` + Erişilebilirlik izni) kural istisnası gerektirir.
+2. ⚠️ **Doğrudan Yerel AI Log Okuyucu:** `lunula://ai/usage` kancası (#41) hazır; ancak `~/.claude`, Codex ve Cursor yerel log dosyalarını doğrudan okumak App Sandbox dışındadır (`NSOpenPanel` klasör yer imi veya API anahtarı gerekir).
+3. ⚠️ **Screenshot Shelf & Screen Capture:** Panodaki ekran görüntüsünü Rafa ekleme (#39) hazır; Masaüstü klasörünü otomatik izlemek kullanıcı klasör izni, doğrudan ekran yakalama (`ScreenCaptureKit`) Ekran Kaydı izni gerektirir.
+4. ⚠️ **Live Audio Spectrum & Sound Mixer:** macOS 14.4+ `CATapDescription` (CoreAudio Process Tap) Sistem Sesi Kaydı izni ister.
+5. ⚠️ **Automatic Updates (Sparkle) & Custom Idle Animation (Lottie):** Üçüncü parti paket (`Sparkle`, `lottie-ios`) eklenmesi `AGENTS.md` gereği senin onayına bağlıdır.
 
 ---
 
 ## Kategori D — Mevcut Mimari Kurallarla Yasaklı Özellikler (`🚫`)
 
-`Scripts/check-architecture.sh` ve `AGENTS.md` ("Forbidden: private APIs, SkyLight/SLS, CGS, DisplayServices, CoreBrightness, dlopen/dlsym, Accessibility APIs, CGEventPost, Process/NSTask, sharingType, disabling App Sandbox") tarafından engellenen özellikler:
+`Scripts/check-architecture.sh` ve `AGENTS.md` ("Forbidden: private APIs, SkyLight/SLS, CGS, DisplayServices, CoreBrightness, dlopen/dlsym, Accessibility APIs, CGEventPost, Process/NSTask, sharingType, disabling App Sandbox") tarafından engellenen özellikler (not: çift ⌥ dokunuş #44, sandbox-içi klavye temizleme kilidi #45 ve kamera/mikrofon tabanlı Çağrı Adası #46 Kategori B'de özel API'siz tamamlandı):
 
-- 🚫 **#53 Face Unlock:** Kilit ekranı üzerinde görüntü yakalama ve parola alanına otomatik giriş özel API / `CGEventPost` gerektirir.
-- 🚫 **#54 Knock to Control:** Apple Silicon ivmeölçer (`AppleSPUHIDDevice`) veya ham trackpad dokunuşu (`MultitouchSupport.framework`) özel API'dir. (Yalnızca *"çift tuşa basma"* modu genel `flagsChanged` ile yapılabilir.)
-- 🚫 **#55 System HUDs / Alt HUD Styles / Keyboard Backlight / External Display DDC:** Sistem HUD'unu bastırmak, `CoreBrightness` ve `IOAVService` kullanmak özel API'dir.
-- 🚫 **#56 Window Snapping / Message Island / Keystroke HUD / Keyboard Cleaning Lock:** Başka uygulamaların pencerelerini taşımak ve Mesajlar'ı okumak `AXUIElement` (Erişilebilirlik) ve `CGEvent.tapCreate` gerektirir.
-- 🚫 **#57 Hidden from Screen Capture / Lock Screen Widgets / Notch Terminal / Call Island / Focus Mode:** `NSWindow.sharingType`, `SLSWindow` kilit ekranı katmanı, `Process()` / `forkpty` kabuğu ve özel çağrı bildirimleri mevcut kurallarla yasaktır.
+- 🚫 **Face Unlock:** Kilit ekranı üzerinde görüntü yakalama ve parola alanına otomatik giriş özel API / `CGEventPost` gerektirir.
+- 🚫 **Donanım İvmeölçer / Ham Trackpad Knock:** Apple Silicon ivmeölçer (`AppleSPUHIDDevice`) veya ham trackpad dokunuşu (`MultitouchSupport.framework`) özel API'dir.
+- 🚫 **System HUDs / Alt HUD Styles / Keyboard Backlight / External Display DDC:** Sistem HUD'unu bastırmak, `CoreBrightness` ve `IOAVService` kullanmak özel API'dir.
+- 🚫 **Window Snapping / Message Island / Sistem Geneli Tuş Kilidi:** Başka uygulamaların pencerelerini taşımak, Mesajlar'ı okumak ve sistem geneli tuşları yakalamak `AXUIElement` (Erişilebilirlik) ve `CGEvent.tapCreate` gerektirir.
+- 🚫 **Hidden from Screen Capture / Lock Screen Widgets / Notch Terminal / Focus Mode:** `NSWindow.sharingType`, `SLSWindow` kilit ekranı katmanı, `Process()` / `forkpty` kabuğu ve Communication Notifications yetkili Odak durumu mevcut kurallarla yasaktır.

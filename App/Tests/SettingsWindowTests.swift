@@ -31,15 +31,15 @@ private final class FakeLoginItem: LoginItemControlling {
         #expect(window.styleMask.contains(.fullSizeContentView))
     }
 
-    @Test func fiveTabsAreDefinedWithCorrectTitlesAndSymbols() {
+    @Test func fiveTabsAreDefinedWithLocalizedTitlesAndSymbols() {
         #expect(
             SettingsTabID.allCases.map(\.rawValue) == [
                 "general", "appearance", "activities", "tools", "about",
             ])
-        #expect(
-            SettingsTabID.allCases.map(\.shortTitle) == [
-                "Genel", "Görünüm", "Etkinlikler", "Araçlar", "Hakkında",
-            ])
+        for tab in SettingsTabID.allCases {
+            #expect(!tab.shortTitle.isEmpty && !tab.shortTitle.hasPrefix("settings.tab."))
+            #expect(!tab.symbol.isEmpty)
+        }
     }
 
     @Test func allTabsProducesAllFiveTabs() {

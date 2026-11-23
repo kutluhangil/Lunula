@@ -1,7 +1,142 @@
 {
   "sourceLanguage": "en",
-  "version": "1.0",
   "strings": {
+    "alert.callActive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call active"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görüşme etkin"
+          }
+        }
+      }
+    },
+    "alert.capsLockOff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caps Lock OFF"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caps Lock KAPALI"
+          }
+        }
+      }
+    },
+    "alert.capsLockOn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caps Lock ON"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caps Lock AÇIK"
+          }
+        }
+      }
+    },
+    "alert.colorCopied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color copied to clipboard"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renk panoya kopyalandı"
+          }
+        }
+      }
+    },
+    "alert.micMuted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone muted"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon sessize alındı"
+          }
+        }
+      }
+    },
+    "alert.micUnmuted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone active"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon etkin"
+          }
+        }
+      }
+    },
+    "alert.ocrCopied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text copied"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin kopyalandı"
+          }
+        }
+      }
+    },
+    "alert.safeToDisconnect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safe to disconnect"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güvenle çıkarılabilir"
+          }
+        }
+      }
+    },
     "app.name": {
       "extractionState": "manual",
       "localizations": {
@@ -19,478 +154,19 @@
         }
       }
     },
-    "menu.settings": {
+    "competing.notice %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings…"
+            "value": "%@ also uses the notch; the two may overlap."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ayarlar…"
-          }
-        }
-      }
-    },
-    "menu.mute1h": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mute for 1 hour"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 saat sustur"
-          }
-        }
-      }
-    },
-    "menu.unmute": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unmute"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Susturmayı kaldır"
-          }
-        }
-      }
-    },
-    "menu.quit": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quit Lunula"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lunula'dan çık"
-          }
-        }
-      }
-    },
-    "shortcut.toggleIsland": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show or hide the island"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adayı göster veya gizle"
-          }
-        }
-      }
-    },
-    "settings.tab.general": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "General"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Genel"
-          }
-        }
-      }
-    },
-    "settings.tab.about": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "About"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hakkında"
-          }
-        }
-      }
-    },
-    "settings.general.launchAtLogin": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Launch at login"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Girişte başlat"
-          }
-        }
-      }
-    },
-    "settings.general.loginApproval": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "macOS needs your approval in System Settings › Login Items."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "macOS, Sistem Ayarları › Giriş Öğeleri'nde onayınızı bekliyor."
-          }
-        }
-      }
-    },
-    "settings.general.openLoginItems": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open System Settings"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sistem Ayarları'nı aç"
-          }
-        }
-      }
-    },
-    "settings.general.displayMode": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show the island on"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adayı göster"
-          }
-        }
-      }
-    },
-    "settings.displayMode.notchedOnly": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notched display only"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yalnızca çentikli ekranda"
-          }
-        }
-      }
-    },
-    "settings.displayMode.allDisplays": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All displays"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tüm ekranlarda"
-          }
-        }
-      }
-    },
-    "settings.displayMode.mainDisplay": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Main display"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ana ekranda"
-          }
-        }
-      }
-    },
-    "settings.general.hideInFullscreen": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide in full screen"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tam ekranda gizle"
-          }
-        }
-      }
-    },
-    "settings.general.criticalAlertsInFullscreen": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Critical alerts in full screen"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tam ekranda kritik uyarılar"
-          }
-        }
-      }
-    },
-    "settings.general.showMenuBarIcon": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show menu bar icon"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menü çubuğu simgesini göster"
-          }
-        }
-      }
-    },
-    "settings.about.version": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sürüm"
-          }
-        }
-      }
-    },
-    "settings.about.licenses": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Licenses"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lisanslar"
-          }
-        }
-      }
-    },
-    "menu.edit": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Düzen"
-          }
-        }
-      }
-    },
-    "menu.cut": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cut"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kes"
-          }
-        }
-      }
-    },
-    "menu.copy": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kopyala"
-          }
-        }
-      }
-    },
-    "menu.paste": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paste"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yapıştır"
-          }
-        }
-      }
-    },
-    "menu.selectAll": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Select All"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tümünü Seç"
-          }
-        }
-      }
-    },
-    "menu.window": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Window"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pencere"
-          }
-        }
-      }
-    },
-    "menu.close": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Close"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kapat"
-          }
-        }
-      }
-    },
-    "intent.show.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Activity"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etkinlik göster"
-          }
-        }
-      }
-    },
-    "intent.update.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Update Activity"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etkinliği güncelle"
+            "value": "%@ da çentiği kullanıyor; ikisi üst üste binebilir."
           }
         }
       }
@@ -512,36 +188,104 @@
         }
       }
     },
-    "intent.timer.title": {
+    "intent.error.generic": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start Timer"
+            "value": "The request could not be completed."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zamanlayıcı başlat"
+            "value": "İstek tamamlanamadı."
           }
         }
       }
     },
-    "intent.toggle.title": {
+    "intent.error.invalid %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toggle Island"
+            "value": "Invalid %@."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adayı aç/kapat"
+            "value": "%@ geçersiz."
+          }
+        }
+      }
+    },
+    "intent.error.missing %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing %@."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ eksik."
+          }
+        }
+      }
+    },
+    "intent.error.notFound %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No activity with ID %@."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kimlikli etkinlik yok."
+          }
+        }
+      }
+    },
+    "intent.param.accent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accent (hex)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vurgu (hex)"
+          }
+        }
+      }
+    },
+    "intent.param.duration": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duration (seconds)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Süre (saniye)"
           }
         }
       }
@@ -563,19 +307,36 @@
         }
       }
     },
-    "intent.param.title": {
+    "intent.param.minutes": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Title"
+            "value": "Minutes"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Başlık"
+            "value": "Dakika"
+          }
+        }
+      }
+    },
+    "intent.param.progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress (0–1)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlerleme (0–1)"
           }
         }
       }
@@ -614,478 +375,342 @@
         }
       }
     },
-    "intent.param.accent": {
+    "intent.param.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accent (hex)"
+            "value": "Title"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vurgu (hex)"
+            "value": "Başlık"
           }
         }
       }
     },
-    "intent.param.progress": {
+    "intent.show.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Progress (0–1)"
+            "value": "Show Activity"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlerleme (0–1)"
+            "value": "Etkinlik göster"
           }
         }
       }
     },
-    "intent.param.duration": {
+    "intent.timer.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Duration (seconds)"
+            "value": "Start Timer"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Süre (saniye)"
+            "value": "Zamanlayıcı başlat"
           }
         }
       }
     },
-    "intent.param.minutes": {
+    "intent.toggle.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Minutes"
+            "value": "Toggle Island"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dakika"
+            "value": "Adayı aç/kapat"
           }
         }
       }
     },
-    "intent.error.missing %@": {
+    "intent.update.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Missing %@."
+            "value": "Update Activity"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ eksik."
+            "value": "Etkinliği güncelle"
           }
         }
       }
     },
-    "intent.error.invalid %@": {
+    "lock.keyboard.hint": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invalid %@."
+            "value": "Press ⌘⎋ to unlock immediately"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ geçersiz."
+            "value": "Anında açmak için ⌘⎋ tuşlarına bas"
           }
         }
       }
     },
-    "intent.error.generic": {
+    "lock.keyboard.hudLabel": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The request could not be completed."
+            "value": "Keystroke HUD:"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İstek tamamlanamadı."
+            "value": "Tuş göstergesi:"
           }
         }
       }
     },
-    "intent.error.notFound %@": {
+    "lock.keyboard.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No activity with ID %@."
+            "value": "Keyboard Cleaning Lock"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ kimlikli etkinlik yok."
+            "value": "Klavye Temizleme Kilidi"
           }
         }
       }
     },
-    "permission.row.allow": {
+    "lock.keyboard.unlock": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allow"
+            "value": "Unlock"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İzin ver"
+            "value": "Kilidi aç"
           }
         }
       }
     },
-    "permission.row.granted": {
+    "menu.close": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allowed"
+            "value": "Close"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İzin verildi"
+            "value": "Kapat"
           }
         }
       }
     },
-    "permission.row.unavailable": {
+    "menu.copy": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not needed"
+            "value": "Copy"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerekmiyor"
+            "value": "Kopyala"
           }
         }
       }
     },
-    "settings.activities.permission": {
+    "menu.cut": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permission"
+            "value": "Cut"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İzin"
+            "value": "Kes"
           }
         }
       }
     },
-    "settings.activities.downloadsNote": {
+    "menu.edit": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lunula watches your Downloads folder only for finished downloads."
+            "value": "Edit"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lunula, İndirmeler klasörünü yalnızca biten indirmeler için izler."
+            "value": "Düzen"
           }
         }
       }
     },
-    "settings.tab.activities": {
+    "menu.mute1h": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activities"
+            "value": "Mute for 1 hour"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etkinlikler"
+            "value": "1 saat sustur"
           }
         }
       }
     },
-    "settings.tab.appearance": {
+    "menu.paste": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Appearance"
+            "value": "Paste"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Görünüm"
+            "value": "Yapıştır"
           }
         }
       }
     },
-    "settings.appearance.halo": {
+    "menu.quit": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halo intensity"
+            "value": "Quit Lunula"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hâle yoğunluğu"
+            "value": "Lunula'dan çık"
           }
         }
       }
     },
-    "settings.appearance.haptics": {
+    "menu.selectAll": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haptic feedback"
+            "value": "Select All"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dokunsal geri bildirim"
+            "value": "Tümünü Seç"
           }
         }
       }
     },
-    "settings.appearance.sounds": {
+    "menu.settings": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sounds"
+            "value": "Settings…"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesler"
+            "value": "Ayarlar…"
           }
         }
       }
     },
-    "settings.feature.nowPlaying": {
+    "menu.unmute": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Now Playing"
+            "value": "Unmute"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şimdi Çalıyor"
+            "value": "Susturmayı kaldır"
           }
         }
       }
     },
-    "settings.feature.timer": {
+    "menu.window": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Timer"
+            "value": "Window"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zamanlayıcı"
-          }
-        }
-      }
-    },
-    "settings.feature.calendar": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Calendar"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Takvim"
-          }
-        }
-      }
-    },
-    "settings.feature.weather": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weather"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hava"
-          }
-        }
-      }
-    },
-    "settings.feature.shelf": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shelf"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Raf"
-          }
-        }
-      }
-    },
-    "settings.feature.battery": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Battery alerts"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pil uyarıları"
-          }
-        }
-      }
-    },
-    "settings.feature.downloads": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Download alerts"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İndirme uyarıları"
-          }
-        }
-      }
-    },
-    "settings.feature.privacyIndicator": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera and microphone indicator"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera ve mikrofon göstergesi"
-          }
-        }
-      }
-    },
-    "settings.feature.customActivities": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Custom activities (URL and Shortcuts)"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Özel etkinlikler (URL ve Kestirmeler)"
-          }
-        }
-      }
-    },
-    "onboarding.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Welcome to Lunula"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lunula'ya hoş geldin"
+            "value": "Pencere"
           }
         }
       }
@@ -1124,36 +749,206 @@
         }
       }
     },
-    "competing.notice %@": {
+    "onboarding.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ also uses the notch; the two may overlap."
+            "value": "Welcome to Lunula"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ da çentiği kullanıyor; ikisi üst üste binebilir."
+            "value": "Lunula'ya hoş geldin"
           }
         }
       }
     },
-    "settings.window.title": {
+    "permission.row.allow": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lunula Settings"
+            "value": "Allow"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lunula Ayarları"
+            "value": "İzin ver"
+          }
+        }
+      }
+    },
+    "permission.row.denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denied"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reddedildi"
+          }
+        }
+      }
+    },
+    "permission.row.granted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allowed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin verildi"
+          }
+        }
+      }
+    },
+    "permission.row.notRequested": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not requested"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstenmedi"
+          }
+        }
+      }
+    },
+    "permission.row.openSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem Ayarları'nı aç"
+          }
+        }
+      }
+    },
+    "permission.row.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not needed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerekmiyor"
+          }
+        }
+      }
+    },
+    "settings.about.badge.idle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle < 0.1% CPU · 0 wakeups"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boşta < %0.1 CPU · 0 uyanma"
+          }
+        }
+      }
+    },
+    "settings.about.badge.native": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% Native · Swift 6"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%100 Native · Swift 6"
+          }
+        }
+      }
+    },
+    "settings.about.badge.sandbox": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Sandbox"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Sandbox"
+          }
+        }
+      }
+    },
+    "settings.about.licenses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licenses"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lisanslar"
+          }
+        }
+      }
+    },
+    "settings.about.licensesTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licenses & attributions"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lisanslar ve atıflar"
           }
         }
       }
@@ -1175,36 +970,1770 @@
         }
       }
     },
-    "settings.weather.unit": {
+    "settings.about.version": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Temperature unit"
+            "value": "Version"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sıcaklık birimi"
+            "value": "Sürüm"
           }
         }
       }
     },
-    "settings.weather.unit.system": {
+    "settings.about.versionFormat %@ %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "System"
+            "value": "Version %@ (%@)"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sistem"
+            "value": "Sürüm %@ (%@)"
+          }
+        }
+      }
+    },
+    "settings.about.weatherData": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather data"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hava durumu verileri"
+          }
+        }
+      }
+    },
+    "settings.activities.downloadsNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula watches your Downloads folder only for finished downloads."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula, İndirmeler klasörünü yalnızca biten indirmeler için izler."
+          }
+        }
+      }
+    },
+    "settings.activities.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula never asks for permissions at launch. Permissions are requested only when you enable and use a feature."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula ilk açılışta hiçbir izin istemez. İzin, yalnızca o etkinliği açtığında ve gerçekten gerekiyorsa istenir."
+          }
+        }
+      }
+    },
+    "settings.activities.permission": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permission"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin"
+          }
+        }
+      }
+    },
+    "settings.appearance.doubleTapOption": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap Option (⌥) to toggle island"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çift Option (⌥) tuşuyla adayı aç/kapat"
+          }
+        }
+      }
+    },
+    "settings.appearance.expandedWidth": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded island width"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genişlemiş ada genişliği"
+          }
+        }
+      }
+    },
+    "settings.appearance.expandedWidth.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horizontal width of the expanded island (520–600 pt)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genişlemiş adanın yatay genişliği (520–600 pt)."
+          }
+        }
+      }
+    },
+    "settings.appearance.fullChargeThreshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full-charge alert threshold"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam şarj uyarı eşiği"
+          }
+        }
+      }
+    },
+    "settings.appearance.halo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halo intensity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hâle yoğunluğu"
+          }
+        }
+      }
+    },
+    "settings.appearance.halo.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% uses the token defaults (ambient 0.16 · active 0.32 · alert 0.55). 0% turns off."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%100, durum tokenlarının kendisi (ortam 0.16 · aktif 0.32 · uyarı 0.55). %0 kapalı."
+          }
+        }
+      }
+    },
+    "settings.appearance.haptics": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haptic feedback"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokunsal geri bildirim"
+          }
+        }
+      }
+    },
+    "settings.appearance.haptics.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtle trackpad tap when opening and on alerts."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trackpad'de hafif tık: açılışta ve uyarılarda."
+          }
+        }
+      }
+    },
+    "settings.appearance.hideNotchBar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide notch with black menu bar strip"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğunu siyah şeritle gizle"
+          }
+        }
+      }
+    },
+    "settings.appearance.hideNotchBar.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turns the notched menu bar strip black while keeping the halo visible."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çentikli ekranda menü şeridi siyaha döner; çentik kaybolur, hâle parlamaya devam eder."
+          }
+        }
+      }
+    },
+    "settings.appearance.mascot.bird": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bird"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuş"
+          }
+        }
+      }
+    },
+    "settings.appearance.mascot.cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kedi"
+          }
+        }
+      }
+    },
+    "settings.appearance.mascot.default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan"
+          }
+        }
+      }
+    },
+    "settings.appearance.mascot.flame": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flame"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alev"
+          }
+        }
+      }
+    },
+    "settings.appearance.mascot.hare": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hare"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tavşan"
+          }
+        }
+      }
+    },
+    "settings.appearance.mascot.none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default symbol"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan sembol"
+          }
+        }
+      }
+    },
+    "settings.appearance.mascot.tortoise": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tortoise"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaplumbağa"
+          }
+        }
+      }
+    },
+    "settings.appearance.pillOffset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pill vertical offset"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapsül dikey konumu"
+          }
+        }
+      }
+    },
+    "settings.appearance.pillOffset.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance from the top edge on displays without a notch."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çentiksiz ekranlarda 180 × 22 kapsülün üst kenara uzaklığı."
+          }
+        }
+      }
+    },
+    "settings.appearance.section.feedback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri bildirim"
+          }
+        }
+      }
+    },
+    "settings.appearance.section.halo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halo & light"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hâle ve ışık"
+          }
+        }
+      }
+    },
+    "settings.appearance.sounds": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sounds"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesler"
+          }
+        }
+      }
+    },
+    "settings.appearance.sounds.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer completion and critical alerts."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlayıcı bitişi ve uyarılar."
+          }
+        }
+      }
+    },
+    "settings.appearance.timerMascot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer mascot"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlayıcı maskotu"
+          }
+        }
+      }
+    },
+    "settings.appearance.useGlassCards": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liquid Glass inner card highlight"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İç kartlarda Liquid Glass yansıması"
+          }
+        }
+      }
+    },
+    "settings.appearance.useGlassCards.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Island core stays opaque #000000; only #111113 cards catch top light."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ada çekirdeği #000000 kalır; yalnızca #111113 kartlar üstten ışık alır."
+          }
+        }
+      }
+    },
+    "settings.common.days %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld gün"
+          }
+        }
+      }
+    },
+    "settings.common.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "settings.common.on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
+    "settings.displayMode.allDisplays": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All displays"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm ekranlarda"
+          }
+        }
+      }
+    },
+    "settings.displayMode.allDisplays.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "180 × 22 pill on external displays"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harici ekranda 180 × 22 kapsül"
+          }
+        }
+      }
+    },
+    "settings.displayMode.mainDisplay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main display"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana ekranda"
+          }
+        }
+      }
+    },
+    "settings.displayMode.mainDisplay.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display with the menu bar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğunun olduğu ekran"
+          }
+        }
+      }
+    },
+    "settings.displayMode.notchedOnly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notched display only"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca çentikli ekranda"
+          }
+        }
+      }
+    },
+    "settings.displayMode.notchedOnly.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No island on external displays"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harici ekranda ada yok"
+          }
+        }
+      }
+    },
+    "settings.feature.battery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battery alerts"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pil uyarıları"
+          }
+        }
+      }
+    },
+    "settings.feature.battery.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charging halo, low battery and full-charge alert."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şarj hâlesi, düşük pil ve tam şarj uyarısı."
+          }
+        }
+      }
+    },
+    "settings.feature.calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvim"
+          }
+        }
+      }
+    },
+    "settings.feature.calendar.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upcoming meetings with one-click Join for Zoom, Meet and Teams."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaklaşan toplantı; Zoom, Meet ve Teams'e tek tıkla katıl."
+          }
+        }
+      }
+    },
+    "settings.feature.customActivities": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom activities (URL and Shortcuts)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Özel etkinlikler (URL ve Kestirmeler)"
+          }
+        }
+      }
+    },
+    "settings.feature.customActivities.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lunula:// URLs, drive eject, Caps Lock and agent approvals."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lunula:// adresleri, disk çıkarma, Caps Lock, ajan onayları."
+          }
+        }
+      }
+    },
+    "settings.feature.downloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download alerts"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme uyarıları"
+          }
+        }
+      }
+    },
+    "settings.feature.downloads.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows finished downloads on the island with Add to Shelf."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biten indirmeyi adada göster, rafa ekle."
+          }
+        }
+      }
+    },
+    "settings.feature.nowPlaying": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now Playing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi Çalıyor"
+          }
+        }
+      }
+    },
+    "settings.feature.nowPlaying.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Music and Spotify with artwork-tinted halo."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Music ve Spotify; kapak renginde hâle."
+          }
+        }
+      }
+    },
+    "settings.feature.privacyIndicator": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera and microphone indicator"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera ve mikrofon göstergesi"
+          }
+        }
+      }
+    },
+    "settings.feature.privacyIndicator.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera/microphone dots and live Call Island."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik noktaları ve canlı çağrı adası."
+          }
+        }
+      }
+    },
+    "settings.feature.shelf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raf"
+          }
+        }
+      }
+    },
+    "settings.feature.shelf.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag-and-drop shelf, image converter, ZIP archive and OCR."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sürükle-bırak raf, görsel dönüştürme, ZIP aç/sıkıştır, metin tanıma."
+          }
+        }
+      }
+    },
+    "settings.feature.timer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlayıcı"
+          }
+        }
+      }
+    },
+    "settings.feature.timer.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro, stopwatch and 7-day focus streak."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro, kronometre ve 7 günlük odak serisi."
+          }
+        }
+      }
+    },
+    "settings.feature.weather": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hava"
+          }
+        }
+      }
+    },
+    "settings.feature.weather.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local conditions with daily high and low."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bulunduğun yerin anlık havası ve günün en yüksek–en düşüğü."
+          }
+        }
+      }
+    },
+    "settings.general.criticalAlertsInFullscreen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Critical alerts in full screen"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam ekranda kritik uyarılar"
+          }
+        }
+      }
+    },
+    "settings.general.criticalAlertsInFullscreen.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting meetings, finished timers, 10% battery and agent approvals."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplantı başlangıcı, biten zamanlayıcı, %10 pil ve ajan onayları."
+          }
+        }
+      }
+    },
+    "settings.general.displayMode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the island on"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adayı göster"
+          }
+        }
+      }
+    },
+    "settings.general.doubleTapOption.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press Option twice quickly; works without extra permissions."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Option'a hızla iki kez bas; ek izin gerektirmez."
+          }
+        }
+      }
+    },
+    "settings.general.hideInFullscreen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide in full screen"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam ekranda gizle"
+          }
+        }
+      }
+    },
+    "settings.general.hideInFullscreen.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The island steps aside during games, videos and presentations."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun, film ve sunumda ada çekilir."
+          }
+        }
+      }
+    },
+    "settings.general.hoverToPeek": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hover to peek"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzerine gelince göz at"
+          }
+        }
+      }
+    },
+    "settings.general.hoverToPeek.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resting the pointer on the notch opens a compact preview."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İmleç çentikte kısa süre durunca önizleme açılır."
+          }
+        }
+      }
+    },
+    "settings.general.launchAtLogin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch at login"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Girişte başlat"
+          }
+        }
+      }
+    },
+    "settings.general.launchAtLogin.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula starts quietly when your Mac turns on."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac açıldığında Lunula sessizce başlar."
+          }
+        }
+      }
+    },
+    "settings.general.loginApproval": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS needs your approval in System Settings › Login Items."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS, Sistem Ayarları › Giriş Öğeleri'nde onayınızı bekliyor."
+          }
+        }
+      }
+    },
+    "settings.general.openLoginItems": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem Ayarları'nı aç"
+          }
+        }
+      }
+    },
+    "settings.general.openLoginItemsButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Login Items"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş Öğeleri'ni Aç"
+          }
+        }
+      }
+    },
+    "settings.general.section.displays": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Displays"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekranlar"
+          }
+        }
+      }
+    },
+    "settings.general.section.fullscreen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full screen"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam ekran"
+          }
+        }
+      }
+    },
+    "settings.general.section.gestures": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestures"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hareketler"
+          }
+        }
+      }
+    },
+    "settings.general.section.shortcuts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısayollar"
+          }
+        }
+      }
+    },
+    "settings.general.section.system": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System & startup"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem ve başlangıç"
+          }
+        }
+      }
+    },
+    "settings.general.showMenuBarIcon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show menu bar icon"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğu simgesini göster"
+          }
+        }
+      }
+    },
+    "settings.general.showMenuBarIcon.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens a compact menu bar popover detached from the island."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adadan ayrı, küçük bir menü çubuğu penceresi açar."
+          }
+        }
+      }
+    },
+    "settings.general.swipeGestures": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-finger swipe gestures"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İki parmak kaydırma hareketleri"
+          }
+        }
+      }
+    },
+    "settings.general.swipeGestures.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe down on the island to expand, swipe up to close."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adada aşağı kaydırınca açılır, yukarı kaydırınca kapanır."
+          }
+        }
+      }
+    },
+    "settings.general.toggleIsland": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toggle island"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adayı aç/kapat"
+          }
+        }
+      }
+    },
+    "settings.general.toggleIsland.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click and press a shortcut. Esc cancels, ⌫ clears."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tıkla, yeni kısayola bas. Esc vazgeçer, ⌫ siler."
+          }
+        }
+      }
+    },
+    "settings.permission.automation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automation"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyon"
+          }
+        }
+      }
+    },
+    "settings.permission.calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvim"
+          }
+        }
+      }
+    },
+    "settings.permission.location": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konum"
+          }
+        }
+      }
+    },
+    "settings.preview.download.file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "report.pdf"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rapor.pdf"
+          }
+        }
+      }
+    },
+    "settings.preview.download.reveal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder'da göster"
+          }
+        }
+      }
+    },
+    "settings.preview.download.shelf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Shelf"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rafa ekle"
+          }
+        }
+      }
+    },
+    "settings.preview.download.status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirildi"
+          }
+        }
+      }
+    },
+    "settings.preview.menu.clock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu 14:08"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per 14:08"
+          }
+        }
+      }
+    },
+    "settings.preview.menu.edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzen"
+          }
+        }
+      }
+    },
+    "settings.preview.menu.file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya"
+          }
+        }
+      }
+    },
+    "settings.preview.pill.external": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notchless external display"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çentiksiz harici ekran"
+          }
+        }
+      }
+    },
+    "settings.preview.pill.focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak"
+          }
+        }
+      }
+    },
+    "settings.preview.prefix %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview · %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizleme · %@"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.blackBar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Black menu bar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siyah menü çubuğu"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.downloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download activity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme etkinliği"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.halo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halo & light"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hâle ve ışık"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.liquidGlass": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liquid Glass"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liquid Glass"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.live": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live island"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canlı ada"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.mascot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer mascot"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlayıcı maskotu"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.notched": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notched display"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çentikli ekran"
+          }
+        }
+      }
+    },
+    "settings.preview.stage.tools": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded tools"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genişlemiş araçlar"
           }
         }
       }
@@ -1260,23 +2789,6 @@
         }
       }
     },
-    "settings.shelf.retention.7": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 days"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 gün"
-          }
-        }
-      }
-    },
     "settings.shelf.retention.30": {
       "extractionState": "manual",
       "localizations": {
@@ -1290,6 +2802,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "30 gün"
+          }
+        }
+      }
+    },
+    "settings.shelf.retention.7": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 gün"
           }
         }
       }
@@ -1311,396 +2840,856 @@
         }
       }
     },
-    "settings.appearance.pillOffset": {
+    "settings.tab.about": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pill vertical offset"
+            "value": "About"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kapsül dikey konumu"
+            "value": "Hakkında"
           }
         }
       }
     },
-    "settings.appearance.fullChargeThreshold": {
+    "settings.tab.activities": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Full-charge alert threshold"
+            "value": "Activities"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tam şarj uyarı eşiği"
+            "value": "Etkinlikler"
           }
         }
       }
     },
-    "settings.appearance.timerMascot": {
+    "settings.tab.appearance": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Timer mascot"
+            "value": "Appearance"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zamanlayıcı maskotu"
+            "value": "Görünüm"
           }
         }
       }
     },
-    "settings.appearance.mascot.none": {
+    "settings.tab.full.about": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Default symbol"
+            "value": "About"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Varsayılan sembol"
+            "value": "Hakkında"
           }
         }
       }
     },
-    "settings.appearance.mascot.hare": {
+    "settings.tab.full.activities": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hare"
+            "value": "Activities & Permissions"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tavşan"
+            "value": "Etkinlikler ve İzinler"
           }
         }
       }
     },
-    "settings.appearance.mascot.tortoise": {
+    "settings.tab.full.appearance": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tortoise"
+            "value": "Appearance & Halo"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kaplumbağa"
+            "value": "Görünüm ve Hâle"
           }
         }
       }
     },
-    "settings.appearance.mascot.cat": {
+    "settings.tab.full.general": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cat"
+            "value": "General"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kedi"
+            "value": "Genel"
           }
         }
       }
     },
-    "settings.appearance.mascot.bird": {
+    "settings.tab.full.tools": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bird"
+            "value": "Tools & Automation"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kuş"
+            "value": "Araçlar ve Otomasyon"
           }
         }
       }
     },
-    "settings.appearance.mascot.flame": {
+    "settings.tab.general": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Flame"
+            "value": "General"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alev"
+            "value": "Genel"
           }
         }
       }
     },
-    "alert.ocrCopied": {
+    "settings.tab.tools": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Text copied"
+            "value": "Tools"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Metin kopyalandı"
+            "value": "Araçlar"
           }
         }
       }
     },
-    "alert.micMuted": {
+    "settings.timer.minutesShort %lld": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Microphone muted"
+            "value": "%lld min"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon sessize alındı"
+            "value": "%lld dk"
           }
         }
       }
     },
-    "alert.micUnmuted": {
+    "settings.timer.pomodoroCycles": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Microphone active"
+            "value": "Sessions before long break"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon etkin"
+            "value": "Uzun mola öncesi oturum"
           }
         }
       }
     },
-    "alert.colorCopied": {
+    "settings.timer.pomodoroFocus": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Color copied to clipboard"
+            "value": "Pomodoro focus"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renk panoya kopyalandı"
+            "value": "Pomodoro odak"
           }
         }
       }
     },
-    "alert.capsLockOn": {
+    "settings.timer.pomodoroLongBreak": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Caps Lock ON"
+            "value": "Long break"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Caps Lock AÇIK"
+            "value": "Uzun mola"
           }
         }
       }
     },
-    "alert.capsLockOff": {
+    "settings.timer.pomodoroShortBreak": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Caps Lock OFF"
+            "value": "Short break"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Caps Lock KAPALI"
+            "value": "Kısa mola"
           }
         }
       }
     },
-    "alert.safeToDisconnect": {
+    "settings.tools.claudeHookCaption": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Safe to disconnect"
+            "value": "Claude Code hook · ~/.claude/settings.json"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Güvenle çıkarılabilir"
+            "value": "Claude Code kancası · ~/.claude/settings.json"
           }
         }
       }
     },
-    "settings.appearance.hideNotchBar": {
+    "settings.tools.copied": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hide notch with black menu bar strip"
+            "value": "Copied"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Menü çubuğunu siyah şeritle gizle"
+            "value": "Kopyalandı"
           }
         }
       }
     },
-    "settings.appearance.useGlassCards": {
+    "settings.tools.copy": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liquid Glass inner card highlight"
+            "value": "Copy"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İç kartlarda Liquid Glass yansıması"
+            "value": "Kopyala"
           }
         }
       }
     },
-    "settings.appearance.doubleTapOption": {
+    "settings.tools.item.awake": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Double-tap Option (⌥) to toggle island"
+            "value": "Keep Awake"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çift Option (⌥) tuşuyla adayı aç/kapat"
+            "value": "Uyanık Tut"
           }
         }
       }
     },
-    "alert.callActive": {
+    "settings.tools.item.clip": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Call active"
+            "value": "Clipboard & snippets"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Görüşme etkin"
+            "value": "Pano ve şablonlar"
           }
         }
       }
     },
-    "lock.keyboard.title": {
+    "settings.tools.item.drop": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keyboard Cleaning Lock"
+            "value": "Color eyedropper"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klavye Temizleme Kilidi"
+            "value": "Renk damlalığı"
           }
         }
       }
     },
-    "lock.keyboard.hint": {
+    "settings.tools.item.kbd": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Press ⌘⎋ to unlock immediately"
+            "value": "Keyboard cleaning"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anında açmak için ⌘⎋ tuşlarına bas"
+            "value": "Klavye temizleme"
           }
         }
       }
     },
-    "lock.keyboard.unlock": {
+    "settings.tools.item.mic": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unlock"
+            "value": "Mute microphone"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kilidi aç"
+            "value": "Mikrofonu sustur"
+          }
+        }
+      }
+    },
+    "settings.tools.item.notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick notes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı notlar"
+          }
+        }
+      }
+    },
+    "settings.tools.item.out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio output"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ses çıkışı"
+          }
+        }
+      }
+    },
+    "settings.tools.item.prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teleprompter"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teleprompter"
+          }
+        }
+      }
+    },
+    "settings.tools.item.search": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search, math & commands"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ara, hesapla, komut"
+          }
+        }
+      }
+    },
+    "settings.tools.item.stats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System stats"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem istatistikleri"
+          }
+        }
+      }
+    },
+    "settings.tools.item.stocks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launcher & Stocks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlatıcı ve Borsa"
+          }
+        }
+      }
+    },
+    "settings.tools.jump.charge.path": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activities › Battery alerts"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etkinlikler › Pil uyarıları"
+          }
+        }
+      }
+    },
+    "settings.tools.jump.doubleTap.path": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General › Shortcuts"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genel › Kısayollar"
+          }
+        }
+      }
+    },
+    "settings.tools.jump.shelf.path": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activities › Shelf"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etkinlikler › Raf"
+          }
+        }
+      }
+    },
+    "settings.tools.jump.shelf.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf retention"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raf saklama süresi"
+          }
+        }
+      }
+    },
+    "settings.tools.section.hooks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lunula:// and agent hooks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lunula:// ve ajan kancaları"
+          }
+        }
+      }
+    },
+    "settings.tools.section.otherTabs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In other tabs"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer sekmelerde"
+          }
+        }
+      }
+    },
+    "settings.tools.section.toolbar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded island toolbar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genişlemiş ada araç çubuğu"
+          }
+        }
+      }
+    },
+    "settings.tools.toolbar.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected tools appear in the expanded island top bar. Drag to reorder."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçili araçlar genişlemiş adanın üst çubuğunda durur. Sıra, sürükleyerek değişir."
+          }
+        }
+      }
+    },
+    "settings.tools.url.aiUsage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show AI usage limit on the compact island"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI kullanım limitini kompakt adada göster"
+          }
+        }
+      }
+    },
+    "settings.tools.url.approval": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for agent approval; also shows in full screen"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajan onayını sor; tam ekranda da görünür"
+          }
+        }
+      }
+    },
+    "settings.tools.url.show": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show a custom activity on the island"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Özel bir etkinliği adada göster"
+          }
+        }
+      }
+    },
+    "settings.weather.city.noResults": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching city found."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşen şehir bulunamadı."
+          }
+        }
+      }
+    },
+    "settings.weather.city.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search city…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şehir ara…"
+          }
+        }
+      }
+    },
+    "settings.weather.city.search": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ara"
+          }
+        }
+      }
+    },
+    "settings.weather.location": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location source"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konum kaynağı"
+          }
+        }
+      }
+    },
+    "settings.weather.location.automatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik"
+          }
+        }
+      }
+    },
+    "settings.weather.location.manual": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "City"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şehir"
+          }
+        }
+      }
+    },
+    "settings.weather.unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperature unit"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıcaklık birimi"
+          }
+        }
+      }
+    },
+    "settings.weather.unit.system": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem"
+          }
+        }
+      }
+    },
+    "settings.window.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula Ayarları"
+          }
+        }
+      }
+    },
+    "shortcut.toggleIsland": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show or hide the island"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adayı göster veya gizle"
           }
         }
       }
     }
-  }
+  },
+  "version": "1.0"
 }
