@@ -718,25 +718,107 @@ struct LauncherAndHubPopover: View {
     }
 
     private var remindersSection: some View {
-        let items = quickTools.reminders()
+        let syncState = quickTools.appleRemindersState()
+        let appleItems = quickTools.appleReminders()
+        let localItems = quickTools.reminders()
         return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                if syncState == .connected {
+                    Label {
+                        Text("tools.reminders.appleSync", bundle: .module)
+                    } icon: {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(Palette.signalGreen)
+                    }
+                    .font(TypeToken.caption.font)
+                    .foregroundStyle(Palette.textSecondary)
+                } else if syncState == .notConnected {
+                    Button(action: quickTools.connectAppleReminders) {
+                        Label {
+                            Text("tools.reminders.connectApple", bundle: .module)
+                        } icon: {
+                            Image(systemName: "checklist")
+                        }
+                        .font(TypeToken.caption.font)
+                        .foregroundStyle(Palette.textPrimary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Palette.inkPressed, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text("tools.reminders.denied", bundle: .module)
+                        .font(TypeToken.caption.font)
+                        .foregroundStyle(Palette.textSecondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+            }
+
             HStack(spacing: 4) {
                 TextField(String(localized: "tools.reminders.placeholder", bundle: .module), text: $newReminder)
                     .textFieldStyle(.roundedBorder)
-                    .onSubmit(submitReminder)
-                Button(action: submitReminder) {
+                    .onSubmit { submitReminder(synced: syncState == .connected) }
+                Button {
+                    submitReminder(synced: syncState == .connected)
+                } label: {
                     Image(systemName: "plus.circle.fill")
                 }
                 .buttonStyle(.plain)
             }
-            if items.isEmpty {
+
+            if syncState == .connected {
+                if appleItems.isEmpty {
+                    Text("tools.reminders.empty", bundle: .module)
+                        .font(TypeToken.caption.font)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(appleItems) { item in
+                                HStack(spacing: 6) {
+                                    Button {
+                                        quickTools.toggleAppleReminder(item.id)
+                                    } label: {
+                                        Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                                            .foregroundStyle(item.isCompleted ? Palette.signalGreen : .secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(item.title)
+                                            .font(TypeToken.caption.font)
+                                            .strikethrough(item.isCompleted)
+                                            .lineLimit(1)
+                                        if let listTitle = item.listTitle, !listTitle.isEmpty {
+                                            Text(listTitle)
+                                                .font(TypeToken.caption.font)
+                                                .foregroundStyle(Palette.textSecondary)
+                                                .lineLimit(1)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    Button {
+                                        quickTools.removeAppleReminder(item.id)
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 140)
+                }
+            } else if localItems.isEmpty {
                 Text("tools.reminders.empty", bundle: .module)
                     .font(TypeToken.caption.font)
                     .foregroundStyle(.secondary)
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
-                        ForEach(items) { item in
+                        ForEach(localItems) { item in
                             HStack(spacing: 6) {
                                 Button {
                                     quickTools.toggleReminder(item.id)
@@ -766,10 +848,14 @@ struct LauncherAndHubPopover: View {
         }
     }
 
-    private func submitReminder() {
+    private func submitReminder(synced: Bool) {
         let trimmed = newReminder.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        quickTools.addReminder(trimmed)
+        if synced {
+            quickTools.addAppleReminder(trimmed)
+        } else {
+            quickTools.addReminder(trimmed)
+        }
         newReminder = ""
     }
 

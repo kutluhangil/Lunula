@@ -1939,6 +1939,57 @@
         }
       }
     },
+    "tools.reminders.appleSync": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Reminders"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Anımsatıcılar"
+          }
+        }
+      }
+    },
+    "tools.reminders.connectApple": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Apple Reminders"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Anımsatıcılar'a Bağlan"
+          }
+        }
+      }
+    },
+    "tools.reminders.denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders access denied in System Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anımsatıcılar erişimi Sistem Ayarları'nda kapalı"
+          }
+        }
+      }
+    },
     "tools.reminders.empty": {
       "extractionState": "manual",
       "localizations": {

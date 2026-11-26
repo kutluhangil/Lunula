@@ -37,6 +37,26 @@ public struct MountedDriveItem: Identifiable, Equatable, Sendable {
     }
 }
 
+public enum RemindersSyncState: Equatable, Sendable {
+    case notConnected, connected, denied
+}
+
+public struct AppleReminderItem: Identifiable, Equatable, Sendable {
+    public var id: String
+    public var title: String
+    public var isCompleted: Bool
+    public var dueDate: Date?
+    public var listTitle: String?
+
+    public init(id: String, title: String, isCompleted: Bool, dueDate: Date? = nil, listTitle: String? = nil) {
+        self.id = id
+        self.title = title
+        self.isCompleted = isCompleted
+        self.dueDate = dueDate
+        self.listTitle = listTitle
+    }
+}
+
 public struct SystemStatsItem: Equatable, Sendable {
     public var cpuPercent: Int
     public var memoryPercent: Int
@@ -97,6 +117,12 @@ public struct QuickToolsActions {
     public var addReminder: @MainActor (String) -> Void = { _ in }
     public var toggleReminder: @MainActor (UUID) -> Void = { _ in }
     public var removeReminder: @MainActor (UUID) -> Void = { _ in }
+    public var appleRemindersState: @MainActor () -> RemindersSyncState = { .notConnected }
+    public var appleReminders: @MainActor () -> [AppleReminderItem] = { [] }
+    public var connectAppleReminders: @MainActor () -> Void = {}
+    public var addAppleReminder: @MainActor (String) -> Void = { _ in }
+    public var toggleAppleReminder: @MainActor (String) -> Void = { _ in }
+    public var removeAppleReminder: @MainActor (String) -> Void = { _ in }
     public var stockQuotes: @MainActor () -> [StockQuote] = { [] }
     public var refreshStocks: @MainActor () -> Void = {}
     public var addStockSymbol: @MainActor (String) -> Void = { _ in }
@@ -155,6 +181,12 @@ public struct QuickToolsActions {
         addReminder: @escaping @MainActor (String) -> Void = { _ in },
         toggleReminder: @escaping @MainActor (UUID) -> Void = { _ in },
         removeReminder: @escaping @MainActor (UUID) -> Void = { _ in },
+        appleRemindersState: @escaping @MainActor () -> RemindersSyncState = { .notConnected },
+        appleReminders: @escaping @MainActor () -> [AppleReminderItem] = { [] },
+        connectAppleReminders: @escaping @MainActor () -> Void = {},
+        addAppleReminder: @escaping @MainActor (String) -> Void = { _ in },
+        toggleAppleReminder: @escaping @MainActor (String) -> Void = { _ in },
+        removeAppleReminder: @escaping @MainActor (String) -> Void = { _ in },
         stockQuotes: @escaping @MainActor () -> [StockQuote] = { [] },
         refreshStocks: @escaping @MainActor () -> Void = {},
         addStockSymbol: @escaping @MainActor (String) -> Void = { _ in },
@@ -212,6 +244,12 @@ public struct QuickToolsActions {
         self.addReminder = addReminder
         self.toggleReminder = toggleReminder
         self.removeReminder = removeReminder
+        self.appleRemindersState = appleRemindersState
+        self.appleReminders = appleReminders
+        self.connectAppleReminders = connectAppleReminders
+        self.addAppleReminder = addAppleReminder
+        self.toggleAppleReminder = toggleAppleReminder
+        self.removeAppleReminder = removeAppleReminder
         self.stockQuotes = stockQuotes
         self.refreshStocks = refreshStocks
         self.addStockSymbol = addStockSymbol

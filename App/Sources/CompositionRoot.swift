@@ -51,6 +51,7 @@ final class CompositionRoot {
     private lazy var teleprompter = TeleprompterStore(defaults: .standard)
     private lazy var appLauncher = AppLauncherStore(defaults: .standard)
     private lazy var remindersStore = QuickRemindersStore(defaults: .standard, time: time)
+    private lazy var appleReminders = RemindersService(reader: EventKitReminderReader())
     private lazy var stocksStore = StocksWatchlistStore(defaults: .standard)
     private lazy var stocksService = StocksService(store: stocksStore)
     private lazy var aiUsageStore = AIUsageStore(defaults: .standard, time: time)
@@ -153,6 +154,7 @@ final class CompositionRoot {
         }
         hub.register(calendar, feature: .calendar)
         if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
+        appleReminders.start()
         hub.register(alerts: competing, feature: .customActivities)
         hub.register(alerts: externalDrives, feature: .customActivities)
         if settings.settings.enabledFeatures.contains(.customActivities) {
@@ -608,6 +610,24 @@ final class CompositionRoot {
             addReminder: { [unowned self] title in remindersStore.add(title) },
             toggleReminder: { [unowned self] id in remindersStore.toggle(id) },
             removeReminder: { [unowned self] id in remindersStore.remove(id) },
+            appleRemindersState: { [unowned self] in
+                switch appleReminders.authorization {
+                case .fullAccess: .connected
+                case .notDetermined: .notConnected
+                case .denied, .restricted, .writeOnly: .denied
+                }
+            },
+            appleReminders: { [unowned self] in
+                appleReminders.items.map {
+                    AppleReminderItem(
+                        id: $0.id, title: $0.title, isCompleted: $0.isCompleted, dueDate: $0.dueDate,
+                        listTitle: $0.listTitle)
+                }
+            },
+            connectAppleReminders: { [unowned self] in Task { await appleReminders.requestAccess() } },
+            addAppleReminder: { [unowned self] title in appleReminders.add(title) },
+            toggleAppleReminder: { [unowned self] id in appleReminders.toggle(id) },
+            removeAppleReminder: { [unowned self] id in appleReminders.remove(id) },
             stockQuotes: { [unowned self] in stocksStore.quotes },
             refreshStocks: { [unowned self] in stocksService.refreshAll() },
             addStockSymbol: { [unowned self] sym in stocksStore.addSymbol(sym) },

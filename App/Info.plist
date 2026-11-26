@@ -45,5 +45,7 @@
 	<string>Lunula uses your approximate location to show local weather.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Lunula uses your approximate location to show local weather.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Lunula lets you view, add, and complete Apple Reminders from the island.</string>
 </dict>
 </plist>

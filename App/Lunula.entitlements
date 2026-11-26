@@ -18,6 +18,8 @@
 	<true/>
 	<key>com.apple.security.personal-information.location</key>
 	<true/>
+	<key>com.apple.security.personal-information.reminders</key>
+	<true/>
 	<key>com.apple.security.scripting-targets</key>
 	<dict>
 		<key>com.apple.Music</key>
