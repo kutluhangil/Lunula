@@ -13,10 +13,13 @@ public struct NowPlayingSnapshot: Equatable, Sendable {
     public var position: TimeInterval
     public var positionTimestamp: Date
     public var isPlaying: Bool
+    /// Player application volume (`0...100`), when reported by Apple Music or Spotify.
+    public var soundVolume: Int?
 
     public init(
         source: MediaSourceID, trackID: String, title: String, artist: String, album: String?, artworkKey: String?,
-        duration: TimeInterval?, position: TimeInterval, positionTimestamp: Date, isPlaying: Bool
+        duration: TimeInterval?, position: TimeInterval, positionTimestamp: Date, isPlaying: Bool,
+        soundVolume: Int? = nil
     ) {
         self.source = source
         self.trackID = trackID
@@ -28,6 +31,7 @@ public struct NowPlayingSnapshot: Equatable, Sendable {
         self.position = position
         self.positionTimestamp = positionTimestamp
         self.isPlaying = isPlaying
+        self.soundVolume = soundVolume.map { min(max($0, 0), 100) }
     }
 
     /// Playback position at `now`: interpolated while playing, clamped to `0...duration`.

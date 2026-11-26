@@ -56,24 +56,29 @@ struct NowPlayingExpandedCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 4) {
-                if snapshot.source == .music {
-                    Button(action: actions.toggleFavorite) {
-                        Image(systemName: "heart")
-                            .font(.system(size: 12, weight: .medium))
-                            .symbolRenderingMode(.hierarchical)
-                            .frame(width: 26, height: 26)
-                            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            VStack(alignment: .trailing, spacing: 6) {
+                HStack(spacing: 4) {
+                    if snapshot.source == .music {
+                        Button(action: actions.toggleFavorite) {
+                            Image(systemName: "heart")
+                                .font(.system(size: 12, weight: .medium))
+                                .symbolRenderingMode(.hierarchical)
+                                .frame(width: 26, height: 26)
+                                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Palette.textSecondary)
+                        .accessibilityLabel(Text("nowPlaying.favorite", bundle: .module))
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Palette.textSecondary)
-                    .accessibilityLabel(Text("nowPlaying.favorite", bundle: .module))
+                    control("backward.fill", AccessibilityLabels.previous, actions.previous)
+                    control(
+                        snapshot.isPlaying ? "pause.fill" : "play.fill",
+                        AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
+                    control("forward.fill", AccessibilityLabels.next, actions.next)
                 }
-                control("backward.fill", AccessibilityLabels.previous, actions.previous)
-                control(
-                    snapshot.isPlaying ? "pause.fill" : "play.fill",
-                    AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
-                control("forward.fill", AccessibilityLabels.next, actions.next)
+                if let volume = snapshot.soundVolume {
+                    NowPlayingVolumeSlider(volume: volume, accent: accent)
+                }
             }
         }
         .frame(maxWidth: .infinity)

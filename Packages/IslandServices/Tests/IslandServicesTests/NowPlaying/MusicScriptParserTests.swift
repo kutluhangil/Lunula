@@ -35,6 +35,21 @@ import Testing
     }
 
     @Test func malformedValueReturnsNil() { #expect(MusicScriptParser.parse(.text("garbage"), now: now) == nil) }
+
+    @Test func parsesAndClampsSoundVolume() throws {
+        let s = try #require(
+            MusicScriptParser.parse(
+                list(
+                    .text("playing"), .text("Song"), .text("Artist"), .text("Album"), .number(180), .number(20),
+                    .text("ID1"), .number(68)), now: now))
+        #expect(s.soundVolume == 68)
+        let clamped = try #require(
+            MusicScriptParser.parse(
+                list(
+                    .text("playing"), .text("Song"), .text("Artist"), .text("Album"), .number(180), .number(20),
+                    .text("ID1"), .number(150)), now: now))
+        #expect(clamped.soundVolume == 100)
+    }
 }
 
 @Suite struct MusicSourceTests {
@@ -48,5 +63,11 @@ import Testing
         let fake = FakeExecutor(result: .success(.none))
         await MusicSource(runner: ScriptRunner(executor: fake, isRunning: { _ in true })).perform(.seek(42))
         #expect(fake.lastSource?.contains("set player position to 42") == true)
+    }
+
+    @Test func setVolumeSendsClampedSoundVolume() async {
+        let fake = FakeExecutor(result: .success(.none))
+        await MusicSource(runner: ScriptRunner(executor: fake, isRunning: { _ in true })).perform(.setVolume(75))
+        #expect(fake.lastSource?.contains("set sound volume to 75") == true)
     }
 }

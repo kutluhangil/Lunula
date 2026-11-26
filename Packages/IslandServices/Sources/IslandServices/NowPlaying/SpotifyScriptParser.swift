@@ -9,10 +9,11 @@ enum SpotifyScriptParser {
             !id.hasPrefix("spotify:ad:")
         else { return nil }
         let art = items[7].string.flatMap(URL.init(string:)).flatMap { $0.scheme == "https" ? $0 : nil }
+        let volume = items.count > 8 ? items[8].double.map { min(max(Int($0.rounded()), 0), 100) } : nil
         let snapshot = NowPlayingSnapshot(
             source: .spotify, trackID: id, title: title, artist: items[2].string ?? "", album: items[3].string,
             artworkKey: "spotify:" + id, duration: items[4].double.map { $0 / 1000 }, position: items[5].double ?? 0,
-            positionTimestamp: now, isPlaying: state == "playing")
+            positionTimestamp: now, isPlaying: state == "playing", soundVolume: volume)
         return (snapshot, art)
     }
 }

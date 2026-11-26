@@ -6,7 +6,7 @@ enum MusicScripts {
         """
         if player state is stopped then return {"stopped"}
             set t to current track
-            return {player state as text, name of t, artist of t, album of t, duration of t, player position, persistent ID of t}
+            return {player state as text, name of t, artist of t, album of t, duration of t, player position, persistent ID of t, sound volume}
         """)
 
     static let artwork = PlayerScripts.wrap(

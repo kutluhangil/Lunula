@@ -8,9 +8,10 @@ enum MusicScriptParser {
         guard let items = PlayerScripts.texts(value), items.count >= 7, let state = items[0].string,
             state != "stopped", let title = items[1].string, !title.isEmpty, let id = items[6].string
         else { return nil }
+        let volume = items.count > 7 ? items[7].double.map { min(max(Int($0.rounded()), 0), 100) } : nil
         return NowPlayingSnapshot(
             source: .music, trackID: id, title: title, artist: items[2].string ?? "", album: items[3].string,
             artworkKey: "music:" + id, duration: items[4].double, position: items[5].double ?? 0,
-            positionTimestamp: now, isPlaying: state == "playing")
+            positionTimestamp: now, isPlaying: state == "playing", soundVolume: volume)
     }
 }

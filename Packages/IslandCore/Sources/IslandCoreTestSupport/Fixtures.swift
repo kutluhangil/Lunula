@@ -31,11 +31,13 @@ extension NowPlayingSnapshot {
         duration: TimeInterval? = 200,
         position: TimeInterval = 0,
         positionTimestamp: Date = fixtureReferenceDate,
-        isPlaying: Bool = true
+        isPlaying: Bool = true,
+        soundVolume: Int? = nil
     ) -> NowPlayingSnapshot {
         NowPlayingSnapshot(
             source: source, trackID: trackID, title: title, artist: artist, album: album, artworkKey: artworkKey,
-            duration: duration, position: position, positionTimestamp: positionTimestamp, isPlaying: isPlaying)
+            duration: duration, position: position, positionTimestamp: positionTimestamp, isPlaying: isPlaying,
+            soundVolume: soundVolume)
     }
 }
 
