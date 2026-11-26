@@ -69,6 +69,23 @@
         }
       }
     },
+    "alert.device.connected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlandı"
+          }
+        }
+      }
+    },
     "alert.micMuted": {
       "extractionState": "manual",
       "localizations": {
@@ -1510,6 +1527,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ada çekirdeği #000000 kalır; yalnızca #111113 kartlar üstten ışık alır."
+          }
+        }
+      }
+    },
+    "settings.battery.bluetoothAlerts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth audio connect alerts"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth ses bağlantı uyarıları"
           }
         }
       }

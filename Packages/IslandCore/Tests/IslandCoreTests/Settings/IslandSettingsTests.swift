@@ -32,6 +32,7 @@ import Testing
         s.muteUntil = Date(timeIntervalSinceReferenceDate: 800_000_000)
         s.hasCompletedOnboarding = true
         s.fullChargeThreshold = 85
+        s.bluetoothAlertsEnabled = false
         s.timerMascot = .cat
         s.pillVerticalOffset = 4
         #expect(try JSONDecoder().decode(IslandSettings.self, from: JSONEncoder().encode(s)) == s)

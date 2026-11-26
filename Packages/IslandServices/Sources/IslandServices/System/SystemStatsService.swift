@@ -108,7 +108,7 @@ public struct SystemStatsSnapshot: Equatable, Sendable {
         return (percent, usedGB, totalGB)
     }
 
-    private static func readWirelessBatteries() -> [WirelessDeviceBattery] {
+    public static func readWirelessBatteries() -> [WirelessDeviceBattery] {
         var found: [WirelessDeviceBattery] = []
         let info = IOPSCopyPowerSourcesInfo().takeRetainedValue()
         let list = IOPSCopyPowerSourcesList(info).takeRetainedValue() as [CFTypeRef]

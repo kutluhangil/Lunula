@@ -70,6 +70,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var notifiedCompetitors: Set<String> = []
     /// Full-charge alert threshold (80...100%).
     public var fullChargeThreshold: Int = 100
+    /// Show transient island alert when a Bluetooth or external audio device connects.
+    public var bluetoothAlertsEnabled = true
     /// Optional SF Symbol mascot shown next to running timers.
     public var timerMascot: TimerMascot = .none
     /// Vertical offset (0...8 pt) for pill mode on displays without a hardware notch.
@@ -115,7 +117,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         case displayMode, hideInFullscreen, criticalAlertsInFullscreen, launchAtLogin, hapticsEnabled, soundsEnabled
         case haloIntensity, disabledFeatures, weatherLocation, temperatureUnit, shelfCopiesFiles, shelfRetentionDays
         case showMenuBarIcon, muteUntil, hasCompletedOnboarding, downloadsAlertsOptedIn
-        case notifiedCompetitors, fullChargeThreshold, timerMascot, pillVerticalOffset, hideNotchBar, useGlassCards
+        case notifiedCompetitors, fullChargeThreshold, bluetoothAlertsEnabled, timerMascot, pillVerticalOffset,
+            hideNotchBar, useGlassCards
         case doubleTapOptionToToggle, expandedWidth, pomodoroPlan, hoverToPeekEnabled, swipeGesturesEnabled
         case enabledQuickTools, quickToolOrder
     }
@@ -152,6 +155,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         downloadsAlertsOptedIn = value(.downloadsAlertsOptedIn, d.downloadsAlertsOptedIn)
         notifiedCompetitors = value(.notifiedCompetitors, d.notifiedCompetitors)
         fullChargeThreshold = min(max(value(.fullChargeThreshold, d.fullChargeThreshold), 80), 100)
+        bluetoothAlertsEnabled = value(.bluetoothAlertsEnabled, d.bluetoothAlertsEnabled)
         timerMascot = value(.timerMascot, d.timerMascot)
         pillVerticalOffset = min(max(value(.pillVerticalOffset, d.pillVerticalOffset), 0), 8)
         hideNotchBar = value(.hideNotchBar, d.hideNotchBar)
@@ -191,6 +195,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(downloadsAlertsOptedIn, forKey: .downloadsAlertsOptedIn)
         try c.encode(notifiedCompetitors, forKey: .notifiedCompetitors)
         try c.encode(fullChargeThreshold, forKey: .fullChargeThreshold)
+        try c.encode(bluetoothAlertsEnabled, forKey: .bluetoothAlertsEnabled)
         try c.encode(timerMascot, forKey: .timerMascot)
         try c.encode(pillVerticalOffset, forKey: .pillVerticalOffset)
         try c.encode(hideNotchBar, forKey: .hideNotchBar)

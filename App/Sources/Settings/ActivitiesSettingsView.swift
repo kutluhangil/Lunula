@@ -259,23 +259,34 @@ public struct ActivitiesSettingsView: View {
                     permissionState: .unavailable,
                     permissionName: nil
                 ) {
-                    HStack(spacing: 12) {
-                        Text("settings.appearance.fullChargeThreshold")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(Palette.textSecondary)
+                    VStack(spacing: 10) {
+                        HStack(spacing: 12) {
+                            Text("settings.appearance.fullChargeThreshold")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
 
-                        Spacer()
+                            Spacer()
 
-                        LunulaSegmentPicker(
-                            selection: valueBinding(\.fullChargeThreshold),
-                            items: [
-                                (value: 80, label: "80%"),
-                                (value: 85, label: "85%"),
-                                (value: 90, label: "90%"),
-                                (value: 95, label: "95%"),
-                                (value: 100, label: "100%"),
-                            ]
-                        )
+                            LunulaSegmentPicker(
+                                selection: valueBinding(\.fullChargeThreshold),
+                                items: [
+                                    (value: 80, label: "80%"),
+                                    (value: 85, label: "85%"),
+                                    (value: 90, label: "90%"),
+                                    (value: 95, label: "95%"),
+                                    (value: 100, label: "100%"),
+                                ]
+                            )
+                        }
+
+                        HStack(spacing: 12) {
+                            Text("settings.battery.bluetoothAlerts")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                            Spacer()
+                            Toggle("", isOn: valueBinding(\.bluetoothAlertsEnabled))
+                                .toggleStyle(.lunulaSwitch)
+                        }
                     }
                     .padding(.leading, 52)
                     .padding(.trailing, 12)

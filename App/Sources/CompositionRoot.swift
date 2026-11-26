@@ -145,7 +145,12 @@ final class CompositionRoot {
             downloads.start()
         }
         hub.register(alerts: power, feature: .battery)
-        if settings.settings.enabledFeatures.contains(.battery) { power.start() }
+        audioDevices.connectedSubtitle = String(localized: "alert.device.connected")
+        hub.register(alerts: audioDevices, feature: .battery)
+        if settings.settings.enabledFeatures.contains(.battery) {
+            power.start()
+            if settings.settings.bluetoothAlertsEnabled { audioDevices.start() }
+        }
         hub.register(calendar, feature: .calendar)
         if settings.settings.enabledFeatures.contains(.calendar) { calendar.start() }
         hub.register(alerts: competing, feature: .customActivities)
@@ -828,6 +833,9 @@ final class CompositionRoot {
         if let on = turned(.nowPlaying) { on ? nowPlaying.start() : nowPlaying.stop() }
         if let on = turned(.calendar) { on ? calendar.start() : calendar.stop() }
         if let on = turned(.battery) { on ? power.start() : power.stop() }
+        let btWas = old.enabledFeatures.contains(.battery) && old.bluetoothAlertsEnabled
+        let btNow = new.enabledFeatures.contains(.battery) && new.bluetoothAlertsEnabled
+        if btWas != btNow { btNow ? audioDevices.start() : audioDevices.stop() }
         if let on = turned(.privacyIndicator) { on ? deviceUsage.start() : deviceUsage.stop() }
         if let on = turned(.shelf) { on ? fileDrags.start() : fileDrags.stop() }
         if let on = turned(.customActivities) {
