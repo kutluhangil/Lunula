@@ -93,4 +93,20 @@ final class FakeEventReader: EventReading, @unchecked Sendable {  // tests mutat
         await settle()
         #expect(s.nextEvent?.meetingLink?.service == .googleMeet)
     }
+
+    @Test func upcomingTodayReturnsChronologicalTimedEventsForToday() async {
+        let r = FakeEventReader(
+            .fullAccess,
+            [
+                rec("late", startsIn: 3600),
+                rec("allday", startsIn: 60, allDay: true),
+                rec("declined", startsIn: 900, declined: true),
+                rec("soon", startsIn: 300),
+                rec("tomorrow", startsIn: 90_000),
+            ])
+        let s = CalendarService(reader: r, time: time)
+        s.start()
+        await settle()
+        #expect(s.upcomingToday.map(\.eventID) == ["soon", "late"])
+    }
 }

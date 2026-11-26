@@ -10,7 +10,8 @@ struct CalendarExpandedCard: View {
     var showsJoinButton: Bool { event.meetingLink != nil }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let laterEvents = actions.upcomingToday().filter { $0.eventID != event.eventID }.prefix(2)
+        VStack(alignment: .leading, spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.title)
                     .font(TypeToken.title.font)
@@ -28,6 +29,36 @@ struct CalendarExpandedCard: View {
                 .font(TypeToken.body.font)
                 .foregroundStyle(Palette.textSecondary)
                 .lineLimit(1)
+            }
+            if !laterEvents.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(Array(laterEvents), id: \.eventID) { next in
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(next.calendarColor.map(Palette.color) ?? Palette.signalOrange)
+                                .frame(width: 5, height: 5)
+                            Text(next.start, format: .dateTime.hour().minute())
+                                .font(TypeToken.caption.font.monospacedDigit())
+                                .foregroundStyle(Palette.textSecondary)
+                            Text(next.title)
+                                .font(TypeToken.caption.font)
+                                .foregroundStyle(Palette.textPrimary)
+                                .lineLimit(1)
+                            Spacer(minLength: 4)
+                            if let link = next.meetingLink {
+                                Button {
+                                    actions.join(link.url)
+                                } label: {
+                                    Image(systemName: "video.fill")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(Palette.textSecondary)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(Text(AccessibilityLabels.join))
+                            }
+                        }
+                    }
+                }
             }
             Spacer(minLength: 0)
             if let link = event.meetingLink {

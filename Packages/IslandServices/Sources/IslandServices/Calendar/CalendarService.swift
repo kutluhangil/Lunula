@@ -18,6 +18,7 @@ import Observation
     @ObservationIgnored public var onActivitiesChange: (@MainActor () -> Void)?
 
     public private(set) var nextEvent: EventSnapshot?
+    public private(set) var upcomingToday: [EventSnapshot] = []
     public private(set) var allDayToday: [EventSnapshot] = []
     public private(set) var authorization: CalendarAuthorization = .notDetermined
 
@@ -70,16 +71,24 @@ import Observation
             return
         }
         let now = time.now
+        let midnight = Calendar.current.startOfDay(for: now).addingTimeInterval(86_400)
+        let horizon = max(now.addingTimeInterval(Self.lookahead), midnight)
         let reader = reader
         Task {
-            let records = await reader.events(from: now, to: now.addingTimeInterval(Self.lookahead))
+            let records = await reader.events(from: now, to: horizon)
             apply(records, now: time.now)
         }
     }
 
     private func apply(_ records: [CalendarEventRecord], now: Date) {
         let usable = records.filter { !$0.isDeclined && !$0.isCanceled }
+        let midnight = Calendar.current.startOfDay(for: now).addingTimeInterval(86_400)
         allDayToday = usable.filter(\.isAllDay).sorted { $0.start < $1.start }.map(Self.snapshot)
+        upcomingToday =
+            usable
+            .filter { !$0.isAllDay && $0.end > now && $0.start < midnight }
+            .sorted { $0.start < $1.start }
+            .map(Self.snapshot)
         nextEvent = usable.filter { !$0.isAllDay && $0.start.addingTimeInterval(Self.tailTime) > now }
             .min { $0.start < $1.start }.map(Self.snapshot)
         scheduleBoundary(now: now)

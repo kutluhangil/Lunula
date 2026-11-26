@@ -291,7 +291,9 @@ final class CompositionRoot {
                 CalendarActions(
                     join: { NSWorkspace.shared.open($0) },
                     requestAccess: { [unowned self] in Task { await calendar.requestAccess() } },
-                    nextEvent: { [unowned self] in calendar.nextEvent })
+                    nextEvent: { [unowned self] in calendar.nextEvent },
+                    upcomingToday: { [unowned self] in calendar.upcomingToday },
+                    allDayToday: { [unowned self] in calendar.allDayToday })
             )
             .environment(
                 \.alertActions,

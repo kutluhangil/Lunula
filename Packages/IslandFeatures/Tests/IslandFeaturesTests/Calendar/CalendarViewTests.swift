@@ -24,7 +24,24 @@ import Testing
     }
 
     @Test func viewsRender() {
-        #expect(ImageRenderer(content: CalendarExpandedCard(event: .fixture()).frame(width: 492)).cgImage != nil)
-        #expect(ImageRenderer(content: NextEventTile(event: .fixture()).frame(width: 160)).cgImage != nil)
+        let primary = EventSnapshot.fixture(eventID: "1", title: "Standup")
+        let later = EventSnapshot.fixture(eventID: "2", title: "Design Review", start: now.addingTimeInterval(3600))
+        let actions = CalendarActions(
+            join: { _ in }, requestAccess: {}, nextEvent: { primary }, upcomingToday: { [primary, later] },
+            allDayToday: { [EventSnapshot.fixture(eventID: "all", title: "Release Day", isAllDay: true)] })
+        #expect(
+            ImageRenderer(
+                content: CalendarExpandedCard(event: primary).frame(width: 492)
+                    .environment(\.calendarActions, actions)
+            ).cgImage != nil)
+        #expect(
+            ImageRenderer(
+                content: NextEventTile(event: primary).frame(width: 160)
+                    .environment(\.calendarActions, actions)
+            ).cgImage != nil)
+        #expect(
+            ImageRenderer(
+                content: CalendarAgendaPopover().environment(\.calendarActions, actions)
+            ).cgImage != nil)
     }
 }
