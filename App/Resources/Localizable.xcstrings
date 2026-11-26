@@ -1599,6 +1599,74 @@
         }
       }
     },
+    "settings.customActivities.copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı"
+          }
+        }
+      }
+    },
+    "settings.customActivities.copyClaudeHook": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Claude Code Hook"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code Kancasını Kopyala"
+          }
+        }
+      }
+    },
+    "settings.customActivities.hooksHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive the island from Claude Code, Codex, or shell scripts via lunula:// URLs."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adayı Claude Code, Codex veya kabuk betiklerinden lunula:// bağlantılarıyla yönet."
+          }
+        }
+      }
+    },
+    "settings.customActivities.testActivity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test Live Activity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canlı Etkinliği Test Et"
+          }
+        }
+      }
+    },
     "settings.displayMode.allDisplays": {
       "extractionState": "manual",
       "localizations": {

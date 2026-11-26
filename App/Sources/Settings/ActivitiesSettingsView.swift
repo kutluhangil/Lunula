@@ -19,6 +19,7 @@ public struct ActivitiesSettingsView: View {
     @State private var cityResults: [GeoPlace] = []
     @State private var isSearchingCity = false
     @State private var hasSearchedCity = false
+    @State private var copiedClaudeHook = false
 
     public init(
         settings: SettingsStore,
@@ -331,7 +332,39 @@ public struct ActivitiesSettingsView: View {
                     symbol: "sparkles",
                     permissionState: .unavailable,
                     permissionName: nil
-                )
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("settings.customActivities.hooksHint")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Palette.textSecondary)
+
+                        HStack(spacing: 8) {
+                            Button {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(Self.claudeCodeHookSnippet, forType: .string)
+                                copiedClaudeHook = true
+                            } label: {
+                                Text(
+                                    copiedClaudeHook
+                                        ? "settings.customActivities.copied"
+                                        : "settings.customActivities.copyClaudeHook")
+                            }
+                            .buttonStyle(.lunulaSecondary)
+
+                            Button {
+                                if let url = Self.testActivityURL {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            } label: {
+                                Text("settings.customActivities.testActivity")
+                            }
+                            .buttonStyle(.lunulaSecondary)
+                        }
+                    }
+                    .padding(.leading, 52)
+                    .padding(.trailing, 12)
+                    .padding(.bottom, 12)
+                }
             }
             .background(Palette.inkRaised)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -528,4 +561,19 @@ public struct ActivitiesSettingsView: View {
         default: PermissionRow.settingsURL("Privacy_Automation")
         }
     }
+
+    public static let testActivityURL = URL(
+        string:
+            "lunula://activity/show?id=lunula-test&title=Claude%20Code&subtitle=Build%20passing&symbol=sparkles&accent=32D74B&duration=12"
+    )
+
+    public static let claudeCodeHookSnippet = """
+        {
+          "hooks": {
+            "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "/PATH/TO/Lunula/examples/hooks/claude-code-lunula.sh" }] }],
+            "Notification": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "/PATH/TO/Lunula/examples/hooks/claude-code-lunula.sh" }] }],
+            "Stop": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "/PATH/TO/Lunula/examples/hooks/claude-code-lunula.sh" }] }]
+          }
+        }
+        """
 }

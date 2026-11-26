@@ -50,4 +50,16 @@ private final class FakeLoginItem: LoginItemControlling {
         )
         #expect(tabs.map(\.id) == ["general", "appearance", "activities", "tools", "about"])
     }
+
+    @Test func agentHookSnippetAndTestActivityURLAreValid() throws {
+        let url = try #require(ActivitiesSettingsView.testActivityURL)
+        guard case .success(.showActivity(let req)) = IslandURLParser.parse(url) else {
+            Issue.record("Expected valid showActivity URL")
+            return
+        }
+        #expect(req.id == "lunula-test" && req.title == "Claude Code")
+        let data = Data(ActivitiesSettingsView.claudeCodeHookSnippet.utf8)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["hooks"] != nil)
+    }
 }

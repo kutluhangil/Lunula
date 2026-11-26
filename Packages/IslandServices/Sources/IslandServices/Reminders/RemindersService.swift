@@ -33,7 +33,7 @@ import Observation
 
     public func requestAccess() async {
         authorization = await reader.requestAccess()
-        refresh()
+        await refreshNow()
     }
 
     public func add(_ rawTitle: String) {
@@ -68,15 +68,16 @@ import Observation
     }
 
     public func refresh() {
+        Task { await refreshNow() }
+    }
+
+    private func refreshNow() async {
         authorization = reader.authorization()
         guard authorization == .fullAccess else {
             items = []
             return
         }
-        let reader = reader
-        Task {
-            let fetched = await reader.incompleteReminders()
-            items = fetched
-        }
+        let fetched = await reader.incompleteReminders()
+        items = fetched
     }
 }

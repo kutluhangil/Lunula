@@ -30,13 +30,13 @@ It is built under strict rules: **App Sandbox and Hardened Runtime from the firs
 
 | | |
 |---|---|
-| **Now Playing** | The current track with artwork and controls, compact in the notch and full when expanded. |
-| **Timer** | A focus timer that lives in the island and keeps counting in its compact form. |
-| **Calendar** | Your next events at a glance. |
-| **Shelf** | Drop files onto the island and pick them up again later. |
-| **Weather** | Local conditions through Open-Meteo, keyless, behind a provider protocol. |
-| **Alerts and signals** | System signals such as battery and connections shown as short live activities. |
-| **Custom activities** | Your own activities on the island, driven through the `lunula://` URL scheme. |
+| **Now Playing** | The current track with artwork, inline player volume slider, two-line synced lyrics and controls. |
+| **Timer** | Focus timer, configurable Pomodoro durations, 7-day streak chart and drift-free stopwatch. |
+| **Calendar & Reminders** | Full-day schedule agenda with Join buttons and opt-in two-way Apple Reminders sync. |
+| **Shelf** | Drop files onto the island, convert images offline, archive ZIPs, run Vision OCR and AirDrop. |
+| **Weather** | Local conditions through Open-Meteo (automatic or manual city), keyless, behind a provider protocol. |
+| **Alerts and signals** | Battery, Bluetooth audio connect alerts with battery level, external drives and privacy dots. |
+| **Custom activities & AI hooks** | Drive the island via `lunula://` URLs, App Intents and ready-to-use Claude Code / Codex hooks (`examples/hooks/`). |
 | **Tools** | Small sandbox-safe utilities a click away. |
 | **Ada design system** | A custom visual language with its own settings and onboarding. |
 
