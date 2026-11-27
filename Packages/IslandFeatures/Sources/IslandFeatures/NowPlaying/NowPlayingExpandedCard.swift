@@ -26,7 +26,7 @@ struct NowPlayingExpandedCard: View {
                         Text(snapshot.title)
                             .font(TypeToken.title.font)
                             .foregroundStyle(Palette.textPrimary)
-                            .lineLimit(2)
+                            .lineLimit(style == .boring ? 1 : 2)
                             .truncationMode(.tail)
                         Text(snapshot.artist)
                             .font(TypeToken.body.font)
@@ -46,7 +46,7 @@ struct NowPlayingExpandedCard: View {
                     }
                 }
                 NowPlayingProgressBar(snapshot: snapshot, accent: accent)
-                    .padding(.top, 6)
+                    .padding(.top, style == .boring ? 4 : 6)
                 if let pair = quickTools.activeLyricLines(snapshot)
                     ?? quickTools.activeLyricLine(snapshot).map({ ($0, nil) }),
                     !pair.active.isEmpty
@@ -72,46 +72,17 @@ struct NowPlayingExpandedCard: View {
                     }
                     .padding(.top, 2)
                 }
+                if style == .boring {
+                    boringInlineTransportRow
+                        .padding(.top, 4)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(alignment: .trailing, spacing: 6) {
-                HStack(spacing: 4) {
-                    if snapshot.source == .music {
-                        Button(action: actions.toggleFavorite) {
-                            Image(systemName: "heart")
-                                .font(.system(size: 12, weight: .medium))
-                                .symbolRenderingMode(.hierarchical)
-                                .frame(width: 26, height: 26)
-                                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(Palette.textSecondary)
-                        .accessibilityLabel(Text("nowPlaying.favorite", bundle: .module))
-                    }
-                    if style == .boring {
-                        secondaryControl("shuffle", "nowPlaying.shuffle", actions.toggleShuffle)
-                    }
-                    control("backward.fill", AccessibilityLabels.previous, actions.previous)
-                    if style == .lunula || style == .boring {
-                        playPauseFilledButton
-                    } else {
-                        control(
-                            snapshot.isPlaying ? "pause.fill" : "play.fill",
-                            AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
-                    }
-                    control("forward.fill", AccessibilityLabels.next, actions.next)
-                    if style == .boring {
-                        secondaryControl("repeat", "nowPlaying.repeat", actions.cycleRepeat)
-                    }
-                }
-                if let volume = snapshot.soundVolume {
-                    NowPlayingVolumeSlider(volume: volume, accent: accent)
-                }
-            }
-
             if style == .boring {
                 boringTodayAgendaCard
+            } else {
+                trailingTransportColumn(style: style)
             }
         }
         .frame(maxWidth: .infinity)
@@ -139,12 +110,66 @@ struct NowPlayingExpandedCard: View {
         }
     }
 
-    private var playPauseFilledButton: some View {
+    private var boringInlineTransportRow: some View {
+        HStack(spacing: 4) {
+            HStack(spacing: 2) {
+                if snapshot.source == .music {
+                    favoriteButton(side: 24)
+                }
+                secondaryControl("shuffle", "nowPlaying.shuffle", side: 24, actions.toggleShuffle)
+                control("backward.fill", AccessibilityLabels.previous, side: 28, actions.previous)
+                playPauseFilledButton(side: 30)
+                control("forward.fill", AccessibilityLabels.next, side: 28, actions.next)
+                secondaryControl("repeat", "nowPlaying.repeat", side: 24, actions.cycleRepeat)
+            }
+            if let volume = snapshot.soundVolume {
+                Spacer(minLength: 4)
+                NowPlayingVolumeSlider(volume: volume, accent: accent)
+            }
+        }
+    }
+
+    private func trailingTransportColumn(style: IslandVisualStyle) -> some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            HStack(spacing: 4) {
+                if snapshot.source == .music {
+                    favoriteButton(side: 26)
+                }
+                control("backward.fill", AccessibilityLabels.previous, actions.previous)
+                if style == .lunula {
+                    playPauseFilledButton(side: 32)
+                } else {
+                    control(
+                        snapshot.isPlaying ? "pause.fill" : "play.fill",
+                        AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
+                }
+                control("forward.fill", AccessibilityLabels.next, actions.next)
+            }
+            if let volume = snapshot.soundVolume {
+                NowPlayingVolumeSlider(volume: volume, accent: accent)
+            }
+        }
+    }
+
+    private func favoriteButton(side: CGFloat) -> some View {
+        Button(action: actions.toggleFavorite) {
+            Image(systemName: "heart")
+                .font(.system(size: 12, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: side, height: side)
+                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Palette.textSecondary)
+        .accessibilityLabel(Text("nowPlaying.favorite", bundle: .module))
+    }
+
+    private func playPauseFilledButton(side: CGFloat = 32) -> some View {
         Button(action: actions.playPause) {
             Image(systemName: snapshot.isPlaying ? "pause.fill" : "play.fill")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Palette.obsidian)
-                .frame(width: 32, height: 32)
+                .frame(width: side, height: side)
                 .background(Palette.textPrimary, in: Circle())
                 .contentShape(Circle())
         }
@@ -153,13 +178,13 @@ struct NowPlayingExpandedCard: View {
     }
 
     private func secondaryControl(
-        _ symbol: String, _ key: LocalizedStringKey, _ action: @escaping @MainActor () -> Void
+        _ symbol: String, _ key: LocalizedStringKey, side: CGFloat = 26, _ action: @escaping @MainActor () -> Void
     ) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 12, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
-                .frame(width: 26, height: 26)
+                .frame(width: side, height: side)
                 .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -235,14 +260,15 @@ struct NowPlayingExpandedCard: View {
         }
     }
 
-    private func control(_ symbol: String, _ label: LocalizedStringResource, _ action: @escaping @MainActor () -> Void)
-        -> some View
-    {
+    private func control(
+        _ symbol: String, _ label: LocalizedStringResource, side: CGFloat = 32,
+        _ action: @escaping @MainActor () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(TypeToken.title.font)
                 .symbolRenderingMode(.hierarchical)
-                .frame(width: 32, height: 32)
+                .frame(width: side, height: side)
                 .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)

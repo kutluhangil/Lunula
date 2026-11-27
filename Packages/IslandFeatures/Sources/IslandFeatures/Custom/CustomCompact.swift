@@ -13,13 +13,19 @@ struct CustomCompactLeading: View {
     }
 }
 
-/// Progress ring, or a system-clock countdown when the activity has an end time; otherwise empty.
+/// Live recording timer, progress ring, or a system-clock countdown when the activity has an end time; otherwise empty.
 struct CustomCompactTrailing: View {
     let snapshot: CustomActivitySnapshot
     let accent: RGBAColor?
+    @Environment(\.quickTools) private var quickTools
 
     var body: some View {
-        if let progress = snapshot.progress {
+        if snapshot.symbol == "record.circle.fill", let startedAt = quickTools.recordingStartedAt() {
+            Text(timerInterval: min(startedAt, .now)...Date.distantFuture, countsDown: false)
+                .font(TypeToken.numeralCompact.font.monospacedDigit())
+                .foregroundStyle(Palette.signalRed)
+                .lineLimit(1)
+        } else if let progress = snapshot.progress {
             ZStack {
                 Circle().stroke(Palette.inkPressed, lineWidth: 2.5)
                 Circle()

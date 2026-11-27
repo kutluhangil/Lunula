@@ -2,6 +2,16 @@ import Foundation
 import IslandCore
 import Observation
 
+public enum QuickAIStatusKind: Equatable, Sendable {
+    case ollamaConnected(Int)
+    case providerConnected(QuickAIProvider)
+    case missingAPIKey(QuickAIProvider)
+    case invalidResponse
+    case emptyResponse(QuickAIProvider)
+    case httpError(Int, QuickAIProvider)
+    case serverMessage(String)
+}
+
 /// Lightweight in-notch Quick Ask client supporting local Ollama (zero key) and BYOK cloud providers via Keychain.
 @MainActor @Observable public final class QuickAIService {
     private static let systemInstruction =
@@ -9,13 +19,17 @@ import Observation
 
     @ObservationIgnored private let session: URLSession
     @ObservationIgnored private let secrets: SecretStoring
+    @ObservationIgnored private var activeAskTask: Task<Void, Never>?
+    @ObservationIgnored private var activeGenerationID: UUID?
 
     public private(set) var messages: [QuickAIMessage] = []
     public private(set) var isGenerating = false
     public private(set) var lastError: String?
+    public private(set) var lastErrorKind: QuickAIStatusKind?
     public private(set) var availableOllamaModels: [String] = []
     public private(set) var isTestingConnection = false
     public private(set) var connectionStatusMessage: String?
+    public private(set) var connectionStatusKind: QuickAIStatusKind?
     public private(set) var connectionSucceeded: Bool?
 
     public init(session: URLSession = .shared, secrets: SecretStoring = KeychainSecretStore()) {
@@ -37,6 +51,7 @@ import Observation
             _ = secrets.save(trimmed, account: provider.rawValue)
         }
         lastError = nil
+        lastErrorKind = nil
     }
 
     public func clearAPIKey(for provider: QuickAIProvider) {
@@ -46,6 +61,29 @@ import Observation
     public func clearConversation() {
         messages.removeAll()
         lastError = nil
+        lastErrorKind = nil
+    }
+
+    public func startAsk(_ prompt: String, config: QuickAIConfig) {
+        guard !isGenerating else { return }
+        activeAskTask?.cancel()
+        activeAskTask = Task { [weak self] in
+            guard let self else { return }
+            await self.ask(prompt, config: config)
+        }
+    }
+
+    public func cancelGeneration() {
+        activeAskTask?.cancel()
+        activeAskTask = nil
+        activeGenerationID = nil
+        isGenerating = false
+        if let last = messages.last,
+            last.role == "assistant",
+            last.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        {
+            messages.removeLast()
+        }
     }
 
     @discardableResult
@@ -76,23 +114,31 @@ import Observation
                 guard let http = response as? HTTPURLResponse else {
                     connectionSucceeded = false
                     connectionStatusMessage = "Invalid server response."
+                    connectionStatusKind = .invalidResponse
                     return false
                 }
                 guard (200..<300).contains(http.statusCode) else {
                     connectionSucceeded = false
-                    connectionStatusMessage =
-                        Self.parseServerError(data: data)
-                        ?? "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                    if let serverMsg = Self.parseServerError(data: data) {
+                        connectionStatusMessage = serverMsg
+                        connectionStatusKind = .serverMessage(serverMsg)
+                    } else {
+                        connectionStatusMessage =
+                            "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                        connectionStatusKind = .httpError(http.statusCode, config.provider)
+                    }
                     return false
                 }
                 let models = try Self.parseOllamaModels(data: data)
                 availableOllamaModels = models
                 connectionSucceeded = true
                 connectionStatusMessage = "Ollama connected (\(availableOllamaModels.count) models)"
+                connectionStatusKind = .ollamaConnected(availableOllamaModels.count)
                 return true
             } catch {
                 connectionSucceeded = false
                 connectionStatusMessage = error.localizedDescription
+                connectionStatusKind = .serverMessage(error.localizedDescription)
                 return false
             }
         }
@@ -104,23 +150,34 @@ import Observation
         else {
             connectionSucceeded = false
             connectionStatusMessage = "Missing API key"
+            connectionStatusKind = .missingAPIKey(config.provider)
             return false
         }
 
         do {
             let request = try Self.buildRequest(
-                prompt: "Ping", config: config, apiKey: key, stream: false)
+                history: [QuickAIMessage(role: "user", text: "Ping")],
+                config: config,
+                apiKey: key,
+                stream: false
+            )
             let (data, response) = try await session.data(for: request)
             guard let http = response as? HTTPURLResponse else {
                 connectionSucceeded = false
                 connectionStatusMessage = "Invalid server response."
+                connectionStatusKind = .invalidResponse
                 return false
             }
             guard (200..<300).contains(http.statusCode) else {
                 connectionSucceeded = false
-                connectionStatusMessage =
-                    Self.parseServerError(data: data)
-                    ?? "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                if let serverMsg = Self.parseServerError(data: data) {
+                    connectionStatusMessage = serverMsg
+                    connectionStatusKind = .serverMessage(serverMsg)
+                } else {
+                    connectionStatusMessage =
+                        "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                    connectionStatusKind = .httpError(http.statusCode, config.provider)
+                }
                 return false
             }
             let reply = try Self.parseReply(data: data, provider: config.provider)
@@ -128,21 +185,24 @@ import Observation
             guard !reply.isEmpty else {
                 connectionSucceeded = false
                 connectionStatusMessage = "Empty response from \(config.provider.displayName)."
+                connectionStatusKind = .emptyResponse(config.provider)
                 return false
             }
             connectionSucceeded = true
             connectionStatusMessage = "\(config.provider.displayName) connected"
+            connectionStatusKind = .providerConnected(config.provider)
             return true
         } catch {
             connectionSucceeded = false
             connectionStatusMessage = error.localizedDescription
+            connectionStatusKind = .serverMessage(error.localizedDescription)
             return false
         }
     }
 
     public func ask(_ prompt: String, config: QuickAIConfig) async {
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedPrompt.isEmpty, !isGenerating else { return }
+        guard !trimmedPrompt.isEmpty, !isGenerating, !Task.isCancelled else { return }
 
         let apiKey: String?
         if config.provider.requiresAPIKey {
@@ -152,6 +212,7 @@ import Observation
                 !stored.isEmpty
             else {
                 lastError = "Missing API key for \(config.provider.displayName)."
+                lastErrorKind = .missingAPIKey(config.provider)
                 return
             }
             apiKey = stored
@@ -160,9 +221,19 @@ import Observation
         }
 
         lastError = nil
+        lastErrorKind = nil
         messages.append(QuickAIMessage(role: "user", text: trimmedPrompt))
+        let history = Array(messages.suffix(6))
+
+        let generationID = UUID()
+        activeGenerationID = generationID
         isGenerating = true
-        defer { isGenerating = false }
+        defer {
+            if activeGenerationID == generationID {
+                isGenerating = false
+                activeGenerationID = nil
+            }
+        }
 
         let assistantID = UUID()
         var didAppendPlaceholder = false
@@ -170,20 +241,26 @@ import Observation
 
         do {
             let request = try Self.buildRequest(
-                prompt: trimmedPrompt, config: config, apiKey: apiKey, stream: true)
+                history: history, config: config, apiKey: apiKey, stream: true)
             let (bytes, response) = try await session.bytes(for: request)
             guard let http = response as? HTTPURLResponse else {
                 lastError = "Invalid server response."
+                lastErrorKind = .invalidResponse
                 return
             }
             guard (200..<300).contains(http.statusCode) else {
                 var errorData = Data()
                 for try await byte in bytes {
+                    try Task.checkCancellation()
                     errorData.append(byte)
                 }
-                lastError =
-                    Self.parseServerError(data: errorData)
-                    ?? "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                if let serverMsg = Self.parseServerError(data: errorData) {
+                    lastError = serverMsg
+                    lastErrorKind = .serverMessage(serverMsg)
+                } else {
+                    lastError = "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                    lastErrorKind = .httpError(http.statusCode, config.provider)
+                }
                 return
             }
 
@@ -191,6 +268,7 @@ import Observation
             var fallbackLines: [String] = []
 
             for try await rawLine in bytes.lines {
+                try Task.checkCancellation()
                 let trimmed = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
                 if trimmed.isEmpty {
                     continue
@@ -241,6 +319,15 @@ import Observation
                 fallbackLines.append(rawLine)
             }
 
+            if Task.isCancelled {
+                removeEmptyPlaceholderIfNeeded(
+                    assistantID: assistantID,
+                    didAppendPlaceholder: didAppendPlaceholder,
+                    accumulatedText: accumulatedText
+                )
+                return
+            }
+
             if !handledAsStream, !fallbackLines.isEmpty {
                 let fallbackBuffer = fallbackLines.joined(separator: "\n")
                 accumulatedText = try Self.parseReply(
@@ -253,6 +340,7 @@ import Observation
                     messages.removeAll { $0.id == assistantID }
                 }
                 lastError = "Empty response from \(config.provider.displayName)."
+                lastErrorKind = .emptyResponse(config.provider)
                 return
             }
 
@@ -263,13 +351,41 @@ import Observation
             } else {
                 messages.append(QuickAIMessage(id: assistantID, role: "assistant", text: finalReply))
             }
+        } catch is CancellationError {
+            removeEmptyPlaceholderIfNeeded(
+                assistantID: assistantID,
+                didAppendPlaceholder: didAppendPlaceholder,
+                accumulatedText: accumulatedText
+            )
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            removeEmptyPlaceholderIfNeeded(
+                assistantID: assistantID,
+                didAppendPlaceholder: didAppendPlaceholder,
+                accumulatedText: accumulatedText
+            )
         } catch {
-            if didAppendPlaceholder,
-                accumulatedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            {
-                messages.removeAll { $0.id == assistantID }
+            removeEmptyPlaceholderIfNeeded(
+                assistantID: assistantID,
+                didAppendPlaceholder: didAppendPlaceholder,
+                accumulatedText: accumulatedText
+            )
+            if Task.isCancelled {
+                return
             }
             lastError = error.localizedDescription
+            lastErrorKind = .serverMessage(error.localizedDescription)
+        }
+    }
+
+    private func removeEmptyPlaceholderIfNeeded(
+        assistantID: UUID,
+        didAppendPlaceholder: Bool,
+        accumulatedText: String
+    ) {
+        if didAppendPlaceholder,
+            accumulatedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        {
+            messages.removeAll { $0.id == assistantID }
         }
     }
 
@@ -327,7 +443,7 @@ import Observation
     }
 
     private static func buildRequest(
-        prompt: String, config: QuickAIConfig, apiKey: String?, stream: Bool
+        history: [QuickAIMessage], config: QuickAIConfig, apiKey: String?, stream: Bool
     ) throws -> URLRequest {
         let model = config.resolvedModel
         let encoder = JSONEncoder()
@@ -342,6 +458,17 @@ import Observation
             request.httpMethod = "POST"
             request.timeoutInterval = 30
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            let prompt: String
+            if history.count <= 1 {
+                prompt = history.first?.text ?? ""
+            } else {
+                var turns: [String] = []
+                for entry in history {
+                    let speaker = entry.role == "assistant" ? "Assistant" : "User"
+                    turns.append("\(speaker): \(entry.text)")
+                }
+                prompt = turns.joined(separator: "\n")
+            }
             request.httpBody = try encoder.encode(
                 OllamaRequest(
                     model: model, prompt: prompt, system: systemInstruction, stream: stream))
@@ -358,14 +485,14 @@ import Observation
             if let apiKey {
                 request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             }
+            let payloadMessages =
+                [OpenAIRequest.Message(role: "system", content: systemInstruction)]
+                + history.map { OpenAIRequest.Message(role: $0.role, content: $0.text) }
             request.httpBody = try encoder.encode(
                 OpenAIRequest(
                     model: model,
                     stream: stream,
-                    messages: [
-                        .init(role: "system", content: systemInstruction),
-                        .init(role: "user", content: prompt),
-                    ]))
+                    messages: payloadMessages))
             return request
 
         case .anthropic:
@@ -380,13 +507,16 @@ import Observation
                 request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
             }
             request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+            let payloadMessages = history.map {
+                AnthropicRequest.Message(role: $0.role, content: $0.text)
+            }
             request.httpBody = try encoder.encode(
                 AnthropicRequest(
                     model: model,
                     system: systemInstruction,
                     maxTokens: 300,
                     stream: stream,
-                    messages: [.init(role: "user", content: prompt)]))
+                    messages: payloadMessages))
             return request
 
         case .gemini:
@@ -408,10 +538,16 @@ import Observation
             if let apiKey {
                 request.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
             }
+            let contents = history.map { entry in
+                GeminiRequest.Content(
+                    role: entry.role == "assistant" ? "model" : "user",
+                    parts: [.init(text: entry.text)]
+                )
+            }
             request.httpBody = try encoder.encode(
                 GeminiRequest(
                     systemInstruction: .init(role: nil, parts: [.init(text: systemInstruction)]),
-                    contents: [.init(role: "user", parts: [.init(text: prompt)])]))
+                    contents: contents))
             return request
         }
     }

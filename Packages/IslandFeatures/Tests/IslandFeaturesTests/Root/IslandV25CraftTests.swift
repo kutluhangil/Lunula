@@ -315,4 +315,96 @@ import Testing
         let hubView = DetachedMenuBarHubView().environment(\.quickTools, tools)
         #expect(ImageRenderer(content: hubView).cgImage != nil)
     }
+
+    @Test func boringNowPlayingExpandedCardRendersAtDefaultWidthWithVolumeAndAgenda() throws {
+        let now = Date(timeIntervalSinceReferenceDate: 400_000)
+        let track = NowPlayingSnapshot.fixture(
+            title: "Midnight City (Extended Synthwave Mix)",
+            artist: "M83",
+            duration: 243,
+            position: 92,
+            positionTimestamp: now,
+            isPlaying: true,
+            soundVolume: 80
+        )
+        let firstEvent = EventSnapshot.fixture(
+            eventID: "boring-evt-1",
+            title: "Product Sync",
+            start: now.addingTimeInterval(600),
+            end: now.addingTimeInterval(2400)
+        )
+        let secondEvent = EventSnapshot.fixture(
+            eventID: "boring-evt-2",
+            title: "Design Review",
+            start: now.addingTimeInterval(3600),
+            end: now.addingTimeInterval(5400)
+        )
+        let calendar = CalendarActions(
+            join: { _ in },
+            requestAccess: {},
+            nextEvent: { firstEvent },
+            upcomingToday: { [firstEvent, secondEvent] },
+            allDayToday: { [] }
+        )
+        let tools = QuickToolsActions(
+            visualStyle: { .boring },
+            audioSpectrumBands: { [0.45, 0.72, 0.88, 0.64, 0.52, 0.76, 0.48, 0.34] },
+            liveAudioSpectrumEnabled: { true }
+        )
+
+        let card = NowPlayingExpandedCard(
+            snapshot: track,
+            accent: RGBAColor(red: 0.92, green: 0.45, blue: 0.18, alpha: 1.0)
+        )
+        .environment(\.calendarActions, calendar)
+        .environment(\.quickTools, tools)
+        .padding(.horizontal, Radii.expandedShoulder + Spacing.compactPadding)
+        .frame(width: 520, height: 130)
+        .background(Palette.obsidian)
+
+        let image = try #require(ImageRenderer(content: card).cgImage)
+        #expect(PixelProbe.hasOpaqueContent(image))
+    }
+
+    @Test func customCompactTrailingRendersLiveRecordingTimer() throws {
+        let snapshot = CustomActivitySnapshot(
+            title: "Screen Recording",
+            subtitle: nil,
+            symbol: "record.circle.fill",
+            progress: nil,
+            endsAt: nil
+        )
+        let tools = QuickToolsActions(
+            recordingStartedAt: { Date.now.addingTimeInterval(-14) }
+        )
+        let view = CustomCompactTrailing(snapshot: snapshot, accent: nil)
+            .environment(\.quickTools, tools)
+            .frame(width: 72, height: 28)
+            .background(Palette.obsidian)
+
+        let image = try #require(ImageRenderer(content: view).cgImage)
+        #expect(PixelProbe.hasOpaqueContent(image))
+    }
+
+    @Test func quickAIPopoverGeneratingStateShowsStopActionAndRenders() throws {
+        var cancelled = false
+        let tools = QuickToolsActions(
+            surfaceMaterial: { .liquidGlass },
+            quickAIMessages: {
+                [
+                    QuickAIMessage(role: "user", text: "Summarize release notes"),
+                    QuickAIMessage(role: "assistant", text: "Streaming response…"),
+                ]
+            },
+            isQuickAIGenerating: { true },
+            cancelQuickAI: { cancelled = true }
+        )
+
+        tools.cancelQuickAI()
+        #expect(cancelled)
+
+        let view = QuickAIPopover().environment(\.quickTools, tools)
+        let image = try #require(ImageRenderer(content: view).cgImage)
+        #expect(PixelProbe.hasOpaqueContent(image))
+    }
 }

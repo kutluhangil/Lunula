@@ -2,22 +2,34 @@ import AppKit
 import IslandDesign
 import SwiftUI
 
-/// Interactive full-screen region picker on the primary display for cropped `ScreenRecorderService` captures.
+struct SelectedScreenRegion: Equatable, Sendable {
+    let displayID: CGDirectDisplayID?
+    let cropRect: CGRect
+    let backingScaleFactor: CGFloat
+}
+
+/// Interactive full-screen region picker on the active display under the cursor for Retina `ScreenRecorderService` captures.
 @MainActor
 final class ScreenRegionSelector {
     private static let minimumSelectionDimension: CGFloat = 32
 
     private var overlayWindow: RegionOverlayPanel?
-    private var continuation: CheckedContinuation<CGRect?, Never>?
+    private var continuation: CheckedContinuation<SelectedScreenRegion?, Never>?
     private var keyMonitor: Any?
 
     var instructionText: String = "Drag to select area · Esc to cancel"
 
-    func selectRegion() async -> CGRect? {
+    func selectRegion() async -> SelectedScreenRegion? {
         cancel()
-        guard let screen = NSScreen.screens.first else { return nil }
+        let mouse = NSEvent.mouseLocation
+        guard
+            let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) })
+                ?? NSScreen.screens.first
+        else { return nil }
 
         let screenFrame = screen.frame
+        let displayID = screen.cgDirectDisplayID
+        let scaleFactor = screen.backingScaleFactor
         let topSafeInset = max(screen.safeAreaInsets.top, 28) + 24
         let model = RegionOverlayModel(
             instructionText: instructionText,
@@ -62,7 +74,13 @@ final class ScreenRegionSelector {
                 self.finish(with: nil)
                 return
             }
-            self.finish(with: cropRect)
+            self.finish(
+                with: SelectedScreenRegion(
+                    displayID: displayID,
+                    cropRect: cropRect,
+                    backingScaleFactor: scaleFactor
+                )
+            )
         }
         interactionView.onCancel = { [weak self] in
             self?.cancel()
@@ -128,7 +146,7 @@ final class ScreenRegionSelector {
         )
     }
 
-    private func finish(with result: CGRect?) {
+    private func finish(with result: SelectedScreenRegion?) {
         tearDownOverlay()
         guard let pending = continuation else { return }
         continuation = nil

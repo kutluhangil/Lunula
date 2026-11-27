@@ -171,6 +171,7 @@ public struct QuickToolsActions {
     public var recordingStartedAt: @MainActor () -> Date? = { nil }
     public var startScreenRecordingCrop: @MainActor (Bool, Bool) -> Void = { _, _ in }
     public var latestClipboardText: @MainActor () -> String? = { nil }
+    public var cancelQuickAI: @MainActor () -> Void = {}
 
     public init(
         isKeepAwakeActive: @escaping @MainActor () -> Bool = { false },
@@ -257,7 +258,8 @@ public struct QuickToolsActions {
         dropletSensitivity: @escaping @MainActor () -> DropletSensitivity = { .balanced },
         recordingStartedAt: @escaping @MainActor () -> Date? = { nil },
         startScreenRecordingCrop: @escaping @MainActor (Bool, Bool) -> Void = { _, _ in },
-        latestClipboardText: @escaping @MainActor () -> String? = { nil }
+        latestClipboardText: @escaping @MainActor () -> String? = { nil },
+        cancelQuickAI: @escaping @MainActor () -> Void = {}
     ) {
         self.isKeepAwakeActive = isKeepAwakeActive
         self.toggleKeepAwake = toggleKeepAwake
@@ -344,6 +346,7 @@ public struct QuickToolsActions {
         self.recordingStartedAt = recordingStartedAt
         self.startScreenRecordingCrop = startScreenRecordingCrop
         self.latestClipboardText = latestClipboardText
+        self.cancelQuickAI = cancelQuickAI
     }
 }
 

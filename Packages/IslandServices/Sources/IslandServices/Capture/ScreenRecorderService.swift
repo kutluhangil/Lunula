@@ -79,21 +79,31 @@ private final class CaptureSessionBox: @unchecked Sendable {
         uncheckedState: (nil, nil)
     )
 
-    func start(cropRect: CGRect?, mp4URL: URL, relay: RecordingDelegateRelay) async throws {
+    func start(
+        cropRect: CGRect?,
+        displayID: CGDirectDisplayID?,
+        scaleFactor: CGFloat,
+        mp4URL: URL,
+        relay: RecordingDelegateRelay
+    ) async throws {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        guard let display = content.displays.first else {
+        guard
+            let display = (displayID.flatMap { id in content.displays.first { $0.displayID == id } })
+                ?? content.displays.first
+        else {
             throw ScreenCaptureStartError.noShareableDisplay
         }
 
+        let scale = max(1.0, min(scaleFactor, 3.0))
         let filter = SCContentFilter(display: display, excludingWindows: [])
         let streamConfig = SCStreamConfiguration()
         if let cropRect, cropRect.width >= 16, cropRect.height >= 16 {
             streamConfig.sourceRect = cropRect
-            streamConfig.width = Self.evenDimension(Int(cropRect.width.rounded()))
-            streamConfig.height = Self.evenDimension(Int(cropRect.height.rounded()))
+            streamConfig.width = Self.evenDimension(Int((cropRect.width * scale).rounded()))
+            streamConfig.height = Self.evenDimension(Int((cropRect.height * scale).rounded()))
         } else {
-            streamConfig.width = Self.evenDimension(display.width)
-            streamConfig.height = Self.evenDimension(display.height)
+            streamConfig.width = Self.evenDimension(Int((CGFloat(display.width) * scale).rounded()))
+            streamConfig.height = Self.evenDimension(Int((CGFloat(display.height) * scale).rounded()))
         }
         streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 30)
         streamConfig.showsCursor = true
@@ -158,7 +168,12 @@ private final class CaptureSessionBox: @unchecked Sendable {
         super.init()
     }
 
-    public func startRecording(format: RecordingFormat, cropRect: CGRect? = nil) async -> Bool {
+    public func startRecording(
+        format: RecordingFormat,
+        cropRect: CGRect? = nil,
+        displayID: CGDirectDisplayID? = nil,
+        scaleFactor: CGFloat = 2.0
+    ) async -> Bool {
         guard !isRecording else { return false }
         lastError = nil
 
@@ -166,7 +181,13 @@ private final class CaptureSessionBox: @unchecked Sendable {
         let relay = RecordingDelegateRelay()
         let box = CaptureSessionBox()
         do {
-            try await box.start(cropRect: cropRect, mp4URL: mp4URL, relay: relay)
+            try await box.start(
+                cropRect: cropRect,
+                displayID: displayID,
+                scaleFactor: scaleFactor,
+                mp4URL: mp4URL,
+                relay: relay
+            )
             activeSession = ActiveSession(
                 box: box,
                 relay: relay,

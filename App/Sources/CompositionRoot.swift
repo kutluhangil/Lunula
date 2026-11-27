@@ -115,6 +115,7 @@ final class CompositionRoot {
     var settingsWindow: SettingsWindowController?
     var onboarding: OnboardingWindowController?
     var appliedSettings: IslandSettings?
+    let permissionSignal = PermissionRefreshSignal()
     lazy var competing = CompetingAppNotice(settings: settings)
     var tasks: [Task<Void, Never>] = []
 
@@ -235,6 +236,14 @@ final class CompositionRoot {
                     case .didWake: broadcast(.systemDidWake)
                     case .screensDidSleep, .screensDidWake: break
                     }
+                }
+            })
+        tasks.append(
+            Task { [unowned self] in
+                for await _ in NotificationCenter.default.notifications(
+                    named: NSApplication.didBecomeActiveNotification)
+                {
+                    permissionSignal.revision &+= 1
                 }
             })
     }
@@ -542,4 +551,8 @@ final class CompositionRoot {
     var speed: @MainActor () -> Double = { 0 }
     func setMouseEventsIgnored(_ ignored: Bool) { target?.setMouseEventsIgnored(ignored) }
     func makeKey(_ key: Bool) { target?.makeKey(key) }
+}
+
+@MainActor @Observable final class PermissionRefreshSignal {
+    var revision = 0
 }

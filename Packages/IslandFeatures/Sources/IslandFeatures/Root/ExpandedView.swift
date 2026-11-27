@@ -110,7 +110,7 @@ struct ExpandedView: View {
                 .padding(.top, Spacing.expandedPadding)
                 .animation(MotionToken.animation(.content, reduceMotion: reduceMotion), value: page)
         }
-        .padding(.horizontal, Spacing.expandedPadding)
+        .padding(.horizontal, Radii.expandedShoulder + Spacing.compactPadding)
         .padding(.bottom, Spacing.expandedPadding)
         .focusable()
         .focusEffectDisabled()

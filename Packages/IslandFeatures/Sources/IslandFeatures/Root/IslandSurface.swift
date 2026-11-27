@@ -58,7 +58,7 @@ struct IslandSurface: View {
                 )
                 ZStack {
                     content(size: size, expandedWidth: expandedWidth)
-                        .environment(\.islandCardGlass, quickTools.useGlassCards())
+                        .environment(\.islandCardGlass, quickTools.useGlassCards() || material == .liquidGlass)
                         .environment(\.islandMorphNamespace, reduceMotion ? nil : islandMorph)
                     DropletSpecularOverlay(tension: tension, shape: fluidShape)
                 }
@@ -178,11 +178,8 @@ struct IslandSurface: View {
         .transition(reduceMotion ? MotionToken.reducedTransition : Self.contentTransition)
     }
 
-    /// Content settles in just behind the shape (slight lift from the top edge) and leaves quickly.
-    private static let contentTransition = AnyTransition.asymmetric(
-        insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top))
-            .animation(.smooth(duration: 0.35).delay(0.08)),
-        removal: .opacity.animation(.smooth(duration: 0.12)))
+    /// Clean opacity crossfade so `matchedGeometryEffect` hero artwork morphs cleanly across phases.
+    private static let contentTransition = AnyTransition.opacity.animation(.smooth(duration: 0.22))
 
     /// Applies the user's halo intensity; zero turns the halo off entirely.
     private func scaled(_ halo: HaloState) -> HaloState {

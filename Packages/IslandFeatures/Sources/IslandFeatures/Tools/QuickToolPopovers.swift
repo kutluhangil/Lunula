@@ -1066,14 +1066,24 @@ struct QuickAIPopover: View {
                     .textFieldStyle(.roundedBorder)
                     .font(TypeToken.caption.font)
                     .onSubmit(submitPrompt)
-                Button(action: submitPrompt) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(canSend ? Palette.textPrimary : Palette.textTertiary)
+                if isGenerating {
+                    Button(action: quickTools.cancelQuickAI) {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Palette.signalRed)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("tools.ai.stop", bundle: .module))
+                } else {
+                    Button(action: submitPrompt) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(canSend ? Palette.textPrimary : Palette.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canSend)
+                    .accessibilityLabel(Text("tools.ai.send", bundle: .module))
                 }
-                .buttonStyle(.plain)
-                .disabled(!canSend)
-                .accessibilityLabel(Text("tools.ai.send", bundle: .module))
             }
         }
         .padding(10)
@@ -1135,18 +1145,23 @@ struct ToolsGridPageView: View {
         let keepAwake = quickTools.isKeepAwakeActive()
         let micMuted = quickTools.isMicMuted()
         let isRecording = quickTools.isScreenRecording()
+        let notesCount = quickTools.notes().count
+        let clipCount = quickTools.clipboardEntries().count
+        let stats = quickTools.systemStats()
 
         LazyVGrid(columns: columns, spacing: 6) {
             gridButton(
                 symbol: keepAwake ? "cup.and.saucer.fill" : "cup.and.saucer",
                 titleKey: "tools.keepAwake",
                 tint: keepAwake ? Palette.signalOrange : Palette.textPrimary,
+                activeDot: keepAwake ? Palette.signalOrange : nil,
                 action: quickTools.toggleKeepAwake
             )
             gridButton(
                 symbol: micMuted ? "mic.slash.fill" : "mic.fill",
                 titleKey: "tools.grid.micMute",
                 tint: micMuted ? Palette.signalRed : Palette.textPrimary,
+                activeDot: micMuted ? Palette.signalRed : nil,
                 action: quickTools.toggleMicMute
             )
             gridButton(
@@ -1170,13 +1185,15 @@ struct ToolsGridPageView: View {
             recorderGridCell(isRecording: isRecording)
             gridButton(
                 symbol: "note.text",
-                titleKey: "tools.quickNotes"
+                titleKey: "tools.quickNotes",
+                badge: notesCount > 0 ? "\(notesCount)" : nil
             ) {
                 openPopover(.notes)
             }
             gridButton(
                 symbol: "doc.on.clipboard",
-                titleKey: "tools.clipboard"
+                titleKey: "tools.clipboard",
+                badge: clipCount > 0 ? "\(clipCount)" : nil
             ) {
                 openPopover(.clipboard)
             }
@@ -1188,7 +1205,8 @@ struct ToolsGridPageView: View {
             }
             gridButton(
                 symbol: "cpu",
-                titleKey: "tools.grid.stats"
+                titleKey: "tools.grid.stats",
+                badge: "\(stats.cpuPercent)%"
             ) {
                 openPopover(.stats)
             }
@@ -1211,6 +1229,8 @@ struct ToolsGridPageView: View {
         symbol: String,
         titleKey: LocalizedStringKey,
         tint: Color = Palette.textPrimary,
+        badge: String? = nil,
+        activeDot: Color? = nil,
         action: @escaping @MainActor () -> Void
     ) -> some View {
         Button(action: action) {
@@ -1225,6 +1245,20 @@ struct ToolsGridPageView: View {
                     .foregroundStyle(Palette.textPrimary)
                     .lineLimit(1)
                 Spacer(minLength: 0)
+                if let badge {
+                    Text(verbatim: badge)
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(Palette.textSecondary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Palette.inkPressed, in: Capsule())
+                        .lineLimit(1)
+                } else if let activeDot {
+                    Circle()
+                        .fill(activeDot)
+                        .frame(width: 6, height: 6)
+                }
             }
             .padding(.horizontal, 10)
             .frame(maxWidth: .infinity)

@@ -1667,6 +1667,23 @@
         }
       }
     },
+    "tools.ai.stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durdur"
+          }
+        }
+      }
+    },
     "tools.ai.usage": {
       "extractionState": "manual",
       "localizations": {

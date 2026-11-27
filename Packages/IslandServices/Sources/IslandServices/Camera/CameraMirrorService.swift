@@ -119,22 +119,27 @@ private final class MirroredCameraPreviewView: NSView {
         authState = Self.readAuthorizationState()
     }
 
-    public func startAndMakePreviewView() async -> NSView? {
-        let status = AVCaptureDevice.authorizationStatus(for: .video)
-        switch status {
+    @discardableResult
+    public func requestPermissionOnly() async -> Bool {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .notDetermined:
             let granted = await AVCaptureDevice.requestAccess(for: .video)
             authState = granted ? .authorized : .denied
-            guard granted else { return nil }
+            return granted
         case .authorized:
             authState = .authorized
+            return true
         case .denied, .restricted:
             authState = .denied
-            return nil
+            return false
         @unknown default:
             authState = .denied
-            return nil
+            return false
         }
+    }
+
+    public func startAndMakePreviewView() async -> NSView? {
+        guard await requestPermissionOnly() else { return nil }
 
         guard
             let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)

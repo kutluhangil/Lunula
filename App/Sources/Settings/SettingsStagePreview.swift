@@ -32,6 +32,8 @@ public struct SettingsStagePreview: View {
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hoverPoint: CGPoint?
+    @State private var hoverVelocity: CGSize = .zero
+    @State private var lastHoverSample: (point: CGPoint, time: TimeInterval)?
 
     private var increaseContrast: Bool { colorSchemeContrast == .increased }
 
@@ -126,6 +128,7 @@ public struct SettingsStagePreview: View {
         DropletPhysics.compute(
             pointer: waterDropletEffect && !reduceMotion ? hoverPoint : nil,
             islandRect: previewIslandRect,
+            velocity: waterDropletEffect && !reduceMotion ? hoverVelocity : .zero,
             sensitivity: dropletSensitivity
         )
     }
@@ -170,14 +173,31 @@ public struct SettingsStagePreview: View {
             case .active(let location):
                 if reduceMotion {
                     hoverPoint = nil
+                    hoverVelocity = .zero
+                    lastHoverSample = nil
                 } else {
+                    let now = ProcessInfo.processInfo.systemUptime
+                    var velocity = CGSize.zero
+                    if let prev = lastHoverSample {
+                        let dx = location.x - prev.point.x
+                        let dy = location.y - prev.point.y
+                        let dt = now - prev.time
+                        if hypot(dx, dy) < 1.5 && dt < 0.05 { return }
+                        if dt > 0.004 && dt < 0.25 {
+                            velocity = CGSize(width: dx / dt, height: dy / dt)
+                        }
+                    }
+                    lastHoverSample = (location, now)
                     withAnimation(.spring(duration: 0.35, bounce: 0.12)) {
                         hoverPoint = location
+                        hoverVelocity = velocity
                     }
                 }
             case .ended:
+                lastHoverSample = nil
                 withAnimation(.spring(duration: 0.35, bounce: 0.12)) {
                     hoverPoint = nil
+                    hoverVelocity = .zero
                 }
             }
         }

@@ -80,6 +80,7 @@ extension CompositionRoot {
     }
 
     func permissionState(_ feature: IslandFeature) -> PermissionState? {
+        _ = permissionSignal.revision
         switch feature {
         case .nowPlaying:
             switch nowPlaying.permissions[.music] {
@@ -107,14 +108,27 @@ extension CompositionRoot {
 
     func requestPermission(_ feature: IslandFeature) {
         switch feature {
-        case .nowPlaying: Task { await nowPlaying.requestConsent(for: .music) }
-        case .calendar: Task { await calendar.requestAccess() }
-        case .weather: Task { await weather.islandBecameVisible() }
+        case .nowPlaying:
+            Task {
+                await nowPlaying.requestConsent(for: .music)
+                permissionSignal.revision &+= 1
+            }
+        case .calendar:
+            Task {
+                await calendar.requestAccess()
+                permissionSignal.revision &+= 1
+            }
+        case .weather:
+            Task {
+                await weather.islandBecameVisible()
+                permissionSignal.revision &+= 1
+            }
         default: break
         }
     }
 
     func extraPermissionState(_ kind: ExtraPermissionKind) -> PermissionState {
+        _ = permissionSignal.revision
         switch kind {
         case .reminders:
             switch appleReminders.authorization {
@@ -131,7 +145,7 @@ extension CompositionRoot {
             case .unavailable: return .unavailable
             }
         case .audioTap:
-            return settings.settings.liveAudioSpectrumEnabled ? .granted : .notRequested
+            return settings.settings.liveAudioSpectrumEnabled ? .systemManaged : .notRequested
         case .screenCapture:
             return ScreenRecorderService.hasScreenCaptureAccess ? .granted : .notRequested
         case .spotify:
@@ -151,20 +165,48 @@ extension CompositionRoot {
     func requestExtraPermission(_ kind: ExtraPermissionKind) {
         switch kind {
         case .reminders:
-            Task { await appleReminders.requestAccess() }
+            Task {
+                await appleReminders.requestAccess()
+                permissionSignal.revision &+= 1
+            }
         case .camera:
             Task {
-                _ = await cameraMirror.startAndMakePreviewView()
-                cameraMirror.stop()
+                _ = await cameraMirror.requestPermissionOnly()
+                permissionSignal.revision &+= 1
             }
         case .audioTap:
             settings.update { $0.liveAudioSpectrumEnabled = true }
+            permissionSignal.revision &+= 1
         case .screenCapture:
             _ = CGRequestScreenCaptureAccess()
+            permissionSignal.revision &+= 1
         case .spotify:
             #if LUNULA_SPOTIFY
-                Task { await nowPlaying.requestConsent(for: .spotify) }
+                Task {
+                    await nowPlaying.requestConsent(for: .spotify)
+                    permissionSignal.revision &+= 1
+                }
             #endif
+        }
+    }
+
+    func localizedAIStatus(_ kind: QuickAIStatusKind?) -> String? {
+        guard let kind else { return nil }
+        switch kind {
+        case .ollamaConnected(let count):
+            return String(localized: "ai.status.ollamaConnected \(Int64(count))")
+        case .providerConnected(let provider):
+            return String(localized: "ai.status.providerConnected \(provider.displayName)")
+        case .missingAPIKey(let provider):
+            return String(localized: "ai.error.missingKey \(provider.displayName)")
+        case .invalidResponse:
+            return String(localized: "ai.error.invalidResponse")
+        case .emptyResponse(let provider):
+            return String(localized: "ai.error.emptyResponse \(provider.displayName)")
+        case .httpError(let statusCode, let provider):
+            return String(localized: "ai.error.httpError \(Int64(statusCode)) \(provider.displayName)")
+        case .serverMessage(let message):
+            return message
         }
     }
 
@@ -202,7 +244,9 @@ extension CompositionRoot {
                 },
                 testAIConnection: { [unowned self] config in
                     let ok = await quickAI.testConnection(config: config)
-                    return (ok, quickAI.connectionStatusMessage ?? "")
+                    return (
+                        ok, localizedAIStatus(quickAI.connectionStatusKind) ?? quickAI.connectionStatusMessage ?? ""
+                    )
                 },
                 resetDefaults: { [unowned self] in
                     settings.update {

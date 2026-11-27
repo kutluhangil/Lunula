@@ -168,10 +168,11 @@ extension CompositionRoot {
             liveAudioSpectrumEnabled: { [unowned self] in settings.settings.liveAudioSpectrumEnabled },
             quickAIMessages: { [unowned self] in quickAI.messages },
             isQuickAIGenerating: { [unowned self] in quickAI.isGenerating },
-            quickAIError: { [unowned self] in quickAI.lastError },
+            quickAIError: { [unowned self] in
+                localizedAIStatus(quickAI.lastErrorKind) ?? quickAI.lastError
+            },
             askQuickAI: { [unowned self] prompt in
-                let config = settings.settings.quickAIConfig
-                Task { await quickAI.ask(prompt, config: config) }
+                quickAI.startAsk(prompt, config: settings.settings.quickAIConfig)
             },
             clearQuickAI: { [unowned self] in quickAI.clearConversation() },
             isMirrorAuthorized: { [unowned self] in
@@ -193,7 +194,8 @@ extension CompositionRoot {
             },
             latestClipboardText: { [unowned self] in
                 NSPasteboard.general.string(forType: .string) ?? clipboardStore.entries.first?.text
-            })
+            },
+            cancelQuickAI: { [unowned self] in quickAI.cancelGeneration() })
     }
 
     func syncAudioSpectrum() {
@@ -221,14 +223,30 @@ extension CompositionRoot {
     func startScreenCapture(asGIF: Bool, selectRegion: Bool) {
         Task { @MainActor in
             var cropRect: CGRect?
+            var displayID: CGDirectDisplayID?
+            var scaleFactor: CGFloat = 2.0
+
             if selectRegion {
                 broadcast(.escapePressed)
                 regionSelector.instructionText = String(localized: "record.region.instruction")
                 guard let selected = await regionSelector.selectRegion() else { return }
-                cropRect = selected
+                cropRect = selected.cropRect
+                displayID = selected.displayID
+                scaleFactor = selected.backingScaleFactor
+            } else {
+                let mouse = NSEvent.mouseLocation
+                let activeScreen =
+                    NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.screens.first
+                displayID = activeScreen?.cgDirectDisplayID
+                scaleFactor = activeScreen?.backingScaleFactor ?? 2.0
             }
 
-            let started = await screenRecorder.startRecording(format: asGIF ? .gif : .mp4, cropRect: cropRect)
+            let started = await screenRecorder.startRecording(
+                format: asGIF ? .gif : .mp4,
+                cropRect: cropRect,
+                displayID: displayID,
+                scaleFactor: scaleFactor
+            )
             guard started else { return }
             feedback.play(.alignment)
             if case .success(let req) = CustomActivityRequest.make(

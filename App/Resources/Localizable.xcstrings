@@ -1,6 +1,108 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "ai.error.emptyResponse %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty response from %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ boş yanıt döndürdü"
+          }
+        }
+      }
+    },
+    "ai.error.httpError %lld %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP %lld from %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ HTTP %1$lld hatası verdi"
+          }
+        }
+      }
+    },
+    "ai.error.invalidResponse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid server response"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçersiz sunucu yanıtı"
+          }
+        }
+      }
+    },
+    "ai.error.missingKey %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing API key for %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ için API anahtarı eksik"
+          }
+        }
+      }
+    },
+    "ai.status.ollamaConnected %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama connected (%lld models)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama bağlandı (%lld model)"
+          }
+        }
+      }
+    },
+    "ai.status.providerConnected %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ connected"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ bağlandı"
+          }
+        }
+      }
+    },
     "alert.callActive": {
       "extractionState": "manual",
       "localizations": {
@@ -915,6 +1017,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sistem Ayarları'nı aç"
+          }
+        }
+      }
+    },
+    "permission.row.systemManaged": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Managed in System Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem Ayarlarından yönetilir"
           }
         }
       }

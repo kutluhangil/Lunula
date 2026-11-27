@@ -77,11 +77,7 @@ public struct IslandShellBackground<S: Shape>: View {
 
             shape.stroke(
                 LinearGradient(
-                    colors: [
-                        .white.opacity(0.28),
-                        .white.opacity(0.10),
-                        .white.opacity(0.18),
-                    ],
+                    colors: liquidGlassEdgeColors,
                     startPoint: .top,
                     endPoint: .bottom
                 ),
@@ -93,6 +89,22 @@ public struct IslandShellBackground<S: Shape>: View {
                 hardwareNotchCap
                     .clipShape(shape)
             }
+        }
+    }
+
+    private var liquidGlassEdgeColors: [Color] {
+        if let artworkTint {
+            [
+                .white.opacity(0.28),
+                Palette.color(artworkTint).opacity(0.24),
+                .white.opacity(0.18),
+            ]
+        } else {
+            [
+                .white.opacity(0.28),
+                .white.opacity(0.10),
+                .white.opacity(0.18),
+            ]
         }
     }
 

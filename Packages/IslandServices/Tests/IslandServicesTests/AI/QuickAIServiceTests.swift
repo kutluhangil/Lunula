@@ -216,6 +216,7 @@ import Testing
         #expect(service.isTestingConnection == false)
         #expect(service.connectionSucceeded == true)
         #expect(service.connectionStatusMessage == "Ollama connected (2 models)")
+        #expect(service.connectionStatusKind == .ollamaConnected(2))
         #expect(service.availableOllamaModels == ["llama3.2:latest", "mistral:7b"])
 
         ollamaShouldSucceed.set(false)
@@ -223,23 +224,163 @@ import Testing
         #expect(ollamaFail == false)
         #expect(service.connectionSucceeded == false)
         #expect(service.connectionStatusMessage == "Ollama daemon offline")
+        #expect(service.connectionStatusKind == .serverMessage("Ollama daemon offline"))
 
         let missingKeyOK = await service.testConnection(config: QuickAIConfig(provider: .openAI))
         #expect(missingKeyOK == false)
         #expect(service.connectionSucceeded == false)
         #expect(service.connectionStatusMessage == "Missing API key")
+        #expect(service.connectionStatusKind == .missingAPIKey(.openAI))
 
         service.saveAPIKey("sk-valid", for: .openAI)
         let openAIOK = await service.testConnection(config: QuickAIConfig(provider: .openAI))
         #expect(openAIOK == true)
         #expect(service.connectionSucceeded == true)
         #expect(service.connectionStatusMessage == "OpenAI connected")
+        #expect(service.connectionStatusKind == .providerConnected(.openAI))
 
         openAIShouldSucceed.set(false)
         let openAIFail = await service.testConnection(config: QuickAIConfig(provider: .openAI))
         #expect(openAIFail == false)
         #expect(service.connectionSucceeded == false)
         #expect(service.connectionStatusMessage == "Incorrect API key provided")
+        #expect(service.connectionStatusKind == .serverMessage("Incorrect API key provided"))
+    }
+
+    @Test @MainActor func multiTurnHistoryIncludesPriorTurnsForOpenAIAndOllama() async {
+        let secrets = InMemorySecretStore()
+        let openAICallCount = CallCounter()
+        let ollamaCallCount = CallCounter()
+        let capturedOpenAIMessages = CapturedMessagesBox()
+        let capturedOllamaPrompt = CapturedStringBox()
+
+        let (session, sessionID) = StubURLProtocol.makeSession { request in
+            let urlString = request.url?.absoluteString ?? ""
+            if urlString == "https://api.openai.com/v1/chat/completions" {
+                openAICallCount.increment()
+                if let body = StubURLProtocol.readBody(from: request),
+                    let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+                    let rawMessages = json["messages"] as? [[String: Any]]
+                {
+                    var pairs: [(String, String)] = []
+                    for item in rawMessages {
+                        if let role = item["role"] as? String,
+                            let content = item["content"] as? String
+                        {
+                            pairs.append((role, content))
+                        }
+                    }
+                    capturedOpenAIMessages.set(pairs)
+                }
+                let reply = openAICallCount.count == 1 ? "Swift uses actors." : "Yes, Sendable checks them."
+                let payload = Data(
+                    #"{"choices":[{"message":{"content":"\#(reply)"}}]}"#.utf8)
+                return (200, payload)
+            }
+            if urlString == "http://127.0.0.1:11434/api/generate" {
+                ollamaCallCount.increment()
+                if let body = StubURLProtocol.readBody(from: request),
+                    let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+                    let prompt = json["prompt"] as? String
+                {
+                    capturedOllamaPrompt.set(prompt)
+                }
+                let reply = ollamaCallCount.count == 1 ? "Local model reply." : "Follow-up local reply."
+                let payload = Data(#"{"response":"\#(reply)"}"#.utf8)
+                return (200, payload)
+            }
+            return (404, Data())
+        }
+        defer { StubURLProtocol.unregister(sessionID) }
+
+        let openAIService = QuickAIService(session: session, secrets: secrets)
+        openAIService.saveAPIKey("sk-multi-turn", for: .openAI)
+        await openAIService.ask("How does Swift isolate state?", config: QuickAIConfig(provider: .openAI))
+        await openAIService.ask("What about Sendable?", config: QuickAIConfig(provider: .openAI))
+
+        let openAITurns = capturedOpenAIMessages.get()
+        #expect(openAITurns.count == 4)
+        #expect(openAITurns[0].0 == "system")
+        #expect(openAITurns[1].0 == "user")
+        #expect(openAITurns[1].1 == "How does Swift isolate state?")
+        #expect(openAITurns[2].0 == "assistant")
+        #expect(openAITurns[2].1 == "Swift uses actors.")
+        #expect(openAITurns[3].0 == "user")
+        #expect(openAITurns[3].1 == "What about Sendable?")
+
+        let ollamaService = QuickAIService(session: session, secrets: secrets)
+        await ollamaService.ask("First local question", config: QuickAIConfig(provider: .ollama))
+        #expect(capturedOllamaPrompt.get() == "First local question")
+
+        await ollamaService.ask("Second local question", config: QuickAIConfig(provider: .ollama))
+        #expect(
+            capturedOllamaPrompt.get()
+                == "User: First local question\nAssistant: Local model reply.\nUser: Second local question"
+        )
+    }
+
+    @Test @MainActor func cancelGenerationStopsInFlightRequestCleanly() async throws {
+        let secrets = InMemorySecretStore()
+        let requestStarted = AtomicFlag(initial: false)
+        let (session, sessionID) = StubURLProtocol.makeHangingSession { _ in
+            requestStarted.set(true)
+        }
+        defer { StubURLProtocol.unregister(sessionID) }
+
+        let service = QuickAIService(session: session, secrets: secrets)
+        service.startAsk("Long running question", config: QuickAIConfig(provider: .ollama))
+
+        var waited = 0
+        while (!requestStarted.get() || !service.isGenerating) && waited < 200 {
+            try await Task.sleep(for: .milliseconds(5))
+            waited += 1
+        }
+        #expect(requestStarted.get() == true)
+        #expect(service.isGenerating == true)
+
+        service.cancelGeneration()
+        #expect(service.isGenerating == false)
+
+        try await Task.sleep(for: .milliseconds(30))
+        #expect(service.isGenerating == false)
+        #expect(service.lastError == nil)
+        #expect(service.lastErrorKind == nil)
+        #expect(service.messages.count == 1)
+        #expect(service.messages[0].role == "user")
+    }
+}
+
+private final class CapturedMessagesBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: [(String, String)] = []
+
+    func get() -> [(String, String)] {
+        lock.lock()
+        defer { lock.unlock() }
+        return value
+    }
+
+    func set(_ newValue: [(String, String)]) {
+        lock.lock()
+        defer { lock.unlock() }
+        value = newValue
+    }
+}
+
+private final class CapturedStringBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = ""
+
+    func get() -> String {
+        lock.lock()
+        defer { lock.unlock() }
+        return value
+    }
+
+    func set(_ newValue: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        value = newValue
     }
 }
 
@@ -308,6 +449,12 @@ private final class AtomicFlag: @unchecked Sendable {
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     typealias Handler = @Sendable (URLRequest) -> (Int, Data)
     typealias ChunkedHandler = @Sendable (URLRequest) -> (Int, [Data])
+    typealias HangingHandler = @Sendable (URLRequest) -> Void
+
+    enum Mode: Sendable {
+        case chunked(ChunkedHandler)
+        case hanging(HangingHandler)
+    }
 
     private static let headerName = "X-Lunula-Test-Session"
     private static let registry = HandlerRegistry()
@@ -321,7 +468,16 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
 
     static func makeChunkedSession(handler: @escaping ChunkedHandler) -> (URLSession, String) {
         let id = UUID().uuidString
-        registry.set(handler, for: id)
+        registry.set(.chunked(handler), for: id)
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubURLProtocol.self]
+        config.httpAdditionalHeaders = [headerName: id]
+        return (URLSession(configuration: config), id)
+    }
+
+    static func makeHangingSession(onStart: @escaping HangingHandler) -> (URLSession, String) {
+        let id = UUID().uuidString
+        registry.set(.hanging(onStart), for: id)
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubURLProtocol.self]
         config.httpAdditionalHeaders = [headerName: id]
@@ -358,25 +514,36 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     override func startLoading() {
         guard
             let sessionID = request.value(forHTTPHeaderField: Self.headerName),
-            let handler = Self.registry.get(sessionID),
+            let mode = Self.registry.get(sessionID),
             let url = request.url
         else {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
         }
-        let (status, chunks) = handler(request)
-        guard
-            let response = HTTPURLResponse(
-                url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)
-        else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
-            return
+        switch mode {
+        case .chunked(let handler):
+            let (status, chunks) = handler(request)
+            guard
+                let response = HTTPURLResponse(
+                    url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)
+            else {
+                client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+                return
+            }
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            for chunk in chunks where !chunk.isEmpty {
+                client?.urlProtocol(self, didLoad: chunk)
+            }
+            client?.urlProtocolDidFinishLoading(self)
+
+        case .hanging(let onStart):
+            onStart(request)
+            if let response = HTTPURLResponse(
+                url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)
+            {
+                client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            }
         }
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        for chunk in chunks where !chunk.isEmpty {
-            client?.urlProtocol(self, didLoad: chunk)
-        }
-        client?.urlProtocolDidFinishLoading(self)
     }
 
     override func stopLoading() {}
@@ -384,15 +551,15 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
 
 private final class HandlerRegistry: @unchecked Sendable {
     private let lock = NSLock()
-    private var handlers: [String: StubURLProtocol.ChunkedHandler] = [:]
+    private var handlers: [String: StubURLProtocol.Mode] = [:]
 
-    func set(_ handler: @escaping StubURLProtocol.ChunkedHandler, for id: String) {
+    func set(_ mode: StubURLProtocol.Mode, for id: String) {
         lock.lock()
         defer { lock.unlock() }
-        handlers[id] = handler
+        handlers[id] = mode
     }
 
-    func get(_ id: String) -> StubURLProtocol.ChunkedHandler? {
+    func get(_ id: String) -> StubURLProtocol.Mode? {
         lock.lock()
         defer { lock.unlock() }
         return handlers[id]

@@ -3,7 +3,7 @@ import IslandDesign
 import SwiftUI
 
 public enum PermissionState: Equatable, Sendable {
-    case notRequested, granted, denied, unavailable
+    case notRequested, granted, denied, unavailable, systemManaged
 }
 
 public enum ExtraPermissionKind: String, CaseIterable, Sendable {
@@ -23,7 +23,7 @@ public struct PermissionRow: View {
     public static func action(for state: PermissionState) -> Action? {
         switch state {
         case .notRequested: .request
-        case .denied: .openSettings
+        case .denied, .systemManaged: .openSettings
         case .granted, .unavailable: nil
         }
     }
@@ -48,7 +48,7 @@ public struct PermissionRow: View {
     private var dotColor: Color {
         switch state {
         case .granted: Color(red: 0x32 / 255, green: 0xD7 / 255, blue: 0x4B / 255)
-        case .notRequested: Palette.amberGold
+        case .notRequested, .systemManaged: Palette.amberGold
         case .denied: Color(red: 0xFF / 255, green: 0x45 / 255, blue: 0x3A / 255)
         case .unavailable: Palette.textTertiary
         }
@@ -61,6 +61,7 @@ public struct PermissionRow: View {
         case .notRequested: text = String(localized: "permission.row.notRequested")
         case .denied: text = String(localized: "permission.row.denied")
         case .unavailable: text = String(localized: "permission.row.unavailable")
+        case .systemManaged: text = String(localized: "permission.row.systemManaged")
         }
         if let name = name, !name.isEmpty {
             return "\(name) · \(text)"
@@ -83,7 +84,7 @@ public struct PermissionRow: View {
                     Text(String(localized: "permission.row.allow"))
                 }
                 .buttonStyle(.lunulaBadge)
-            } else if state == .denied {
+            } else if state == .denied || state == .systemManaged {
                 Button(action: onOpenSettings) {
                     HStack(spacing: 4) {
                         Text(String(localized: "permission.row.openSettings"))
