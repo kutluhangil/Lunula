@@ -71,4 +71,28 @@ import Testing
             parse("lunula://agent/resolve?id=req-1")
                 == .success(.resolveAgentApproval(id: "req-1")))
     }
+
+    @Test func parsesBrowserMediaUpdateAndClear() {
+        let r = parse(
+            "lunula://media/update?title=Lofi%20Beats&artist=ChilledCow&album=YouTube&playing=1&duration=180&position=15&artwork=https://i.ytimg.com/vi/abc/hqdefault.jpg"
+        )
+        #expect(
+            r
+                == .success(
+                    .updateBrowserMedia(
+                        BrowserMediaUpdate(
+                            title: "Lofi Beats", artist: "ChilledCow", album: "YouTube", isPlaying: true,
+                            duration: 180, position: 15,
+                            artworkURL: URL(string: "https://i.ytimg.com/vi/abc/hqdefault.jpg")))))
+
+        let httpArt = parse("lunula://media/update?title=Song&playing=0&artwork=http://insecure.example/a.jpg")
+        if case .success(.updateBrowserMedia(let update)) = httpArt {
+            #expect(update.isPlaying == false && update.artworkURL == nil)
+        } else {
+            Issue.record("Expected updateBrowserMedia")
+        }
+
+        #expect(parse("lunula://media/update?artist=OnlyArtist") == .failure(.missingParameter("title")))
+        #expect(parse("lunula://media/clear") == .success(.clearBrowserMedia))
+    }
 }

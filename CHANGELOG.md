@@ -6,7 +6,7 @@ First public build.
 
 - Notch island: closed / compact / peek / expanded, pill mode without a notch, per-display windows, fullscreen hiding, sleep/wake and display changes, full-width black menu-bar strip to hide the notch, customizable expanded width (`520–600 pt`), customizable pill vertical offset, configurable hover-to-peek and swipe gestures.
 - Ada design system ("Obsidyen ve Işık"): opaque `#000000` island core, inset cards with optional Liquid Glass highlight, animated Core Animation halo, metaball detached bubbles, custom Lunula app icon.
-- Now Playing (Apple Music; Spotify behind `LUNULA_SPOTIFY`), artwork accent halo, controls, inline player volume slider (without touching system HUD), seeking, shuffle/repeat/favorite, two-line synced lyrics (LRCLIB).
+- Now Playing (Apple Music; Spotify behind `LUNULA_SPOTIFY`; browser/YouTube media via `lunula://media/update` + `extensions/browser-media/`), artwork accent halo, controls, inline player volume slider (without touching system HUD), seeking, shuffle/repeat/favorite, two-line synced lyrics (LRCLIB).
 - Timer, configurable Pomodoro durations with 7-day focus streak chart (recording actual focus minutes, excluding breaks), drift-free stopwatch, optional animated timer mascots, relaunch and sleep persistence.
 - Calendar: next event, full-day schedule agenda popover & upcoming preview, 10-minute countdown and Join button (Zoom, Meet, Teams, FaceTime, Webex).
 - Weather (Open-Meteo) with automatic location or manual city search and daylight halo.

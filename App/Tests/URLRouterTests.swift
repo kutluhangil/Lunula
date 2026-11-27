@@ -34,4 +34,18 @@ import Testing
             r.handle(URL(string: "lunula://activity/show?id=a")!) == .failure(.missingParameter("title"))
                 && custom.activities.isEmpty)
     }
+
+    @Test func routerDispatchesBrowserMediaUpdateAndClear() {
+        let custom = CustomActivityController(time: time)
+        let timer = TimerController(time: time, defaults: UserDefaults(suiteName: UUID().uuidString)!)
+        var received: [BrowserMediaUpdate?] = []
+        let router = URLRouter(
+            custom: custom, timer: timer,
+            onBrowserMediaUpdate: { received.append($0) },
+            toggle: {}, time: time)
+        router.handle(URL(string: "lunula://media/update?title=Track&artist=YouTube&playing=1&duration=120")!)
+        router.handle(URL(string: "lunula://media/clear")!)
+        #expect(received.count == 2)
+        #expect(received[0]?.title == "Track" && received[1] == nil)
+    }
 }

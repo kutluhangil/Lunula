@@ -9,6 +9,7 @@ import OSLog
     private let timer: TimerController
     private let aiUsage: AIUsageStore?
     private let onAgentApprovalRequested: (@MainActor (AgentApprovalRequest) -> Void)?
+    private let onBrowserMediaUpdate: (@MainActor (BrowserMediaUpdate?) -> Void)?
     private let toggle: @MainActor () -> Void
     private let time: IslandTime
     private var limiter: RateLimiter
@@ -18,6 +19,7 @@ import OSLog
         custom: CustomActivityController, timer: TimerController,
         aiUsage: AIUsageStore? = nil,
         onAgentApprovalRequested: (@MainActor (AgentApprovalRequest) -> Void)? = nil,
+        onBrowserMediaUpdate: (@MainActor (BrowserMediaUpdate?) -> Void)? = nil,
         toggle: @escaping @MainActor () -> Void,
         time: IslandTime, limiter: RateLimiter = RateLimiter()
     ) {
@@ -25,6 +27,7 @@ import OSLog
         self.timer = timer
         self.aiUsage = aiUsage
         self.onAgentApprovalRequested = onAgentApprovalRequested
+        self.onBrowserMediaUpdate = onBrowserMediaUpdate
         self.toggle = toggle
         self.time = time
         self.limiter = limiter
@@ -53,6 +56,10 @@ import OSLog
             }
         case .success(.resolveAgentApproval(let id)):
             aiUsage?.resolveApproval(id: id, approved: nil)
+        case .success(.updateBrowserMedia(let update)):
+            onBrowserMediaUpdate?(update)
+        case .success(.clearBrowserMedia):
+            onBrowserMediaUpdate?(nil)
         case .failure(let error):
             logger.notice("Invalid URL command (\(String(describing: error), privacy: .public))")
         }

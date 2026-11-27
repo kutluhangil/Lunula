@@ -79,6 +79,9 @@ final class CompositionRoot {
                             symbol: "checkmark.shield.fill"),
                         tint: .orange, duration: 4.0, priority: .critical)))
         },
+        onBrowserMediaUpdate: { [unowned self] update in
+            nowPlaying.updateBrowserMedia(update)
+        },
         toggle: { [unowned self] in activeIsland()?.store.send(.toggleRequested) },
         time: time)
     private lazy var weather = WeatherService(

@@ -96,4 +96,18 @@ import Testing
         await settle()
         #expect(music.queryCount == 0 && kinds == [.permissionNeeded] && c.pendingConsent == .music)
     }
+
+    @Test func browserMediaUpdatesAndClearsWithoutAutomationPermission() {
+        let perms = FakePermissions([.music: .notRunning])
+        let c = make([], permissions: perms)
+        c.updateBrowserMedia(
+            BrowserMediaUpdate(
+                title: "YouTube Video", artist: "Channel", album: nil, isPlaying: true, duration: 300, position: 12))
+        #expect(c.snapshot?.source == .browser)
+        #expect(c.snapshot?.title == "YouTube Video" && c.snapshot?.isPlaying == true)
+        #expect(c.activities.count == 1)
+
+        c.updateBrowserMedia(nil)
+        #expect(c.snapshot == nil && c.activities.isEmpty)
+    }
 }

@@ -10,7 +10,7 @@
 | 4 | **Teleprompter** (`[x]` tamamlandı) | Rakiplerde sık istenen, sandbox'ta sorunsuz | `TeleprompterPopover` eklendi |
 | 5 | **Gerçek ses görselleştirici** (Core Audio process tap) | Şimdi Çalıyor'u canlandırır | `NSAudioCaptureUsageDescription` + "Sistem Sesi Kaydı" izni; izin reddi sessizce boş veri döner; CPU maliyeti ölçülmeli (yalnızca ada açıkken çalıştır) |
 | 6 | **Odak (Focus) durumu** | v1'den çıkarıldı | `INFocusStatusCenter` Communication Notifications yetkisi + App Review riski → spike; alternatif: Kestirmeler otomasyonuyla `lunula://` URL'si (kullanıcı kendi Odak otomasyonunu kurar) |
-| 7 | **Tarayıcı medyası** (Safari Web Extension) | Evrensel Now Playing'in MAS'a uygun yolu | Uzantı + uygulama grubu iletişimi; Chrome için ayrı uzantı |
+| 7 | **Tarayıcı medyası** (`[x]` köprü + Manifest V3 eklentisi tamamlandı) | Evrensel Now Playing'in MAS'a uygun yolu | `lunula://media/update` + `MediaSourceID.browser` + `extensions/browser-media/` (Chrome/Brave/Arc + Safari converter) |
 | 8 | **WeatherKit sağlayıcısı** | Apple verisi ve atfı | Yalnızca App Store dağıtımında (Developer ID'de yok); `com.apple.developer.weatherkit`; aylık 500 bin çağrı |
 | 9 | **Özel ses paleti** | Marka hissi | Ses tasarımı; kapatılabilir |
 | 10 | **Kişilik katmanı** (sabah özeti, gün sonu) | Farklılaşma | Aşırıya kaçmama ilkesi (spec §1.2) |

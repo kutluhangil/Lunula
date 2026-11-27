@@ -96,6 +96,37 @@ import Observation
         }
     }
 
+    /// Updates or clears browser-sourced media (YouTube, YouTube Music, SoundCloud, etc.) pushed via `lunula://media/*`.
+    public func updateBrowserMedia(_ update: BrowserMediaUpdate?) {
+        guard let update else {
+            applySnapshot(nil, for: .browser, artworkFetcher: nil)
+            return
+        }
+        let trackID = "browser:\(update.title)|\(update.artist)"
+        let artworkURL = update.artworkURL
+        let snap = NowPlayingSnapshot(
+            source: .browser, trackID: trackID, title: update.title, artist: update.artist, album: update.album,
+            artworkKey: artworkURL.map { "browser:\($0.absoluteString)" }, duration: update.duration,
+            position: update.position, positionTimestamp: time.now, isPlaying: update.isPlaying)
+        let fetcher: (@Sendable () async -> Data?)?
+        if let artworkURL {
+            fetcher = { await Self.fetchArtwork(from: artworkURL) }
+        } else {
+            fetcher = nil
+        }
+        applySnapshot(snap, for: .browser, artworkFetcher: fetcher)
+    }
+
+    private nonisolated static func fetchArtwork(from url: URL) async -> Data? {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 5
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+            (response as? HTTPURLResponse)?.statusCode == 200,
+            data.count <= 2 * 1024 * 1024
+        else { return nil }
+        return data
+    }
+
     // MARK: - Private
 
     private var activeSource: NowPlayingSource? { sources.first { $0.id == activeID } }
@@ -134,9 +165,20 @@ import Observation
     }
 
     private func apply(_ new: NowPlayingSnapshot?, from source: NowPlayingSource) {
-        latest[source.id] = new
-        if new?.isPlaying == true || activeID == nil || (activeID == source.id && new == nil) {
-            activeID = new == nil ? latest.first(where: { $0.value.isPlaying })?.key ?? latest.keys.first : source.id
+        let activeOrSource = activeSource ?? source
+        applySnapshot(new, for: source.id) {
+            guard let id = new?.trackID else { return nil }
+            return await activeOrSource.artwork(for: id)
+        }
+    }
+
+    private func applySnapshot(
+        _ new: NowPlayingSnapshot?, for sourceID: MediaSourceID,
+        artworkFetcher: (@Sendable () async -> Data?)?
+    ) {
+        latest[sourceID] = new
+        if new?.isPlaying == true || activeID == nil || (activeID == sourceID && new == nil) {
+            activeID = new == nil ? latest.first(where: { $0.value.isPlaying })?.key ?? latest.keys.first : sourceID
         }
         let previous = snapshot
         let current = activeID.flatMap { latest[$0] }
@@ -157,18 +199,22 @@ import Observation
         if current?.artworkKey != previous?.artworkKey {
             accent = nil
             artwork = nil
-            if let current { loadAccent(for: current, from: activeSource ?? source) }
+            if let current, let key = current.artworkKey {
+                if let activeSource, activeSource.id == current.source {
+                    loadAccent(for: key) { await activeSource.artwork(for: current.trackID) }
+                } else if let artworkFetcher, current.source == sourceID {
+                    loadAccent(for: key, fetch: artworkFetcher)
+                }
+            }
         }
         guard current != previous else { return }
         snapshot = current
         onActivitiesChange?()
     }
 
-    private func loadAccent(for track: NowPlayingSnapshot, from source: NowPlayingSource) {
-        guard let key = track.artworkKey else { return }
-        let trackID = track.trackID
+    private func loadAccent(for key: String, fetch: @escaping @Sendable () async -> Data?) {
         Task {
-            let data = await source.artwork(for: trackID)
+            let data = await fetch()
             guard snapshot?.artworkKey == key else { return }
             artwork = data.map { (key, $0) }
             let color = await accents.accent(for: key) { data }

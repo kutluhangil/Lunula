@@ -1,6 +1,6 @@
 import Foundation
 
-public enum MediaSourceID: String, Codable, Sendable { case music, spotify }
+public enum MediaSourceID: String, Codable, Sendable { case music, spotify, browser }
 
 public struct NowPlayingSnapshot: Equatable, Sendable {
     public var source: MediaSourceID

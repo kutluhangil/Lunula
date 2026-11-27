@@ -32,6 +32,29 @@ public struct CustomActivityRequest: Equatable, Sendable {
     }
 }
 
+public struct BrowserMediaUpdate: Equatable, Sendable {
+    public var title: String
+    public var artist: String
+    public var album: String?
+    public var isPlaying: Bool
+    public var duration: TimeInterval?
+    public var position: TimeInterval
+    public var artworkURL: URL?
+
+    public init(
+        title: String, artist: String = "", album: String? = nil, isPlaying: Bool = true,
+        duration: TimeInterval? = nil, position: TimeInterval = 0, artworkURL: URL? = nil
+    ) {
+        self.title = title
+        self.artist = artist
+        self.album = album
+        self.isPlaying = isPlaying
+        self.duration = duration
+        self.position = max(0, position)
+        self.artworkURL = artworkURL?.scheme?.lowercased() == "https" ? artworkURL : nil
+    }
+}
+
 public enum IslandURLCommand: Equatable, Sendable {
     case showActivity(CustomActivityRequest)
     case endActivity(id: String)
@@ -40,6 +63,8 @@ public enum IslandURLCommand: Equatable, Sendable {
     case updateAIUsage(provider: String, tokensUsed: Int, costUSD: Double, windowLimitPercent: Int)
     case requestAgentApproval(id: String, agent: String, command: String)
     case resolveAgentApproval(id: String)
+    case updateBrowserMedia(BrowserMediaUpdate)
+    case clearBrowserMedia
 }
 
 public enum IslandURLError: Error, Equatable, Sendable {

@@ -55,6 +55,46 @@ public enum IslandURLParser {
         case "agent/resolve":
             if let failure = CustomActivityRequest.validateID(query["id"]) { return .failure(failure) }
             return .success(.resolveAgentApproval(id: query["id"] ?? ""))
+        case "media/update":
+            let title = (query["title"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !title.isEmpty else { return .failure(.missingParameter("title")) }
+            let artist = (query["artist"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let album = query["album"]?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let playingRaw = (query["playing"] ?? "1").lowercased()
+            let isPlaying = !["0", "false", "no", "paused"].contains(playingRaw)
+            let duration: TimeInterval?
+            if let rawDur = query["duration"] {
+                guard let parsed = Double(rawDur), parsed.isFinite, parsed >= 0 else {
+                    return .failure(.invalidParameter("duration"))
+                }
+                duration = parsed
+            } else {
+                duration = nil
+            }
+            let position: TimeInterval
+            if let rawPos = query["position"] {
+                guard let parsed = Double(rawPos), parsed.isFinite, parsed >= 0 else {
+                    return .failure(.invalidParameter("position"))
+                }
+                position = parsed
+            } else {
+                position = 0
+            }
+            let artworkURL = query["artwork"].flatMap(URL.init(string:)).flatMap {
+                $0.scheme?.lowercased() == "https" ? $0 : nil
+            }
+            return .success(
+                .updateBrowserMedia(
+                    BrowserMediaUpdate(
+                        title: String(title.prefix(CustomActivityLimits.maxTitleLength)),
+                        artist: String(artist.prefix(CustomActivityLimits.maxSubtitleLength)),
+                        album: album?.isEmpty == true ? nil : album,
+                        isPlaying: isPlaying,
+                        duration: duration,
+                        position: position,
+                        artworkURL: artworkURL)))
+        case "media/clear":
+            return .success(.clearBrowserMedia)
         default:
             return .failure(.unknownCommand(path))
         }
