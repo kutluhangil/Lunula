@@ -77,4 +77,33 @@ import Testing
             IslandSettings.self, from: Data(#"{"expandedWidth":900}"#.utf8))
         #expect(clamped.expandedWidth == 600)
     }
+
+    @Test func visualStyleSurfaceDropletLyricsSpectrumAndQuickAIRoundTrip() throws {
+        #expect(QuickToolID.defaultEnabledOrder == ["awake", "mic", "out", "drop", "notes", "clip"])
+        #expect(QuickToolID.allCases.contains(.ai))
+        #expect(QuickToolID.allCases.contains(.mirror))
+        #expect(QuickToolID.allCases.contains(.record))
+
+        var s = IslandSettings.default
+        s.waterDropletEffect = false
+        s.visualStyle = .boring
+        s.surfaceMaterial = .liquidGlass
+        s.compactWingLyrics = false
+        s.floatingShelfBasket = false
+        s.liveAudioSpectrumEnabled = true
+        s.quickAIConfig = QuickAIConfig(
+            provider: .gemini,
+            model: "gemini-2.5-pro",
+            ollamaEndpoint: "http://localhost:11434"
+        )
+        s.enabledQuickTools = ["awake", "ai", "mirror", "record"]
+        s.quickToolOrder = ["ai", "mirror", "record", "awake"]
+
+        let decoded = try JSONDecoder().decode(IslandSettings.self, from: JSONEncoder().encode(s))
+        var expected = s
+        expected.quickToolOrder = QuickToolID.normalizedOrder(s.quickToolOrder)
+        #expect(decoded == expected)
+        #expect(decoded.orderedEnabledQuickTools == ["ai", "mirror", "record", "awake"])
+        #expect(decoded.quickAIConfig.resolvedModel == "gemini-2.5-pro")
+    }
 }

@@ -13,6 +13,9 @@ public struct SettingsWindowView: View {
     let permission: @MainActor (IslandFeature) -> PermissionState?
     let request: @MainActor (IslandFeature) -> Void
     let searchWeatherCity: @MainActor (String) async -> [GeoPlace]
+    let hasAIKey: @MainActor (QuickAIProvider) -> Bool
+    let saveAIKey: @MainActor (String, QuickAIProvider) -> Void
+    let clearAIKey: @MainActor (QuickAIProvider) -> Void
 
     @State private var selectedTab: SettingsTabID = .general
     @Namespace private var tabAnimation
@@ -23,6 +26,9 @@ public struct SettingsWindowView: View {
         permission: @escaping @MainActor (IslandFeature) -> PermissionState? = { _ in nil },
         request: @escaping @MainActor (IslandFeature) -> Void = { _ in },
         searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] },
+        hasAIKey: @escaping @MainActor (QuickAIProvider) -> Bool = { _ in false },
+        saveAIKey: @escaping @MainActor (String, QuickAIProvider) -> Void = { _, _ in },
+        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in },
         initialTab: SettingsTabID = .general
     ) {
         self.settings = settings
@@ -30,6 +36,9 @@ public struct SettingsWindowView: View {
         self.permission = permission
         self.request = request
         self.searchWeatherCity = searchWeatherCity
+        self.hasAIKey = hasAIKey
+        self.saveAIKey = saveAIKey
+        self.clearAIKey = clearAIKey
         self._selectedTab = State(initialValue: initialTab)
     }
 
@@ -176,7 +185,10 @@ public struct SettingsWindowView: View {
                                 withAnimation(.easeInOut(duration: 0.20)) {
                                     selectedTab = tab
                                 }
-                            })
+                            },
+                            hasAIKey: hasAIKey,
+                            saveAIKey: saveAIKey,
+                            clearAIKey: clearAIKey)
                     case .about:
                         AboutSettingsView()
                     }

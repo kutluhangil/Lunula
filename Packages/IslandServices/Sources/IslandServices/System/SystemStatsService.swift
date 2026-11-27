@@ -22,22 +22,29 @@ public struct SystemStatsSnapshot: Equatable, Sendable {
     public var memoryUsedGB: Double
     public var memoryTotalGB: Double
     public var wirelessBatteries: [WirelessDeviceBattery]
+    public var downloadBytesPerSec: Double
+    public var uploadBytesPerSec: Double
 
     public init(
         cpuPercent: Int, memoryPercent: Int, memoryUsedGB: Double, memoryTotalGB: Double,
-        wirelessBatteries: [WirelessDeviceBattery]
+        wirelessBatteries: [WirelessDeviceBattery],
+        downloadBytesPerSec: Double = 0,
+        uploadBytesPerSec: Double = 0
     ) {
         self.cpuPercent = cpuPercent
         self.memoryPercent = memoryPercent
         self.memoryUsedGB = memoryUsedGB
         self.memoryTotalGB = memoryTotalGB
         self.wirelessBatteries = wirelessBatteries
+        self.downloadBytesPerSec = downloadBytesPerSec
+        self.uploadBytesPerSec = uploadBytesPerSec
     }
 }
 
-/// On-demand Mach CPU/Memory telemetry and IOKit wireless device battery reader (zero background polling).
+/// On-demand Mach CPU/Memory telemetry, Darwin network throughput, and IOKit wireless battery reader (zero background polling).
 @MainActor @Observable public final class SystemStatsService {
     @ObservationIgnored private var previousTicks: (user: UInt64, system: UInt64, idle: UInt64, nice: UInt64)?
+    @ObservationIgnored private var previousNetSample: (timestamp: TimeInterval, rxBytes: UInt64, txBytes: UInt64)?
 
     public private(set) var snapshot = SystemStatsSnapshot(
         cpuPercent: 0, memoryPercent: 0, memoryUsedGB: 0, memoryTotalGB: 0, wirelessBatteries: [])
@@ -49,14 +56,67 @@ public struct SystemStatsSnapshot: Equatable, Sendable {
         let cpu = readCPUPercent()
         let mem = Self.readMemory()
         let devices = Self.readWirelessBatteries()
+        let net = readNetworkRates()
         let next = SystemStatsSnapshot(
             cpuPercent: cpu,
             memoryPercent: mem.percent,
             memoryUsedGB: mem.usedGB,
             memoryTotalGB: mem.totalGB,
-            wirelessBatteries: devices)
+            wirelessBatteries: devices,
+            downloadBytesPerSec: net.download,
+            uploadBytesPerSec: net.upload)
         snapshot = next
         return next
+    }
+
+    private func readNetworkRates() -> (download: Double, upload: Double) {
+        let now = ProcessInfo.processInfo.systemUptime
+        let current = Self.readNetworkCounters()
+        guard let prev = previousNetSample else {
+            previousNetSample = (now, current.rxBytes, current.txBytes)
+            return (0, 0)
+        }
+        let dt = now - prev.timestamp
+        guard dt >= 0.2 else {
+            return (snapshot.downloadBytesPerSec, snapshot.uploadBytesPerSec)
+        }
+        previousNetSample = (now, current.rxBytes, current.txBytes)
+        let down = current.rxBytes >= prev.rxBytes ? Double(current.rxBytes - prev.rxBytes) / dt : 0
+        let up = current.txBytes >= prev.txBytes ? Double(current.txBytes - prev.txBytes) / dt : 0
+        return (down, up)
+    }
+
+    nonisolated public static func readNetworkCounters() -> (rxBytes: UInt64, txBytes: UInt64) {
+        var firstAddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&firstAddr) == 0, let first = firstAddr else { return (0, 0) }
+        defer { freeifaddrs(first) }
+
+        var rxTotal: UInt64 = 0
+        var txTotal: UInt64 = 0
+        var cursor: UnsafeMutablePointer<ifaddrs>? = first
+        while let ptr = cursor {
+            let ifa = ptr.pointee
+            cursor = ifa.ifa_next
+            guard let addr = ifa.ifa_addr, addr.pointee.sa_family == UInt8(AF_LINK) else { continue }
+            if (Int32(ifa.ifa_flags) & IFF_LOOPBACK) != 0 { continue }
+            guard let namePtr = ifa.ifa_name else { continue }
+            let name = String(cString: namePtr)
+            guard name.hasPrefix("en") || name.hasPrefix("pdp_ip") else { continue }
+            guard let rawData = ifa.ifa_data else { continue }
+            let data = rawData.assumingMemoryBound(to: if_data.self).pointee
+            rxTotal &+= UInt64(data.ifi_ibytes)
+            txTotal &+= UInt64(data.ifi_obytes)
+        }
+        return (rxTotal, txTotal)
+    }
+
+    nonisolated public static func formatRate(_ bytesPerSec: Double) -> String {
+        guard bytesPerSec.isFinite, bytesPerSec >= 1024 else { return "0 KB/s" }
+        if bytesPerSec < 1_048_576 {
+            let kb = Int((bytesPerSec / 1024).rounded())
+            return "\(kb) KB/s"
+        }
+        return String(format: "%.1f MB/s", bytesPerSec / 1_048_576)
     }
 
     private func readCPUPercent() -> Int {

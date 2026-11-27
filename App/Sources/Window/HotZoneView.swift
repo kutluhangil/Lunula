@@ -29,7 +29,10 @@ final class HotZoneView: NSView {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    override func mouseEntered(with event: NSEvent) { delegate?.hotZoneEntered() }
+    override func mouseEntered(with event: NSEvent) {
+        delegate?.hotZoneEntered()
+        delegate?.hotZoneMoved(to: screenPoint(event), at: event.timestamp)
+    }
     override func mouseExited(with event: NSEvent) { delegate?.hotZoneExited() }
 
     override func mouseMoved(with event: NSEvent) {

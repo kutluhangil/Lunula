@@ -30,20 +30,38 @@ struct IslandSurface: View {
             state: state, notch: notch, shelfIsEmpty: shelfActions.items().isEmpty, expandedWidth: expandedWidth)
         let island = Self.islandRect(
             size: size, notch: notch, phase: state.phase, pillOffset: CGFloat(quickTools.pillVerticalOffset()))
-        let shape = Self.islandShape(phase: state.phase, hasPrimary: state.layout.primary != nil, notch: notch)
-        let halo = scaled(homeHalo(HaloDerivation.state(phase: state.phase, layout: state.layout, now: now)))
+        let baseShape = Self.islandShape(phase: state.phase, hasPrimary: state.layout.primary != nil, notch: notch)
+        let tension = (reduceMotion || !quickTools.waterDropletEffect()) ? .zero : quickTools.dropletTension()
+        let fluidShape = FluidIslandShape(base: baseShape, tension: tension)
+        let visualStyle = quickTools.visualStyle()
+        let material: IslandSurfaceMaterial = state.phase == .idle ? .obsidian : quickTools.surfaceMaterial()
+        let artworkTint: RGBAColor? = state.phase == .idle ? nil : state.layout.primary?.accent
+        let halo: HaloState =
+            (visualStyle == .alcove && state.phase.isOpen)
+            ? .off
+            : scaled(homeHalo(HaloDerivation.state(phase: state.phase, layout: state.layout, now: now)))
         let privacy = privacyInfo.current()
         let isHidden = state.phase == .hidden || (!notch.hasHardwareNotch && state.phase == .idle)
 
         ZStack(alignment: .topLeading) {
             ZStack {
-                Palette.obsidian
-                content(size: size, expandedWidth: expandedWidth)
-                    .environment(\.islandCardGlass, quickTools.useGlassCards())
+                IslandShellBackground(
+                    material: material,
+                    shape: fluidShape,
+                    notchSize: notch.size,
+                    hasHardwareNotch: notch.hasHardwareNotch,
+                    artworkTint: artworkTint,
+                    visualStyle: visualStyle
+                )
+                ZStack {
+                    content(size: size, expandedWidth: expandedWidth)
+                        .environment(\.islandCardGlass, quickTools.useGlassCards())
+                    DropletSpecularOverlay(tension: tension, shape: fluidShape)
+                }
+                .clipShape(fluidShape)
             }
             .frame(width: size.width, height: size.height)
-            .clipShape(shape)
-            .contentShape(shape)
+            .contentShape(fluidShape)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(Text(AccessibilityLabels.island(summary: Self.summary(state))))
             .accessibilityAddTraits(.isButton)
@@ -56,7 +74,7 @@ struct IslandSurface: View {
                 let pad = HaloStyle.glowRadius
                 HaloView(
                     state: halo,
-                    outline: shape.path(in: CGRect(x: pad, y: pad, width: size.width, height: size.height)).cgPath,
+                    outline: fluidShape.path(in: CGRect(x: pad, y: pad, width: size.width, height: size.height)).cgPath,
                     lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
                 )
                 .frame(width: size.width + 2 * pad, height: size.height + 2 * pad)
@@ -88,7 +106,7 @@ struct IslandSurface: View {
                 MetaballBridge(
                     islandRect: island,
                     bubbleStart: end.offsetBy(dx: island.maxX - end.maxX, dy: 0),
-                    bubbleEnd: end, progress: budProgress, islandCornerRadius: shape.cornerRadius
+                    bubbleEnd: end, progress: budProgress, islandCornerRadius: baseShape.cornerRadius
                 )
                 .allowsHitTesting(false)
             }
@@ -239,6 +257,8 @@ struct IslandSurface: View {
                         width: clampedWidth,
                         bodyHeight: shelfIsEmpty
                             ? IslandMetrics.expandedBodyCompact : IslandMetrics.expandedBodyShelf)
+                case .tools:
+                    .expanded(width: clampedWidth, bodyHeight: IslandMetrics.expandedBodyShelf)
                 case .activity:
                     .expanded(width: clampedWidth, bodyHeight: IslandMetrics.expandedBodyCompact)
                 }

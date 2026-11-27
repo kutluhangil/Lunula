@@ -52,7 +52,26 @@ public struct ActivitiesSettingsView: View {
                     symbol: "music.note",
                     permissionState: permission(.nowPlaying) ?? .unavailable,
                     permissionName: String(localized: "settings.permission.automation")
-                )
+                ) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 12) {
+                            Text("settings.nowPlaying.liveSpectrum")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                            Spacer()
+                            Toggle("", isOn: valueBinding(\.liveAudioSpectrumEnabled))
+                                .toggleStyle(.lunulaSwitch)
+                                .fixedSize()
+                        }
+
+                        Text("settings.nowPlaying.liveSpectrum.note")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Palette.textSecondary)
+                    }
+                    .padding(.leading, 52)
+                    .padding(.trailing, 12)
+                    .padding(.bottom, 12)
+                }
 
                 Divider().background(Palette.hairline)
 
@@ -227,6 +246,16 @@ public struct ActivitiesSettingsView: View {
                             Spacer()
                             Toggle("", isOn: valueBinding(\.shelfCopiesFiles))
                                 .toggleStyle(.lunulaSwitch)
+                        }
+
+                        HStack(spacing: 12) {
+                            Text("settings.shelf.floatingBasket")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                            Spacer()
+                            Toggle("", isOn: valueBinding(\.floatingShelfBasket))
+                                .toggleStyle(.lunulaSwitch)
+                                .fixedSize()
                         }
 
                         HStack(spacing: 12) {

@@ -30,15 +30,15 @@ It is built under strict rules: **App Sandbox and Hardened Runtime from the firs
 
 | | |
 |---|---|
-| **Now Playing** | The current track with artwork, inline player volume slider, two-line synced lyrics and controls. |
+| **Now Playing** | Artwork, inline player volume slider, 8-band live audio spectrum, compact-wing & two-line synced lyrics, and browser/YouTube bridge. |
 | **Timer** | Focus timer, configurable Pomodoro durations, 7-day streak chart and drift-free stopwatch. |
 | **Calendar & Reminders** | Full-day schedule agenda with Join buttons and opt-in two-way Apple Reminders sync. |
-| **Shelf** | Drop files onto the island, convert images offline, archive ZIPs, run Vision OCR and AirDrop. |
+| **Shelf & Drop Basket** | Notch shelf + floating edge drop basket, MP4/GIF screen recorder, offline image converter, ZIPs, Vision OCR and AirDrop. |
 | **Weather** | Local conditions through Open-Meteo (automatic or manual city), keyless, behind a provider protocol. |
 | **Alerts and signals** | Battery, Bluetooth audio connect alerts with battery level, external drives and privacy dots. |
-| **Custom activities & AI hooks** | Drive the island via `lunula://` URLs, App Intents and ready-to-use Claude Code / Codex hooks (`examples/hooks/`). |
-| **Tools** | Small sandbox-safe utilities a click away. |
-| **Ada design system** | A custom visual language with its own settings and onboarding. |
+| **Custom activities & AI** | In-notch Mini AI (local Ollama + Keychain BYOK), `lunula://` URLs, App Intents and Claude Code / Codex hooks (`examples/hooks/`). |
+| **Tools & Mirror** | Camera quick mirror, live network speed, clipboard history, notes, eyedropper, teleprompter, audio switcher and Keep Awake. |
+| **Styles, Glass & Droplet** | Switchable `Lunula` / `Alcove` / `Boring` layouts, `#000000` Obsidian or macOS 26 `Liquid Glass`, and water-droplet pointer physics. |
 
 <table>
   <tr>
@@ -77,7 +77,7 @@ Four local Swift packages, generated into an Xcode project with XcodeGen so para
 | **Guarded architecture** | `check-architecture.sh` fails the build if IslandCore imports anything beyond Foundation and Observation, if Features import Services, if Services import SwiftUI, if a private API or process escape appears, or if code hops synchronously onto the main queue. |
 | **Reproducible project** | `Lunula.xcodeproj` is generated with XcodeGen, and CI checks that the generated plist and entitlements are committed. |
 | **No unsigned releases** | The release workflow refuses to run unless every signing secret is present, imports the Developer ID certificate into a temporary keychain and notarises the build. |
-| **Tested** | 96 test files across the four packages and the app, run in CI with a release build. |
+| **Tested** | 95 test files (426 tests) across the four packages and the app, run in CI with a release build. |
 
 <img src="docs/media/divider.svg" width="100%" alt="">
 

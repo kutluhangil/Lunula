@@ -263,6 +263,7 @@ struct SearchAndPalettePopover: View {
                 VStack(alignment: .leading, spacing: 4) {
                     paletteButton("house", "island.tab.home") { send(.pageSelected(.home)) }
                     paletteButton("tray", "island.tab.shelf") { send(.pageSelected(.shelf)) }
+                    paletteButton("wrench.and.screwdriver", "island.tab.tools") { send(.pageSelected(.tools)) }
                     paletteButton("cup.and.saucer.fill", "tools.keepAwake", quickTools.toggleKeepAwake)
                     paletteButton("mic.slash.fill", "tools.micMute", quickTools.toggleMicMute)
                     paletteButton("timer", "timer.pomodoro", timerActions.startPomodoro)
@@ -354,13 +355,13 @@ struct TeleprompterPopover: View {
 
             HStack(spacing: 6) {
                 Image(systemName: "tortoise")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                 Slider(value: $speed, in: 10...80)
                     .onChange(of: speed) { _, newValue in
                         quickTools.setTeleprompterSpeed(newValue)
                     }
                 Image(systemName: "hare")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
             }
         }
         .padding(10)
@@ -402,6 +403,20 @@ struct SystemStatsPopover: View {
                 }
             }
 
+            Divider()
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Palette.textSecondary)
+                Text("tools.stats.network", bundle: .module)
+                    .font(TypeToken.caption.font)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(verbatim: "↓ \(stats.downloadRateText) · ↑ \(stats.uploadRateText)")
+                    .font(TypeToken.caption.font.monospacedDigit())
+                    .foregroundStyle(Palette.textPrimary)
+            }
+
             if !stats.wirelessBatteries.isEmpty {
                 Divider()
                 Text("tools.stats.devices", bundle: .module)
@@ -410,7 +425,7 @@ struct SystemStatsPopover: View {
                 ForEach(stats.wirelessBatteries) { dev in
                     HStack {
                         Image(systemName: "wave.3.right")
-                            .font(.system(size: 10))
+                            .font(.system(size: 11))
                         Text(dev.name)
                             .font(TypeToken.caption.font)
                             .lineLimit(1)
@@ -696,7 +711,7 @@ struct LauncherAndHubPopover: View {
                                     quickTools.removeShortcut(sc.id)
                                 } label: {
                                     Image(systemName: "xmark")
-                                        .font(.system(size: 9))
+                                        .font(.system(size: 11))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -903,7 +918,7 @@ struct LauncherAndHubPopover: View {
                                     quickTools.removeStockSymbol(q.symbol)
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
-                                        .font(.system(size: 10))
+                                        .font(.system(size: 11))
                                         .foregroundStyle(.secondary)
                                 }
                                 .buttonStyle(.plain)
@@ -923,5 +938,284 @@ struct LauncherAndHubPopover: View {
         quickTools.addStockSymbol(trimmed)
         newSymbol = ""
         quickTools.refreshStocks()
+    }
+}
+
+struct QuickAIPopover: View {
+    @Environment(\.quickTools) private var quickTools
+    @State private var prompt = ""
+
+    var body: some View {
+        let messages = quickTools.quickAIMessages()
+        let isGenerating = quickTools.isQuickAIGenerating()
+        let errorText = quickTools.quickAIError()
+
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Label {
+                    Text("tools.ai", bundle: .module)
+                } icon: {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(Palette.amberGold)
+                }
+                .font(TypeToken.caption.font)
+                .foregroundStyle(Palette.textPrimary)
+
+                if isGenerating {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+
+                Spacer()
+
+                Button(action: quickTools.clearQuickAI) {
+                    Text("tools.ai.clear", bundle: .module)
+                        .font(TypeToken.caption.font)
+                        .foregroundStyle(Palette.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Palette.inkPressed, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(messages.isEmpty && (errorText == nil || errorText?.isEmpty == true))
+            }
+
+            if messages.isEmpty && !isGenerating && (errorText == nil || errorText?.isEmpty == true) {
+                Text("tools.ai.empty", bundle: .module)
+                    .font(TypeToken.caption.font)
+                    .foregroundStyle(Palette.textSecondary)
+                    .padding(.vertical, 6)
+            } else if !messages.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(messages) { message in
+                            let isUser = message.role == "user"
+                            HStack {
+                                if isUser { Spacer(minLength: 24) }
+                                Text(message.text)
+                                    .font(TypeToken.caption.font)
+                                    .foregroundStyle(Palette.textPrimary)
+                                    .textSelection(.enabled)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        isUser ? Palette.inkPressed : Palette.inkRaised,
+                                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    )
+                                if !isUser { Spacer(minLength: 24) }
+                            }
+                        }
+                    }
+                }
+                .frame(maxHeight: 170)
+            }
+
+            if let errorText, !errorText.isEmpty {
+                Text(errorText)
+                    .font(TypeToken.caption.font)
+                    .foregroundStyle(Palette.signalRed)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack(spacing: 6) {
+                TextField(String(localized: "tools.ai.placeholder", bundle: .module), text: $prompt)
+                    .textFieldStyle(.roundedBorder)
+                    .font(TypeToken.caption.font)
+                    .onSubmit(submitPrompt)
+                Button(action: submitPrompt) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(canSend ? Palette.textPrimary : Palette.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSend)
+                .accessibilityLabel(Text("tools.ai.send", bundle: .module))
+            }
+        }
+        .padding(10)
+        .frame(width: 300)
+    }
+
+    private var canSend: Bool {
+        !quickTools.isQuickAIGenerating()
+            && !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func submitPrompt() {
+        let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !quickTools.isQuickAIGenerating() else { return }
+        quickTools.askQuickAI(trimmed)
+        prompt = ""
+    }
+}
+
+struct ToolsGridPageView: View {
+    let openPopover: @MainActor (ActiveToolPopover) -> Void
+    @Environment(\.quickTools) private var quickTools
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+
+    var body: some View {
+        let keepAwake = quickTools.isKeepAwakeActive()
+        let micMuted = quickTools.isMicMuted()
+        let isRecording = quickTools.isScreenRecording()
+
+        LazyVGrid(columns: columns, spacing: 6) {
+            gridButton(
+                symbol: keepAwake ? "cup.and.saucer.fill" : "cup.and.saucer",
+                titleKey: "tools.keepAwake",
+                tint: keepAwake ? Palette.signalOrange : Palette.textPrimary,
+                action: quickTools.toggleKeepAwake
+            )
+            gridButton(
+                symbol: micMuted ? "mic.slash.fill" : "mic.fill",
+                titleKey: "tools.grid.micMute",
+                tint: micMuted ? Palette.signalRed : Palette.textPrimary,
+                action: quickTools.toggleMicMute
+            )
+            gridButton(
+                symbol: "eyedropper",
+                titleKey: "tools.grid.eyedropper",
+                action: quickTools.pickColor
+            )
+            gridButton(
+                symbol: "sparkles",
+                titleKey: "tools.ai",
+                tint: Palette.amberGold
+            ) {
+                openPopover(.ai)
+            }
+            gridButton(
+                symbol: "web.camera",
+                titleKey: "tools.mirror"
+            ) {
+                openPopover(.mirror)
+            }
+            recorderGridCell(isRecording: isRecording)
+            gridButton(
+                symbol: "note.text",
+                titleKey: "tools.quickNotes"
+            ) {
+                openPopover(.notes)
+            }
+            gridButton(
+                symbol: "doc.on.clipboard",
+                titleKey: "tools.clipboard"
+            ) {
+                openPopover(.clipboard)
+            }
+            gridButton(
+                symbol: "text.aligncenter",
+                titleKey: "tools.teleprompter"
+            ) {
+                openPopover(.teleprompter)
+            }
+            gridButton(
+                symbol: "cpu",
+                titleKey: "tools.grid.stats"
+            ) {
+                openPopover(.stats)
+            }
+            gridButton(
+                symbol: "square.grid.2x2",
+                titleKey: "tools.grid.hub"
+            ) {
+                openPopover(.hub)
+            }
+            gridButton(
+                symbol: "keyboard",
+                titleKey: "tools.grid.keyboardLock",
+                action: quickTools.startKeyboardCleaningLock
+            )
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+
+    private func gridButton(
+        symbol: String,
+        titleKey: LocalizedStringKey,
+        tint: Color = Palette.textPrimary,
+        action: @escaping @MainActor () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 7) {
+                Image(systemName: symbol)
+                    .font(.system(size: 12, weight: .semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(tint)
+                    .frame(width: 16, height: 16)
+                Text(titleKey, bundle: .module)
+                    .font(TypeToken.caption.font)
+                    .foregroundStyle(Palette.textPrimary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity)
+            .frame(height: 32)
+            .islandCard()
+            .contentShape(RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func recorderGridCell(isRecording: Bool) -> some View {
+        if isRecording {
+            Button(action: quickTools.stopScreenRecording) {
+                HStack(spacing: 7) {
+                    Image(systemName: "stop.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
+                        .foregroundStyle(Palette.signalRed)
+                        .frame(width: 16, height: 16)
+                    Text("tools.record.stop", bundle: .module)
+                        .font(TypeToken.caption.font)
+                        .foregroundStyle(Palette.signalRed)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity)
+                .frame(height: 32)
+                .islandCard()
+                .contentShape(RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        } else {
+            Menu {
+                Button {
+                    quickTools.startScreenRecording(false)
+                } label: {
+                    Text("tools.record.mp4", bundle: .module)
+                }
+                Button {
+                    quickTools.startScreenRecording(true)
+                } label: {
+                    Text("tools.record.gif", bundle: .module)
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "record.circle")
+                        .font(.system(size: 12, weight: .semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(Palette.textPrimary)
+                        .frame(width: 16, height: 16)
+                    Text("tools.record", bundle: .module)
+                        .font(TypeToken.caption.font)
+                        .foregroundStyle(Palette.textPrimary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity)
+                .frame(height: 32)
+                .islandCard()
+                .contentShape(RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+        }
     }
 }

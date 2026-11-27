@@ -145,7 +145,9 @@ final class IslandContainerView: NSView {
     /// Panel-local rects with a top-left origin (IslandRootView.hoverRegion).
     var hoverRegion: (@MainActor () -> [CGRect])?
     var onHoverChange: (@MainActor (Bool) -> Void)?
+    var onPointerMove: (@MainActor (_ point: CGPoint?, _ velocity: CGSize) -> Void)?
     private var isInside = false
+    private var lastPointerSample: (point: CGPoint, timestamp: TimeInterval)?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -158,13 +160,42 @@ final class IslandContainerView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    override func mouseEntered(with event: NSEvent) { updateHover(event) }
-    override func mouseMoved(with event: NSEvent) { updateHover(event) }
-    override func mouseExited(with event: NSEvent) { updateHover(event) }
+    override func mouseEntered(with event: NSEvent) {
+        let point = panelLocalPoint(event)
+        let velocity = computeVelocity(to: point, timestamp: event.timestamp)
+        onPointerMove?(point, velocity)
+        updateHover(at: point)
+    }
 
-    private func updateHover(_ event: NSEvent) {
+    override func mouseMoved(with event: NSEvent) {
+        let point = panelLocalPoint(event)
+        let velocity = computeVelocity(to: point, timestamp: event.timestamp)
+        onPointerMove?(point, velocity)
+        updateHover(at: point)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        lastPointerSample = nil
+        onPointerMove?(nil, .zero)
+        updateHover(at: panelLocalPoint(event))
+    }
+
+    private func panelLocalPoint(_ event: NSEvent) -> CGPoint {
         let p = convert(event.locationInWindow, from: nil)
-        let point = CGPoint(x: p.x, y: bounds.height - p.y)
+        return CGPoint(x: p.x, y: bounds.height - p.y)
+    }
+
+    private func computeVelocity(to point: CGPoint, timestamp: TimeInterval) -> CGSize {
+        defer { lastPointerSample = (point, timestamp) }
+        guard let previous = lastPointerSample else { return .zero }
+        let dt = timestamp - previous.timestamp
+        guard dt > 0.0001, dt < 0.5 else { return .zero }
+        let vx = min(max((point.x - previous.point.x) / dt, -2500), 2500)
+        let vy = min(max((point.y - previous.point.y) / dt, -2500), 2500)
+        return CGSize(width: vx, height: vy)
+    }
+
+    private func updateHover(at point: CGPoint) {
         let inside = hoverRegion?().contains { $0.contains(point) } ?? false
         guard inside != isInside else { return }
         isInside = inside

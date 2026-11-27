@@ -10,7 +10,7 @@ public enum WeatherLocationSetting: Codable, Equatable, Sendable {
 }
 
 public enum QuickToolID: String, Codable, Equatable, Sendable, CaseIterable, Identifiable {
-    case awake, mic, out, drop, notes, clip, search, prompt, stats, stocks, kbd
+    case awake, mic, out, drop, notes, clip, search, prompt, stats, stocks, kbd, ai, mirror, record
 
     public var id: String { rawValue }
 
@@ -94,6 +94,20 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var enabledQuickTools: Set<String> = Set(QuickToolID.defaultEnabledOrder)
     /// Display order of all quick tools in Settings and the expanded island top bar.
     public var quickToolOrder: [String] = QuickToolID.defaultOrder
+    /// Elastic surface-tension deformation and specular highlight when hovering near the island.
+    public var waterDropletEffect = true
+    /// High-level aesthetic personality of the island shell and inner layout.
+    public var visualStyle: IslandVisualStyle = .lunula
+    /// Outer shell material of the island surface.
+    public var surfaceMaterial: IslandSurfaceMaterial = .obsidian
+    /// Shows live synced lyric line in the right compact wing when available.
+    public var compactWingLyrics = true
+    /// Shows a floating shelf drop basket when dragging files.
+    public var floatingShelfBasket = true
+    /// Enables live audio spectrum bars on Now Playing surfaces.
+    public var liveAudioSpectrumEnabled = false
+    /// Provider, model, and local endpoint configuration for Quick AI.
+    public var quickAIConfig = QuickAIConfig()
 
     /// Enabled quick tools ordered according to `quickToolOrder`.
     public var orderedEnabledQuickTools: [String] {
@@ -121,6 +135,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
             hideNotchBar, useGlassCards
         case doubleTapOptionToToggle, expandedWidth, pomodoroPlan, hoverToPeekEnabled, swipeGesturesEnabled
         case enabledQuickTools, quickToolOrder
+        case waterDropletEffect, visualStyle, surfaceMaterial, compactWingLyrics, floatingShelfBasket,
+            liveAudioSpectrumEnabled, quickAIConfig
     }
 
     /// Missing, unknown or malformed keys fall back to the default per key, so old or future data never breaks.
@@ -172,6 +188,13 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         swipeGesturesEnabled = value(.swipeGesturesEnabled, d.swipeGesturesEnabled)
         enabledQuickTools = value(.enabledQuickTools, d.enabledQuickTools)
         quickToolOrder = QuickToolID.normalizedOrder(value(.quickToolOrder, d.quickToolOrder))
+        waterDropletEffect = value(.waterDropletEffect, d.waterDropletEffect)
+        visualStyle = value(.visualStyle, d.visualStyle)
+        surfaceMaterial = value(.surfaceMaterial, d.surfaceMaterial)
+        compactWingLyrics = value(.compactWingLyrics, d.compactWingLyrics)
+        floatingShelfBasket = value(.floatingShelfBasket, d.floatingShelfBasket)
+        liveAudioSpectrumEnabled = value(.liveAudioSpectrumEnabled, d.liveAudioSpectrumEnabled)
+        quickAIConfig = value(.quickAIConfig, d.quickAIConfig)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -207,5 +230,12 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(swipeGesturesEnabled, forKey: .swipeGesturesEnabled)
         try c.encode(enabledQuickTools, forKey: .enabledQuickTools)
         try c.encode(QuickToolID.normalizedOrder(quickToolOrder), forKey: .quickToolOrder)
+        try c.encode(waterDropletEffect, forKey: .waterDropletEffect)
+        try c.encode(visualStyle, forKey: .visualStyle)
+        try c.encode(surfaceMaterial, forKey: .surfaceMaterial)
+        try c.encode(compactWingLyrics, forKey: .compactWingLyrics)
+        try c.encode(floatingShelfBasket, forKey: .floatingShelfBasket)
+        try c.encode(liveAudioSpectrumEnabled, forKey: .liveAudioSpectrumEnabled)
+        try c.encode(quickAIConfig, forKey: .quickAIConfig)
     }
 }

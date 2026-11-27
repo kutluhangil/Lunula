@@ -14,7 +14,10 @@ import SwiftUI
         launchAtLogin: LaunchAtLoginService,
         permission: @escaping @MainActor (IslandFeature) -> PermissionState? = { _ in nil },
         request: @escaping @MainActor (IslandFeature) -> Void = { _ in },
-        searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] }
+        searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] },
+        hasAIKey: @escaping @MainActor (QuickAIProvider) -> Bool = { _ in false },
+        saveAIKey: @escaping @MainActor (String, QuickAIProvider) -> Void = { _, _ in },
+        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in }
     ) {
         self.settingsStore = settings
         self.tabs = SettingsTab.allTabs(
@@ -22,7 +25,10 @@ import SwiftUI
             launchAtLogin: launchAtLogin,
             permission: permission,
             request: request,
-            searchWeatherCity: searchWeatherCity
+            searchWeatherCity: searchWeatherCity,
+            hasAIKey: hasAIKey,
+            saveAIKey: saveAIKey,
+            clearAIKey: clearAIKey
         )
 
         let rootView = SettingsWindowView(
@@ -30,7 +36,10 @@ import SwiftUI
             launchAtLogin: launchAtLogin,
             permission: permission,
             request: request,
-            searchWeatherCity: searchWeatherCity
+            searchWeatherCity: searchWeatherCity,
+            hasAIKey: hasAIKey,
+            saveAIKey: saveAIKey,
+            clearAIKey: clearAIKey
         )
         let hosting = NSHostingController(rootView: rootView)
 

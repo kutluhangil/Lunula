@@ -137,6 +137,40 @@
         }
       }
     },
+    "alert.recording.savedToShelf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to Shelf"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rafa eklendi"
+          }
+        }
+      }
+    },
+    "alert.recording.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording saved"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayıt kaydedildi"
+          }
+        }
+      }
+    },
     "alert.safeToDisconnect": {
       "extractionState": "manual",
       "localizations": {
@@ -1089,6 +1123,40 @@
         }
       }
     },
+    "settings.appearance.compactWingLyrics": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compact wing live lyrics"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kompakt kanatta canlı şarkı sözü"
+          }
+        }
+      }
+    },
+    "settings.appearance.compactWingLyrics.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrolls the active synced lyric line alongside the compact Now Playing island."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi Çalıyor etkinken senkronize aktif dizeyi kompakt kanatta gösterir."
+          }
+        }
+      }
+    },
     "settings.appearance.doubleTapOption": {
       "extractionState": "manual",
       "localizations": {
@@ -1378,6 +1446,40 @@
         }
       }
     },
+    "settings.appearance.material.liquidGlass": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liquid Glass"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liquid Glass"
+          }
+        }
+      }
+    },
+    "settings.appearance.material.obsidian": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obsidian"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obsidyen"
+          }
+        }
+      }
+    },
     "settings.appearance.pillOffset": {
       "extractionState": "manual",
       "localizations": {
@@ -1446,6 +1548,23 @@
         }
       }
     },
+    "settings.appearance.section.style": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style & physics"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stil ve fizik"
+          }
+        }
+      }
+    },
     "settings.appearance.sounds": {
       "extractionState": "manual",
       "localizations": {
@@ -1476,6 +1595,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zamanlayıcı bitişi ve uyarılar."
+          }
+        }
+      }
+    },
+    "settings.appearance.surfaceMaterial": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surface material"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yüzey malzemesi"
+          }
+        }
+      }
+    },
+    "settings.appearance.surfaceMaterial.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pure #000000 Obsidian shell or translucent Liquid Glass rim."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saf #000000 Obsidyen gövde veya yarı saydam Liquid Glass çerçeve."
           }
         }
       }
@@ -1527,6 +1680,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ada çekirdeği #000000 kalır; yalnızca #111113 kartlar üstten ışık alır."
+          }
+        }
+      }
+    },
+    "settings.appearance.visualStyle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Design style"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasarım stili"
+          }
+        }
+      }
+    },
+    "settings.appearance.visualStyle.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signature Lunula amber, sleek Alcove minimalism or classic Boring utility."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunula kehribar imzası, yalın Alcove minimalizmi veya klasik Boring düzeni."
+          }
+        }
+      }
+    },
+    "settings.appearance.waterDroplet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Water-droplet pointer physics"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su damlası imleç fiziği"
+          }
+        }
+      }
+    },
+    "settings.appearance.waterDroplet.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtle surface-tension pull and specular highlight as the pointer approaches."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İmleç yaklaştığında hafif yüzey gerilimi esnemesi ve ışık yansıması."
           }
         }
       }
@@ -2483,6 +2704,40 @@
         }
       }
     },
+    "settings.nowPlaying.liveSpectrum": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real-time audio spectrum"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerçek zamanlı ses spektrumu"
+          }
+        }
+      }
+    },
+    "settings.nowPlaying.liveSpectrum.note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS System Audio Recording permission is requested only when you turn this on."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS Sistem Ses Kaydı izni yalnızca bu seçeneği açtığında istenir."
+          }
+        }
+      }
+    },
     "settings.permission.automation": {
       "extractionState": "manual",
       "localizations": {
@@ -2857,6 +3112,23 @@
         }
       }
     },
+    "settings.shelf.floatingBasket": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show floating drop basket while dragging files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya sürüklerken yüzen bırakma sepetini göster"
+          }
+        }
+      }
+    },
     "settings.shelf.retention": {
       "extractionState": "manual",
       "localizations": {
@@ -3197,6 +3469,193 @@
         }
       }
     },
+    "settings.tools.ai.apiKey": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API key"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API anahtarı"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.apiKey.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste API key…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API anahtarını yapıştır…"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.clearKey": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Key"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anahtarı Sil"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.keyNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored securely in macOS Keychain; never written to plain settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS Anahtar Zinciri'nde güvenle saklanır; düz ayarlara yazılmaz."
+          }
+        }
+      }
+    },
+    "settings.tools.ai.keySaved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved in Keychain"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anahtar Zinciri'nde kayıtlı"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.model": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.ollamaEndpoint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama endpoint"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama adresi"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.ollamaEndpoint.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local HTTP server URL for Ollama requests."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama istekleri için yerel HTTP sunucu adresi."
+          }
+        }
+      }
+    },
+    "settings.tools.ai.provider": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provider"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sağlayıcı"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.provider.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run locally with Ollama or bring your own API key."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama ile yerelde çalıştır veya kendi API anahtarını kullan."
+          }
+        }
+      }
+    },
+    "settings.tools.ai.saveKey": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Key"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anahtarı Kaydet"
+          }
+        }
+      }
+    },
     "settings.tools.claudeHookCaption": {
       "extractionState": "manual",
       "localizations": {
@@ -3244,6 +3703,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kopyala"
+          }
+        }
+      }
+    },
+    "settings.tools.item.ai": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick AI"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı AI"
           }
         }
       }
@@ -3333,6 +3809,23 @@
         }
       }
     },
+    "settings.tools.item.mirror": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera mirror"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera aynası"
+          }
+        }
+      }
+    },
     "settings.tools.item.notes": {
       "extractionState": "manual",
       "localizations": {
@@ -3380,6 +3873,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Teleprompter"
+          }
+        }
+      }
+    },
+    "settings.tools.item.record": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen & audio record"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekran ve ses kaydı"
           }
         }
       }
@@ -3499,6 +4009,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Raf saklama süresi"
+          }
+        }
+      }
+    },
+    "settings.tools.section.ai": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mini AI (Ollama & BYOK)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mini AI (Ollama ve BYOK)"
           }
         }
       }
@@ -3771,6 +4298,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lunula Ayarları"
+          }
+        }
+      }
+    },
+    "shelf.airdrop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop"
+          }
+        }
+      }
+    },
+    "shelf.basket.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release files here"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyaları buraya bırak"
+          }
+        }
+      }
+    },
+    "shelf.basket.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop to Shelf"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rafa bırak"
           }
         }
       }

@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import IslandCore
 import SwiftUI
@@ -64,10 +65,13 @@ public struct SystemStatsItem: Equatable, Sendable {
     public var memoryTotalGB: Double
     public var wirelessBatteries: [WirelessBatteryItem]
     public var mountedDrives: [MountedDriveItem]
+    public var downloadRateText: String
+    public var uploadRateText: String
 
     public init(
         cpuPercent: Int = 0, memoryPercent: Int = 0, memoryUsedGB: Double = 0, memoryTotalGB: Double = 0,
-        wirelessBatteries: [WirelessBatteryItem] = [], mountedDrives: [MountedDriveItem] = []
+        wirelessBatteries: [WirelessBatteryItem] = [], mountedDrives: [MountedDriveItem] = [],
+        downloadRateText: String = "0 KB/s", uploadRateText: String = "0 KB/s"
     ) {
         self.cpuPercent = cpuPercent
         self.memoryPercent = memoryPercent
@@ -75,6 +79,8 @@ public struct SystemStatsItem: Equatable, Sendable {
         self.memoryTotalGB = memoryTotalGB
         self.wirelessBatteries = wirelessBatteries
         self.mountedDrives = mountedDrives
+        self.downloadRateText = downloadRateText
+        self.uploadRateText = uploadRateText
     }
 }
 
@@ -142,6 +148,25 @@ public struct QuickToolsActions {
     public var activeLyricLine: @MainActor (NowPlayingSnapshot) -> String? = { _ in nil }
     public var activeLyricLines: @MainActor (NowPlayingSnapshot) -> (active: String, next: String?)? = { _ in nil }
     public var enabledQuickTools: @MainActor () -> [String] = { QuickToolID.defaultEnabledOrder }
+    public var visualStyle: @MainActor () -> IslandVisualStyle = { .lunula }
+    public var surfaceMaterial: @MainActor () -> IslandSurfaceMaterial = { .obsidian }
+    public var waterDropletEffect: @MainActor () -> Bool = { true }
+    public var dropletTension: @MainActor () -> DropletTension = { .zero }
+    public var compactWingLyrics: @MainActor () -> Bool = { true }
+    public var audioSpectrumBands: @MainActor () -> [Double] = { [] }
+    public var liveAudioSpectrumEnabled: @MainActor () -> Bool = { false }
+    public var quickAIMessages: @MainActor () -> [QuickAIMessage] = { [] }
+    public var isQuickAIGenerating: @MainActor () -> Bool = { false }
+    public var quickAIError: @MainActor () -> String? = { nil }
+    public var askQuickAI: @MainActor (String) -> Void = { _ in }
+    public var clearQuickAI: @MainActor () -> Void = {}
+    public var isMirrorAuthorized: @MainActor () -> Bool = { false }
+    public var isMirrorDenied: @MainActor () -> Bool = { false }
+    public var startMirrorPreview: @MainActor () async -> NSView? = { nil }
+    public var stopMirrorPreview: @MainActor () -> Void = {}
+    public var isScreenRecording: @MainActor () -> Bool = { false }
+    public var startScreenRecording: @MainActor (Bool) -> Void = { _ in }
+    public var stopScreenRecording: @MainActor () -> Void = {}
 
     public init(
         isKeepAwakeActive: @escaping @MainActor () -> Bool = { false },
@@ -205,7 +230,26 @@ public struct QuickToolsActions {
         startKeyboardCleaningLock: @escaping @MainActor () -> Void = {},
         activeLyricLine: @escaping @MainActor (NowPlayingSnapshot) -> String? = { _ in nil },
         activeLyricLines: @escaping @MainActor (NowPlayingSnapshot) -> (active: String, next: String?)? = { _ in nil },
-        enabledQuickTools: @escaping @MainActor () -> [String] = { QuickToolID.defaultEnabledOrder }
+        enabledQuickTools: @escaping @MainActor () -> [String] = { QuickToolID.defaultEnabledOrder },
+        visualStyle: @escaping @MainActor () -> IslandVisualStyle = { .lunula },
+        surfaceMaterial: @escaping @MainActor () -> IslandSurfaceMaterial = { .obsidian },
+        waterDropletEffect: @escaping @MainActor () -> Bool = { true },
+        dropletTension: @escaping @MainActor () -> DropletTension = { .zero },
+        compactWingLyrics: @escaping @MainActor () -> Bool = { true },
+        audioSpectrumBands: @escaping @MainActor () -> [Double] = { [] },
+        liveAudioSpectrumEnabled: @escaping @MainActor () -> Bool = { false },
+        quickAIMessages: @escaping @MainActor () -> [QuickAIMessage] = { [] },
+        isQuickAIGenerating: @escaping @MainActor () -> Bool = { false },
+        quickAIError: @escaping @MainActor () -> String? = { nil },
+        askQuickAI: @escaping @MainActor (String) -> Void = { _ in },
+        clearQuickAI: @escaping @MainActor () -> Void = {},
+        isMirrorAuthorized: @escaping @MainActor () -> Bool = { false },
+        isMirrorDenied: @escaping @MainActor () -> Bool = { false },
+        startMirrorPreview: @escaping @MainActor () async -> NSView? = { nil },
+        stopMirrorPreview: @escaping @MainActor () -> Void = {},
+        isScreenRecording: @escaping @MainActor () -> Bool = { false },
+        startScreenRecording: @escaping @MainActor (Bool) -> Void = { _ in },
+        stopScreenRecording: @escaping @MainActor () -> Void = {}
     ) {
         self.isKeepAwakeActive = isKeepAwakeActive
         self.toggleKeepAwake = toggleKeepAwake
@@ -269,6 +313,25 @@ public struct QuickToolsActions {
         self.activeLyricLine = activeLyricLine
         self.activeLyricLines = activeLyricLines
         self.enabledQuickTools = enabledQuickTools
+        self.visualStyle = visualStyle
+        self.surfaceMaterial = surfaceMaterial
+        self.waterDropletEffect = waterDropletEffect
+        self.dropletTension = dropletTension
+        self.compactWingLyrics = compactWingLyrics
+        self.audioSpectrumBands = audioSpectrumBands
+        self.liveAudioSpectrumEnabled = liveAudioSpectrumEnabled
+        self.quickAIMessages = quickAIMessages
+        self.isQuickAIGenerating = isQuickAIGenerating
+        self.quickAIError = quickAIError
+        self.askQuickAI = askQuickAI
+        self.clearQuickAI = clearQuickAI
+        self.isMirrorAuthorized = isMirrorAuthorized
+        self.isMirrorDenied = isMirrorDenied
+        self.startMirrorPreview = startMirrorPreview
+        self.stopMirrorPreview = stopMirrorPreview
+        self.isScreenRecording = isScreenRecording
+        self.startScreenRecording = startScreenRecording
+        self.stopScreenRecording = stopScreenRecording
     }
 }
 

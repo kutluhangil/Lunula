@@ -6,9 +6,11 @@ import IslandCore
 @MainActor final class FileDragMonitor {
     private let screens: @MainActor () -> [ScreenDescriptor]
     private let send: @MainActor (UInt32, IslandEvent) -> Void
+    var onDragSessionChange: (@MainActor (_ isDraggingFiles: Bool, _ mouseLocation: NSPoint) -> Void)?
     private var monitor: Any?
     private var changeCountAtMouseUp = NSPasteboard(name: .drag).changeCount
     private var approached: UInt32?
+    private var isDraggingFiles = false
 
     init(
         screens: @escaping @MainActor () -> [ScreenDescriptor], send: @escaping @MainActor (UInt32, IslandEvent) -> Void
@@ -28,19 +30,32 @@ import IslandCore
     func stop() {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
+        leave()
+        if isDraggingFiles {
+            isDraggingFiles = false
+            onDragSessionChange?(false, NSEvent.mouseLocation)
+        }
     }
 
     private func handle(_ type: NSEvent.EventType) {
         let pasteboard = NSPasteboard(name: .drag)
         if type == .leftMouseUp {
             changeCountAtMouseUp = pasteboard.changeCount
+            isDraggingFiles = false
             leave()
+            onDragSessionChange?(false, NSEvent.mouseLocation)
             return
         }
         guard pasteboard.changeCount != changeCountAtMouseUp, pasteboard.types?.contains(.fileURL) == true else {
+            if isDraggingFiles {
+                isDraggingFiles = false
+                onDragSessionChange?(false, NSEvent.mouseLocation)
+            }
             return
         }
         let point = NSEvent.mouseLocation
+        isDraggingFiles = true
+        onDragSessionChange?(true, point)
         let target = screens().first { DragProximity.isApproaching(point: point, screenFrame: $0.frame) }?.id
         guard target != approached else { return }
         leave()

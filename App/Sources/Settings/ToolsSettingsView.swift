@@ -3,13 +3,32 @@ import IslandCore
 import IslandDesign
 import SwiftUI
 
-/// Tab 4: Quick tools grid (toggle + drag-to-reorder), cross-tab jump links, and `lunula://` agent hooks.
+/// Tab 4: Quick tools grid (toggle + drag-to-reorder), Mini AI config, cross-tab jump links, and `lunula://` agent hooks.
 struct ToolsSettingsView: View {
     @Bindable var settings: SettingsStore
     var onSelectTab: ((SettingsTabID) -> Void)?
+    var hasAIKey: @MainActor (QuickAIProvider) -> Bool
+    var saveAIKey: @MainActor (String, QuickAIProvider) -> Void
+    var clearAIKey: @MainActor (QuickAIProvider) -> Void
 
     @State private var copiedIndex: Int?
     @State private var targetedToolKey: String?
+    @State private var apiKeyDraft = ""
+    @State private var keyStateRevision = 0
+
+    init(
+        settings: SettingsStore,
+        onSelectTab: ((SettingsTabID) -> Void)? = nil,
+        hasAIKey: @escaping @MainActor (QuickAIProvider) -> Bool = { _ in false },
+        saveAIKey: @escaping @MainActor (String, QuickAIProvider) -> Void = { _, _ in },
+        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in }
+    ) {
+        self.settings = settings
+        self.onSelectTab = onSelectTab
+        self.hasAIKey = hasAIKey
+        self.saveAIKey = saveAIKey
+        self.clearAIKey = clearAIKey
+    }
 
     private struct ToolItem: Identifiable {
         let key: String
@@ -43,6 +62,12 @@ struct ToolsSettingsView: View {
             hasShortcutBadge: false),
         "kbd": ToolItem(
             key: "kbd", titleKey: "settings.tools.item.kbd", symbol: "keyboard", hasShortcutBadge: true),
+        "ai": ToolItem(
+            key: "ai", titleKey: "settings.tools.item.ai", symbol: "sparkles.rectangle.stack", hasShortcutBadge: false),
+        "mirror": ToolItem(
+            key: "mirror", titleKey: "settings.tools.item.mirror", symbol: "web.camera", hasShortcutBadge: false),
+        "record": ToolItem(
+            key: "record", titleKey: "settings.tools.item.record", symbol: "record.circle", hasShortcutBadge: false),
     ]
 
     private var orderedTools: [ToolItem] {
@@ -148,7 +173,10 @@ struct ToolsSettingsView: View {
                 )
             }
 
-            // MARK: - Section 2: Links to other tabs
+            // MARK: - Section 2: Mini AI (Ollama & BYOK)
+            miniAISection
+
+            // MARK: - Section 3: Links to other tabs
             VStack(alignment: .leading, spacing: 8) {
                 Text("settings.tools.section.otherTabs")
                     .font(.system(size: 15, weight: .semibold))
@@ -261,6 +289,195 @@ struct ToolsSettingsView: View {
                 )
             }
         }
+    }
+
+    private var miniAISection: some View {
+        let provider = settings.settings.quickAIConfig.provider
+        let _ = keyStateRevision
+        let keySaved = hasAIKey(provider)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("settings.tools.section.ai")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Palette.textPrimary)
+                .padding(.horizontal, 4)
+
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("settings.tools.ai.provider")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Palette.textPrimary)
+                        Text("settings.tools.ai.provider.subtitle")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Palette.textSecondary)
+                    }
+                    Spacer()
+                    LunulaSegmentPicker(
+                        selection: Binding(
+                            get: { settings.settings.quickAIConfig.provider },
+                            set: { selected in
+                                apiKeyDraft = ""
+                                settings.update { $0.quickAIConfig.provider = selected }
+                            }
+                        ),
+                        items: [
+                            (value: QuickAIProvider.ollama, label: "Ollama"),
+                            (value: QuickAIProvider.openAI, label: "OpenAI"),
+                            (value: QuickAIProvider.anthropic, label: "Anthropic"),
+                            (value: QuickAIProvider.gemini, label: "Gemini"),
+                        ]
+                    )
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+
+                Divider().overlay(Color.white.opacity(0.08))
+
+                HStack(spacing: 12) {
+                    Text("settings.tools.ai.model")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Palette.textPrimary)
+                    Spacer()
+                    TextField(
+                        provider.defaultModel,
+                        text: Binding(
+                            get: { settings.settings.quickAIConfig.model },
+                            set: { model in settings.update { $0.quickAIConfig.model = model } }
+                        )
+                    )
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(Palette.textPrimary)
+                    .padding(.horizontal, 10)
+                    .frame(width: 240, height: 28)
+                    .background(Palette.obsidian)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(Palette.hairline, lineWidth: 0.5)
+                    )
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+
+                Divider().overlay(Color.white.opacity(0.08))
+
+                if provider == .ollama {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.tools.ai.ollamaEndpoint")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(Palette.textPrimary)
+                            Text("settings.tools.ai.ollamaEndpoint.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Palette.textSecondary)
+                        }
+                        Spacer()
+                        TextField(
+                            "http://127.0.0.1:11434",
+                            text: Binding(
+                                get: { settings.settings.quickAIConfig.ollamaEndpoint },
+                                set: { endpoint in
+                                    settings.update { $0.quickAIConfig.ollamaEndpoint = endpoint }
+                                }
+                            )
+                        )
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(Palette.textPrimary)
+                        .padding(.horizontal, 10)
+                        .frame(width: 240, height: 28)
+                        .background(Palette.obsidian)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(Palette.hairline, lineWidth: 0.5)
+                        )
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                }
+
+                if provider.requiresAPIKey {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Text("settings.tools.ai.apiKey")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(Palette.textPrimary)
+
+                            Spacer()
+
+                            if keySaved {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 11, weight: .semibold))
+                                    Text("settings.tools.ai.keySaved")
+                                        .font(.system(size: 11, weight: .medium))
+                                }
+                                .foregroundStyle(Palette.signalGreen)
+                            }
+                        }
+
+                        HStack(spacing: 8) {
+                            SecureField(String(localized: "settings.tools.ai.apiKey.placeholder"), text: $apiKeyDraft)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Palette.textPrimary)
+                                .padding(.horizontal, 10)
+                                .frame(height: 28)
+                                .background(Palette.obsidian)
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(Palette.hairline, lineWidth: 0.5)
+                                )
+                                .onSubmit {
+                                    commitAIKey(for: provider)
+                                }
+
+                            Button {
+                                commitAIKey(for: provider)
+                            } label: {
+                                Text("settings.tools.ai.saveKey")
+                            }
+                            .buttonStyle(.lunulaSecondary)
+                            .disabled(apiKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                            Button {
+                                clearAIKey(provider)
+                                apiKeyDraft = ""
+                                keyStateRevision &+= 1
+                            } label: {
+                                Text("settings.tools.ai.clearKey")
+                            }
+                            .buttonStyle(.lunulaSecondary)
+                            .disabled(!keySaved)
+                        }
+
+                        Text("settings.tools.ai.keyNote")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Palette.textSecondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                }
+            }
+            .background(Palette.inkRaised)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Palette.hairlineContrast, lineWidth: 0.5)
+            )
+        }
+    }
+
+    private func commitAIKey(for provider: QuickAIProvider) {
+        let trimmed = apiKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        saveAIKey(trimmed, provider)
+        apiKeyDraft = ""
+        keyStateRevision &+= 1
     }
 
     private func crossTabRow(

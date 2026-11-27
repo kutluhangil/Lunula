@@ -3,6 +3,7 @@ import Foundation
 public enum IslandPage: Hashable, Sendable {
     case home
     case shelf
+    case tools
     case activity(ActivityID)
 }
 

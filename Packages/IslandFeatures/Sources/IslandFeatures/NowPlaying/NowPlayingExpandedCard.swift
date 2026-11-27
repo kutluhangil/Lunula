@@ -14,18 +14,36 @@ struct NowPlayingExpandedCard: View {
     }
 
     var body: some View {
+        let style = quickTools.visualStyle()
+        let bands = quickTools.audioSpectrumBands()
+
         HStack(alignment: .center, spacing: 12) {
             ArtworkImage(snapshot: snapshot, side: 64, radius: Radii.artworkLarge)
             VStack(alignment: .leading, spacing: 2) {
-                Text(snapshot.title)
-                    .font(TypeToken.title.font)
-                    .foregroundStyle(Palette.textPrimary)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
-                Text(snapshot.artist)
-                    .font(TypeToken.body.font)
-                    .foregroundStyle(Palette.textSecondary)
-                    .lineLimit(1)
+                HStack(alignment: .center, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(snapshot.title)
+                            .font(TypeToken.title.font)
+                            .foregroundStyle(Palette.textPrimary)
+                            .lineLimit(2)
+                            .truncationMode(.tail)
+                        Text(snapshot.artist)
+                            .font(TypeToken.body.font)
+                            .foregroundStyle(Palette.textSecondary)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if quickTools.liveAudioSpectrumEnabled() || style == .boring {
+                        AudioSpectrumBarsView(
+                            levels: bands,
+                            isPlaying: snapshot.isPlaying,
+                            accent: accent,
+                            barWidth: 3,
+                            height: 18
+                        )
+                    }
+                }
                 NowPlayingProgressBar(snapshot: snapshot, accent: accent)
                     .padding(.top, 6)
                 if let pair = quickTools.activeLyricLines(snapshot)
@@ -71,9 +89,13 @@ struct NowPlayingExpandedCard: View {
                         .accessibilityLabel(Text("nowPlaying.favorite", bundle: .module))
                     }
                     control("backward.fill", AccessibilityLabels.previous, actions.previous)
-                    control(
-                        snapshot.isPlaying ? "pause.fill" : "play.fill",
-                        AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
+                    if style == .lunula || style == .boring {
+                        playPauseFilledButton
+                    } else {
+                        control(
+                            snapshot.isPlaying ? "pause.fill" : "play.fill",
+                            AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
+                    }
                     control("forward.fill", AccessibilityLabels.next, actions.next)
                 }
                 if let volume = snapshot.soundVolume {
@@ -104,6 +126,19 @@ struct NowPlayingExpandedCard: View {
                 Text("nowPlaying.appVolume", bundle: .module)
             }
         }
+    }
+
+    private var playPauseFilledButton: some View {
+        Button(action: actions.playPause) {
+            Image(systemName: snapshot.isPlaying ? "pause.fill" : "play.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Palette.obsidian)
+                .frame(width: 32, height: 32)
+                .background(Palette.textPrimary, in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying)))
     }
 
     private func control(_ symbol: String, _ label: LocalizedStringResource, _ action: @escaping @MainActor () -> Void)

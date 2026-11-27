@@ -37,8 +37,12 @@
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Lunula shows what's playing in Music and Spotify and lets you control playback.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Lunula reads system audio frequencies only while the live spectrum visualizer is enabled and visible.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Lunula shows your next event and a Join button for meetings.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Lunula uses the front camera only while you open the Camera Mirror tool.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Kutluhan Gül</string>
 	<key>NSLocationUsageDescription</key>

@@ -11,6 +11,8 @@ import IslandCore
     private var speedEstimator = PointerSpeedEstimator()
     private var swipe = SwipeDetector()
     private var lastMoveTime: TimeInterval = 0
+    private var lastHotZoneSample: (point: NSPoint, timestamp: TimeInterval)?
+    var onHotZonePointerChanged: (@MainActor (_ screenPoint: NSPoint?, _ velocity: CGSize) -> Void)?
 
     init(
         send: @escaping @MainActor (IslandEvent) -> Void, phase: @escaping @MainActor () -> IslandPhase,
@@ -37,13 +39,27 @@ import IslandCore
     }
 
     func hotZoneExited() {
+        lastHotZoneSample = nil
+        onHotZonePointerChanged?(nil, .zero)
         guard isResting else { return }
         send(.pointerExitedIsland)
     }
 
     func hotZoneMoved(to point: NSPoint, at time: TimeInterval) {
+        let velocity = computeVelocity(to: point, timestamp: time)
         lastMoveTime = time
         speedEstimator.add(point, at: time)
+        onHotZonePointerChanged?(point, velocity)
+    }
+
+    private func computeVelocity(to point: NSPoint, timestamp: TimeInterval) -> CGSize {
+        defer { lastHotZoneSample = (point, timestamp) }
+        guard let previous = lastHotZoneSample else { return .zero }
+        let dt = timestamp - previous.timestamp
+        guard dt > 0.0001, dt < 0.5 else { return .zero }
+        let vx = min(max((point.x - previous.point.x) / dt, -2500), 2500)
+        let vy = min(max((point.y - previous.point.y) / dt, -2500), 2500)
+        return CGSize(width: vx, height: vy)
     }
 
     func hotZoneClicked(at point: NSPoint, button: HotZoneButton) {

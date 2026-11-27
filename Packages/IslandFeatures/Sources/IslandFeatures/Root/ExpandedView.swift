@@ -3,13 +3,13 @@ import IslandCore
 import IslandDesign
 import SwiftUI
 
+enum ActiveToolPopover: String, Identifiable {
+    case notes, clipboard, search, teleprompter, stats, hub, ai, mirror
+    var id: String { rawValue }
+}
+
 /// Expanded island: top band beside the camera (hero symbol left, pill tabs and quick tools right), then the page.
 struct ExpandedView: View {
-    private enum ActiveToolPopover: String, Identifiable {
-        case notes, clipboard, search, teleprompter, stats, hub
-        var id: String { rawValue }
-    }
-
     let page: IslandPage
     let layout: IslandLayout
     let home: HomeInputs
@@ -18,6 +18,7 @@ struct ExpandedView: View {
     let send: @MainActor (IslandEvent) -> Void
     let openSettings: @MainActor () -> Void
     @FocusState private var focused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.shelfActions) private var shelf
     @Environment(\.quickTools) private var quickTools
     @State private var activePopover: ActiveToolPopover?
@@ -25,7 +26,7 @@ struct ExpandedView: View {
     @State private var draftNote = ""
 
     private var hasLeadingSymbol: Bool {
-        layout.primary != nil || page == .shelf
+        layout.primary != nil || page == .shelf || page == .tools
     }
 
     /// Computes how many 22 pt tool buttons fit inside the left wing without colliding with the notch camera.
@@ -46,38 +47,55 @@ struct ExpandedView: View {
     }
 
     var body: some View {
+        let style = quickTools.visualStyle()
+        let isAlcoveMinimal = style == .alcove && layout.primary != nil && page == .home
+
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 HStack(spacing: 6) {
                     topLeadingSymbol
-                    headerQuickTools
+                    if !isAlcoveMinimal {
+                        headerQuickTools
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .popover(item: $activePopover) { tool in
+                    toolPopoverContent(for: tool)
+                }
+
                 Color.clear.frame(width: notch.size.width)
-                HStack(spacing: 4) {
-                    tab("island.tab.home", .home)
-                    tab("island.tab.shelf", .shelf)
-                    Button(action: quickTools.toggleDetachedPopover) {
-                        Image(systemName: "pip.exit")
-                            .font(.system(size: 12, weight: .medium))
-                            .symbolRenderingMode(.hierarchical)
-                            .frame(width: 22, height: 22)
-                            .contentShape(Rectangle())
+
+                HStack(spacing: 2) {
+                    if !isAlcoveMinimal {
+                        tab("island.tab.home", .home)
+                        tab("island.tab.shelf", .shelf)
+                        tab("island.tab.tools", .tools)
+
+                        if style == .boring {
+                            Button {
+                                activePopover = activePopover == .mirror ? nil : .mirror
+                            } label: {
+                                Image(systemName: "web.camera")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .symbolRenderingMode(.hierarchical)
+                                    .frame(width: 20, height: 22)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(activePopover == .mirror ? Palette.textPrimary : Palette.textSecondary)
+                            .accessibilityLabel(Text("tools.mirror", bundle: .module))
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Palette.textSecondary)
-                    .padding(.leading, 2)
-                    .accessibilityLabel(Text("tools.detachMenuBar", bundle: .module))
+
                     Button(action: openSettings) {
                         Image(systemName: "gearshape")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                             .symbolRenderingMode(.hierarchical)
-                            .frame(width: 22, height: 22)
+                            .frame(width: 20, height: 22)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(Palette.textSecondary)
-                    .padding(.leading, 2)
                     .accessibilityLabel(Text(AccessibilityLabels.openSettings))
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -109,6 +127,7 @@ struct ExpandedView: View {
     }
 
     @ViewBuilder private var headerQuickTools: some View {
+        let style = quickTools.visualStyle()
         let outputs = quickTools.outputDevices()
         let enabled = quickTools.enabledQuickTools().filter { key in
             key != QuickToolID.out.rawValue || !outputs.isEmpty
@@ -116,13 +135,15 @@ struct ExpandedView: View {
         let slots = Self.maxInlineToolSlots(
             notchWidth: notch.size.width, hasLeadingSymbol: hasLeadingSymbol, expandedWidth: expandedWidth)
         let partition = Self.partitionQuickTools(enabled, maxSlots: slots)
+        let inlineKeys = style == .lunula ? Array(enabled.prefix(2)) : partition.inline
+        let overflowKeys = style == .lunula ? [] : partition.overflow
 
         HStack(spacing: 2) {
-            ForEach(partition.inline, id: \.self) { key in
+            ForEach(inlineKeys, id: \.self) { key in
                 inlineToolButton(for: key, outputs: outputs)
             }
 
-            if !partition.overflow.isEmpty {
+            if !overflowKeys.isEmpty {
                 Button {
                     showsOverflowPopover.toggle()
                 } label: {
@@ -136,19 +157,43 @@ struct ExpandedView: View {
                 .foregroundStyle(Palette.textSecondary)
                 .accessibilityLabel(Text("tools.more", bundle: .module))
                 .popover(isPresented: $showsOverflowPopover) {
-                    overflowToolsPopover(keys: partition.overflow, outputs: outputs)
+                    overflowToolsPopover(keys: overflowKeys, outputs: outputs)
                 }
             }
         }
-        .popover(item: $activePopover) { tool in
-            switch tool {
-            case .notes: quickNotesPopover
-            case .clipboard: ClipboardAndSnippetsPopover()
-            case .search: SearchAndPalettePopover(send: send, openSettings: openSettings)
-            case .teleprompter: TeleprompterPopover()
-            case .stats: SystemStatsPopover()
-            case .hub: LauncherAndHubPopover()
-            }
+    }
+
+    @ViewBuilder
+    private func toolPopoverContent(for tool: ActiveToolPopover) -> some View {
+        switch tool {
+        case .notes:
+            quickNotesPopover
+        case .clipboard:
+            ClipboardAndSnippetsPopover()
+        case .search:
+            SearchAndPalettePopover(send: send, openSettings: openSettings)
+        case .teleprompter:
+            TeleprompterPopover()
+        case .stats:
+            SystemStatsPopover()
+        case .hub:
+            LauncherAndHubPopover()
+        case .ai:
+            QuickAIPopover()
+        case .mirror:
+            CameraMirrorPopoverView(
+                isAuthorized: quickTools.isMirrorAuthorized(),
+                isDenied: quickTools.isMirrorDenied(),
+                startPreview: quickTools.startMirrorPreview,
+                stopPreview: quickTools.stopMirrorPreview,
+                openSystemSettings: {
+                    if let url = URL(
+                        string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera"
+                    ) {
+                        quickTools.openURL(url)
+                    }
+                }
+            )
         }
     }
 
@@ -344,6 +389,71 @@ struct ExpandedView: View {
             .foregroundStyle(Palette.textSecondary)
             .accessibilityLabel(Text("tools.keyboardLock", bundle: .module))
 
+        case QuickToolID.ai.rawValue:
+            Button {
+                activePopover = activePopover == .ai ? nil : .ai
+            } label: {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 12, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(activePopover == .ai ? Palette.amberGold : Palette.textSecondary)
+            .accessibilityLabel(Text("tools.ai", bundle: .module))
+
+        case QuickToolID.mirror.rawValue:
+            Button {
+                activePopover = activePopover == .mirror ? nil : .mirror
+            } label: {
+                Image(systemName: "web.camera")
+                    .font(.system(size: 12, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(activePopover == .mirror ? Palette.textPrimary : Palette.textSecondary)
+            .accessibilityLabel(Text("tools.mirror", bundle: .module))
+
+        case QuickToolID.record.rawValue:
+            if quickTools.isScreenRecording() {
+                Button(action: quickTools.stopScreenRecording) {
+                    Image(systemName: "stop.circle.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
+                        .frame(width: 22, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Palette.signalRed)
+                .accessibilityLabel(Text("tools.record.stop", bundle: .module))
+            } else {
+                Menu {
+                    Button {
+                        quickTools.startScreenRecording(false)
+                    } label: {
+                        Text("tools.record.mp4", bundle: .module)
+                    }
+                    Button {
+                        quickTools.startScreenRecording(true)
+                    } label: {
+                        Text("tools.record.gif", bundle: .module)
+                    }
+                } label: {
+                    Image(systemName: "record.circle")
+                        .font(.system(size: 12, weight: .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .frame(width: 22, height: 22)
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .foregroundStyle(Palette.textSecondary)
+                .accessibilityLabel(Text("tools.record", bundle: .module))
+            }
+
         default:
             EmptyView()
         }
@@ -425,6 +535,50 @@ struct ExpandedView: View {
             overflowButton(symbol: "keyboard", key: "tools.keyboardLock") {
                 showsOverflowPopover = false
                 quickTools.startKeyboardCleaningLock()
+            }
+        case QuickToolID.ai.rawValue:
+            overflowButton(symbol: "sparkles", key: "tools.ai", tint: Palette.amberGold) {
+                openFromOverflow(.ai)
+            }
+        case QuickToolID.mirror.rawValue:
+            overflowButton(symbol: "web.camera", key: "tools.mirror") {
+                openFromOverflow(.mirror)
+            }
+        case QuickToolID.record.rawValue:
+            if quickTools.isScreenRecording() {
+                overflowButton(
+                    symbol: "stop.circle.fill",
+                    key: "tools.record.stop",
+                    tint: Palette.signalRed
+                ) {
+                    showsOverflowPopover = false
+                    quickTools.stopScreenRecording()
+                }
+            } else {
+                Menu {
+                    Button {
+                        showsOverflowPopover = false
+                        quickTools.startScreenRecording(false)
+                    } label: {
+                        Text("tools.record.mp4", bundle: .module)
+                    }
+                    Button {
+                        showsOverflowPopover = false
+                        quickTools.startScreenRecording(true)
+                    } label: {
+                        Text("tools.record.gif", bundle: .module)
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "record.circle").frame(width: 16)
+                        Text("tools.record", bundle: .module)
+                            .font(TypeToken.caption.font)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                }
+                .menuStyle(.borderlessButton)
             }
         default:
             EmptyView()
@@ -563,6 +717,12 @@ struct ExpandedView: View {
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Palette.textSecondary)
                 .frame(width: 16, height: 16)
+        } else if page == .tools {
+            Image(systemName: "wrench.and.screwdriver")
+                .font(.system(size: 13, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Palette.textSecondary)
+                .frame(width: 16, height: 16)
         }
     }
 
@@ -572,6 +732,10 @@ struct ExpandedView: View {
             HomePageView(inputs: home).environment(\.islandLayout, layout)
         case .shelf:
             ShelfPage(items: shelf.items())
+        case .tools:
+            ToolsGridPageView { tool in
+                activePopover = activePopover == tool ? nil : tool
+            }
         case .activity(let id):
             if let activity = layout.activity(id) {
                 ActivityContentView(activity: activity, slot: .expanded)
@@ -585,9 +749,11 @@ struct ExpandedView: View {
             send(.pageSelected(target))
         } label: {
             Text(key, bundle: .module)
-                .font(TypeToken.body.font)
+                .font(TypeToken.caption.font)
                 .foregroundStyle(isActive ? Palette.textPrimary : Palette.textSecondary)
-                .padding(.horizontal, 8)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.horizontal, 5)
                 .frame(height: 22)
                 .background(isActive ? Palette.inkPressed : .clear, in: Capsule())
         }

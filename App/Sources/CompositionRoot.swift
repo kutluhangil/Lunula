@@ -61,6 +61,20 @@ final class CompositionRoot {
     private lazy var capsLock = CapsLockMonitor()
     private lazy var keyboardLock = KeyboardLockController()
     private lazy var lyrics = LyricsService()
+    private lazy var quickAI = QuickAIService()
+    private lazy var audioSpectrum = AudioSpectrumService(time: time)
+    private lazy var cameraMirror = CameraMirrorService()
+    private lazy var screenRecorder = ScreenRecorderService()
+    private lazy var shelfBasket = FloatingShelfBasketController(
+        title: String(localized: "shelf.basket.title"),
+        subtitle: String(localized: "shelf.basket.subtitle"),
+        airDropLabel: String(localized: "shelf.airdrop"),
+        onDropURLs: { [unowned self] urls in
+            shelfActions.add(urls)
+        },
+        onAirDropURLs: { urls in
+            NSSharingService(named: .sendViaAirDrop)?.perform(withItems: urls)
+        })
     private lazy var downloads = DownloadsWatcher()
     private lazy var deviceUsage = DeviceUsageMonitor(reader: SystemDeviceUsageReader())
     lazy var custom = CustomActivityController(time: time)
@@ -116,7 +130,15 @@ final class CompositionRoot {
             })
         hub.onLayoutChange = { [unowned self] layout in
             lyrics.update(for: nowPlaying.snapshot)
+            syncAudioSpectrum()
             broadcast(.activitiesChanged(layout))
+        }
+        fileDrags.onDragSessionChange = { [unowned self] isDragging, point in
+            shelfBasket.update(
+                isDragging: isDragging,
+                mouse: point,
+                screens: screens,
+                enabled: settings.settings.enabledFeatures.contains(.shelf) && settings.settings.floatingShelfBasket)
         }
         hub.onAlert = { [unowned self] alert in
             broadcast(.alertRaised(alert))
@@ -246,6 +268,10 @@ final class CompositionRoot {
                     expandedWidth: CGFloat(settings.settings.expandedWidth))
             }
             controller.container.onHoverChange = { [weak router = island.router] in router?.islandHoverChanged($0) }
+            controller.container.onPointerMove = { [weak self, weak island] point, velocity in
+                guard let self, let island else { return }
+                updateDroplet(for: island, localPoint: point, velocity: velocity)
+            }
             controller.onResignKey = { [weak island] in island?.store.send(.clickedOutside) }
             controller.setNotchBackdropVisible(
                 settings.settings.hideNotchBar && island.store.state.phase != .hidden)
@@ -269,6 +295,19 @@ final class CompositionRoot {
             send: { store.send($0) }, phase: { store.state.phase },
             geometry: { [unowned island] in Self.restingGeometry(state: store.state, notch: island.notch) },
             showContextMenu: { [unowned self] point in contextMenu().popUp(positioning: nil, at: point, in: nil) })
+        router.onHotZonePointerChanged = { [weak self, weak island] screenPoint, velocity in
+            guard let self, let island else { return }
+            guard let screenPoint else {
+                updateDroplet(for: island, localPoint: nil, velocity: .zero)
+                return
+            }
+            let panelFrame =
+                windows.controller(for: island.screen.id)?.panel.frame
+                ?? IslandMetrics.panelFrame(notch: island.notch, screen: island.screen)
+            let localPoint = CGPoint(x: screenPoint.x - panelFrame.minX, y: panelFrame.maxY - screenPoint.y)
+            let localVelocity = CGSize(width: velocity.width, height: -velocity.height)
+            updateDroplet(for: island, localPoint: localPoint, velocity: localVelocity)
+        }
         island.router = router
         panel.speed = { [weak router] in router?.currentSpeed ?? 0 }
         store.send(.optionsChanged(settings.settings.islandOptions))
@@ -290,7 +329,7 @@ final class CompositionRoot {
             .environment(\.shelfActions, shelfActions)
             .environment(\.haloIntensity, HaloIntensity(current: { [unowned self] in settings.settings.haloIntensity }))
             .environment(\.privacyInfo, PrivacyInfo(current: { [unowned self] in deviceUsage.privacy }))
-            .environment(\.quickTools, quickToolsActions)
+            .environment(\.quickTools, makeQuickToolsActions(for: island))
             .environment(
                 \.calendarActions,
                 CalendarActions(
@@ -331,6 +370,8 @@ final class CompositionRoot {
                     settings.settings.hideNotchBar && island.store.state.phase != .hidden)
                 let anyOpen = islands.values.contains { $0.store.state.phase.isOpen }
                 nowPlaying.setExpanded(anyOpen)
+                if !anyOpen { cameraMirror.stop() }
+                syncAudioSpectrum()
                 if anyOpen { pasteboardMonitor.checkNow() }
                 if island.store.state.phase == .expanded(.home), settings.settings.enabledFeatures.contains(.weather) {
                     Task { await weather.islandBecameVisible() }
@@ -526,6 +567,10 @@ final class CompositionRoot {
     }
 
     private var quickToolsActions: QuickToolsActions {
+        makeQuickToolsActions(for: nil)
+    }
+
+    private func makeQuickToolsActions(for island: ScreenIsland?) -> QuickToolsActions {
         QuickToolsActions(
             isKeepAwakeActive: { [unowned self] in keepAwake.isActive },
             toggleKeepAwake: { [unowned self] in
@@ -593,7 +638,9 @@ final class CompositionRoot {
                     },
                     mountedDrives: externalDrives.drives.map {
                         MountedDriveItem(name: $0.name, url: $0.url)
-                    })
+                    },
+                    downloadRateText: SystemStatsService.formatRate(s.downloadBytesPerSec),
+                    uploadRateText: SystemStatsService.formatRate(s.uploadBytesPerSec))
             },
             ejectDrive: { [unowned self] url in
                 externalDrives.eject(url, safeDisconnectMessage: String(localized: "alert.safeToDisconnect"))
@@ -670,7 +717,120 @@ final class CompositionRoot {
             },
             enabledQuickTools: { [unowned self] in
                 settings.settings.orderedEnabledQuickTools
-            })
+            },
+            visualStyle: { [unowned self] in settings.settings.visualStyle },
+            surfaceMaterial: { [unowned self] in settings.settings.surfaceMaterial },
+            waterDropletEffect: { [unowned self] in settings.settings.waterDropletEffect },
+            dropletTension: { [weak island] in island?.dropletTension ?? .zero },
+            compactWingLyrics: { [unowned self] in settings.settings.compactWingLyrics },
+            audioSpectrumBands: { [unowned self] in audioSpectrum.bands },
+            liveAudioSpectrumEnabled: { [unowned self] in settings.settings.liveAudioSpectrumEnabled },
+            quickAIMessages: { [unowned self] in quickAI.messages },
+            isQuickAIGenerating: { [unowned self] in quickAI.isGenerating },
+            quickAIError: { [unowned self] in quickAI.lastError },
+            askQuickAI: { [unowned self] prompt in
+                let config = settings.settings.quickAIConfig
+                Task { await quickAI.ask(prompt, config: config) }
+            },
+            clearQuickAI: { [unowned self] in quickAI.clearConversation() },
+            isMirrorAuthorized: { [unowned self] in
+                cameraMirror.refreshAuthState()
+                return cameraMirror.authState == .authorized
+            },
+            isMirrorDenied: { [unowned self] in cameraMirror.authState == .denied },
+            startMirrorPreview: { [unowned self] in await cameraMirror.startAndMakePreviewView() },
+            stopMirrorPreview: { [unowned self] in cameraMirror.stop() },
+            isScreenRecording: { [unowned self] in screenRecorder.isRecording },
+            startScreenRecording: { [unowned self] asGIF in startScreenCapture(asGIF: asGIF) },
+            stopScreenRecording: { [unowned self] in stopScreenCapture() })
+    }
+
+    private func updateDroplet(for island: ScreenIsland, localPoint: CGPoint?, velocity: CGSize) {
+        guard settings.settings.waterDropletEffect else {
+            if island.dropletTension != .zero { island.dropletTension = .zero }
+            return
+        }
+        let target: DropletTension
+        if let localPoint,
+            let hoverRect = IslandRootView.hoverRegion(
+                state: island.store.state, notch: island.notch,
+                expandedWidth: CGFloat(settings.settings.expandedWidth)
+            ).first
+        {
+            let exactRect = CGRect(
+                x: hoverRect.minX, y: hoverRect.minY + 4, width: hoverRect.width, height: hoverRect.height - 4)
+            target = DropletPhysics.compute(pointer: localPoint, islandRect: exactRect, velocity: velocity)
+        } else {
+            target = .zero
+        }
+        guard target != island.dropletTension else { return }
+        withAnimation(.spring(duration: 0.42, bounce: 0.12)) {
+            island.dropletTension = target
+        }
+    }
+
+    private func syncAudioSpectrum() {
+        let wantsSpectrum =
+            settings.settings.enabledFeatures.contains(.nowPlaying)
+            && (settings.settings.liveAudioSpectrumEnabled || settings.settings.visualStyle == .boring)
+        let isPlaying = nowPlaying.snapshot?.isPlaying == true
+        let anyVisible = islands.values.contains {
+            switch $0.store.state.phase {
+            case .compact, .peek, .expanded: true
+            case .hidden, .idle, .transient: false
+            }
+        }
+        if wantsSpectrum && isPlaying && anyVisible {
+            if audioSpectrum.isActive {
+                audioSpectrum.updatePlayback(isPlaying: true)
+            } else {
+                audioSpectrum.start(liveTapAllowed: settings.settings.liveAudioSpectrumEnabled, isPlaying: true)
+            }
+        } else if audioSpectrum.isActive {
+            audioSpectrum.stop()
+        }
+    }
+
+    private func startScreenCapture(asGIF: Bool) {
+        Task { @MainActor in
+            let started = await screenRecorder.startRecording(format: asGIF ? .gif : .mp4)
+            guard started else { return }
+            feedback.play(.alignment)
+            if case .success(let req) = CustomActivityRequest.make(
+                id: "screen-recording",
+                title: String(localized: "alert.recording.title"),
+                subtitle: asGIF ? "GIF" : "MP4",
+                symbol: "record.circle.fill",
+                accentHex: "FF453A",
+                progress: nil,
+                duration: nil)
+            {
+                custom.show(req)
+            }
+        }
+    }
+
+    private func stopScreenCapture() {
+        Task { @MainActor in
+            custom.end(id: "screen-recording")
+            guard let url = await screenRecorder.stopRecording() else { return }
+            do {
+                try shelf.add([url])
+                feedback.play(.levelChange)
+                broadcast(
+                    .alertRaised(
+                        TransientAlert(
+                            id: UUID(), kind: .custom,
+                            detail: .text(
+                                title: url.lastPathComponent,
+                                subtitle: String(localized: "alert.recording.savedToShelf"),
+                                symbol: "checkmark.circle.fill"),
+                            tint: .green, duration: 2.6, priority: .normal)))
+                activeIsland()?.store.send(.pageSelected(.shelf))
+            } catch {
+                logger.error("recording shelf save failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
     }
 
     private func observePrivacyCallActivity() {
@@ -879,6 +1039,18 @@ final class CompositionRoot {
         let downloadsWas = old.enabledFeatures.contains(.downloads) && old.downloadsAlertsOptedIn
         let downloadsNow = new.enabledFeatures.contains(.downloads) && new.downloadsAlertsOptedIn
         if downloadsWas != downloadsNow { downloadsNow ? downloads.start() : downloads.stop() }
+        if old.liveAudioSpectrumEnabled != new.liveAudioSpectrumEnabled || old.visualStyle != new.visualStyle {
+            audioSpectrum.stop()
+            syncAudioSpectrum()
+        }
+        if !new.waterDropletEffect {
+            for island in islands.values where island.dropletTension != .zero {
+                island.dropletTension = .zero
+            }
+        }
+        if !new.floatingShelfBasket || !new.enabledFeatures.contains(.shelf) {
+            shelfBasket.update(isDragging: false, mouse: .zero, screens: screens, enabled: false)
+        }
         hub.refresh()
     }
 
@@ -939,7 +1111,10 @@ final class CompositionRoot {
                 searchWeatherCity: { [unowned self] query in
                     let lang = Locale.current.language.languageCode?.identifier ?? "en"
                     return await weather.search(query, language: lang)
-                }
+                },
+                hasAIKey: { [unowned self] provider in quickAI.hasAPIKey(for: provider) },
+                saveAIKey: { [unowned self] key, provider in quickAI.saveAPIKey(key, for: provider) },
+                clearAIKey: { [unowned self] provider in quickAI.clearAPIKey(for: provider) }
             )
         }
         settingsWindow?.show()
@@ -947,14 +1122,15 @@ final class CompositionRoot {
 }
 
 /// Per-screen island parts. The store needs a panel before the window controller exists, hence the proxy.
-@MainActor private final class ScreenIsland {
-    var screen: ScreenDescriptor
-    var notch: NotchMetrics
-    let store: IslandStore
-    let panel: PanelProxy
-    let feedback: ScreenFeedback
-    var router: PointerRouter!
-    var hotZoneRect: CGRect?
+@MainActor @Observable private final class ScreenIsland {
+    @ObservationIgnored var screen: ScreenDescriptor
+    @ObservationIgnored var notch: NotchMetrics
+    @ObservationIgnored let store: IslandStore
+    @ObservationIgnored let panel: PanelProxy
+    @ObservationIgnored let feedback: ScreenFeedback
+    @ObservationIgnored var router: PointerRouter!
+    @ObservationIgnored var hotZoneRect: CGRect?
+    var dropletTension: DropletTension = .zero
 
     init(screen: ScreenDescriptor, store: IslandStore, panel: PanelProxy, feedback: ScreenFeedback) {
         self.screen = screen

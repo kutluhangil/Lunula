@@ -1,6 +1,11 @@
-# Kutluhan için yapılacaklar (güncellendi: 2026-11-22)
+# Kutluhan için yapılacaklar (güncellendi: 2026-11-27)
 
-Kod, Ada tasarım sistemi, 5 sekmeli Ayarlar + İlk Açılış, TR/EN yerelleştirme, uygulama ikonu, CI düzeltmesi ve tüm otomatik testler tamam. Aşağıdakiler yalnızca **çentikli MacBook donanımı, Apple Developer hesabı veya ürün kararı** gerektirdiği için bekliyor.
+Kod, Ada tasarım sistemi, 5 sekmeli Ayarlar + İlk Açılış, TR/EN yerelleştirme, uygulama ikonu, CI düzeltmesi, tüm otomatik testler ve Faz 1–7 (oynatıcı ses kaydırıcısı, Bluetooth ses bağlantı uyarıları, tam gün takvim ajandası, Apple Reminders `EventKit` senkronu, Claude Code / Codex kancaları, Homebrew Cask / DMG otomasyonu, Tarayıcı/YouTube Now Playing köprüsü) tamam. Aşağıdakiler yalnızca **çentikli MacBook donanımı, Apple Developer hesabı veya ürün kararı** gerektirdiği için sonraya not alındı:
+
+## 0. Sonraya ertelenen kararlar (2026-11-27 notu)
+
+1. **Sparkle 2 otomatik güncelleme entegrasyonu:** Üçüncü parti bağımlılık onayı (`AGENTS.md`) + EdDSA anahtar çifti + appcast barındırma kararı verildiğinde MAS dışı doğrudan dağıtım hedefine eklenecek.
+2. **Canlı Release QA ve `v0.1.0-rc1` çıkışı:** Aşağıdaki 1–5. bölümlerdeki canlı MacBook görsel/donanım kontrolleri, Apple Developer imzalama sırları ve ilk etiket (`v0.1.0-rc1`) çıkışı daha sonra birlikte yapılacak.
 
 ## 1. Hazırlık ve canlı kontrol (5 dk)
 

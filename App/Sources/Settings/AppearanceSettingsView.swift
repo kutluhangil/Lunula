@@ -28,6 +28,115 @@ public struct AppearanceSettingsView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 20) {
+            // MARK: - Style & physics
+            VStack(alignment: .leading, spacing: 8) {
+                Text("settings.appearance.section.style")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Palette.textPrimary)
+                    .padding(.horizontal, 4)
+
+                VStack(spacing: 0) {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.appearance.visualStyle")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textPrimary)
+                            Text("settings.appearance.visualStyle.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                        }
+                        Spacer()
+                        LunulaSegmentPicker(
+                            selection: binding(\.visualStyle),
+                            items: [
+                                (value: IslandVisualStyle.lunula, label: "Lunula"),
+                                (value: IslandVisualStyle.alcove, label: "Alcove"),
+                                (value: IslandVisualStyle.boring, label: "Boring"),
+                            ]
+                        )
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(minHeight: 44)
+
+                    Divider().background(Palette.hairline)
+
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.appearance.surfaceMaterial")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textPrimary)
+                            Text("settings.appearance.surfaceMaterial.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                        }
+                        Spacer()
+                        LunulaSegmentPicker(
+                            selection: binding(\.surfaceMaterial),
+                            items: [
+                                (
+                                    value: IslandSurfaceMaterial.obsidian,
+                                    label: String(localized: "settings.appearance.material.obsidian")
+                                ),
+                                (
+                                    value: IslandSurfaceMaterial.liquidGlass,
+                                    label: String(localized: "settings.appearance.material.liquidGlass")
+                                ),
+                            ]
+                        )
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(minHeight: 44)
+
+                    Divider().background(Palette.hairline)
+
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.appearance.waterDroplet")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textPrimary)
+                            Text("settings.appearance.waterDroplet.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                        }
+                        Spacer()
+                        Toggle("", isOn: binding(\.waterDropletEffect))
+                            .toggleStyle(.lunulaSwitch)
+                            .fixedSize()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(minHeight: 44)
+
+                    Divider().background(Palette.hairline)
+
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.appearance.compactWingLyrics")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Palette.textPrimary)
+                            Text("settings.appearance.compactWingLyrics.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                        }
+                        Spacer()
+                        Toggle("", isOn: binding(\.compactWingLyrics))
+                            .toggleStyle(.lunulaSwitch)
+                            .fixedSize()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(minHeight: 44)
+                }
+                .background(Palette.inkRaised)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Palette.hairline, lineWidth: 0.5)
+                )
+            }
+
             // MARK: - Halo & light
             VStack(alignment: .leading, spacing: 8) {
                 Text("settings.appearance.section.halo")
