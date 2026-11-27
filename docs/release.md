@@ -32,9 +32,10 @@ NOTARY_PROFILE=lunula-notary Scripts/release/notarize.sh build/Lunula-0.1.0.dmg
 
 ## Sürüm çıkarma
 
-1. `project.yml` içinde `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`'ı artır, `CHANGELOG.md`'yi güncelle, commit + push.
-2. `git tag v0.1.0-rc1 && git push origin v0.1.0-rc1` → `Release` iş akışı DMG'yi imzalar, noter onayına gönderir, zımbalar ve GitHub Release'e yükler.
+1. `project.yml` içinde `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`'ı artır, `./Scripts/bootstrap.sh` çalıştır, `CHANGELOG.md`'yi güncelle, commit + push.
+2. `git tag v0.1.0-rc1 && git push origin v0.1.0-rc1` → `Release` iş akışı DMG'yi imzalar (`check-entitlements.sh` doğrulamalı), noter onayına gönderir, zımbalar, `SHA256SUMS.txt` + Homebrew Cask (`lunula.rb`) üretir ve hepsini GitHub Release'e yükler.
 3. İndirilen DMG'yi temiz bir Mac'te aç; Gatekeeper uyarısı çıkmamalı.
+4. Homebrew Tap (`kutluhangil/homebrew-tap`) kullanacaksan Release ekindeki `lunula.rb` dosyasını tap deposundaki `Casks/lunula.rb` içine koy (`brew install --cask kutluhangil/tap/lunula`).
 
 ## Bu belgenin durumu
 

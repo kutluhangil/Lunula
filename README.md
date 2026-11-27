@@ -87,6 +87,16 @@ Four local Swift packages, generated into an Xcode project with XcodeGen so para
 
 <img src="docs/media/divider.svg" width="100%" alt="">
 
+## Install
+
+Once a signed release is published on [GitHub Releases](https://github.com/kutluhangil/Lunula/releases):
+
+- **Direct DMG:** Download `Lunula-<version>.dmg`, drag `Lunula.app` to `Applications`, and verify against `SHA256SUMS.txt`.
+- **Homebrew Cask:** Install from the release cask (`Casks/lunula.rb`):
+  ```sh
+  brew install --cask ./Casks/lunula.rb
+  ```
+
 ## Build and test
 
 macOS only, Xcode 26+.

@@ -64,7 +64,14 @@ jobs:
           Scripts/release/notarize.sh "$DMG"
           rm "$APPSTORE_CONNECT_KEY_PATH"
 
+      - name: Generate checksums and Homebrew Cask
+        run: |
+          version=$(awk '/MARKETING_VERSION:/ {print $2; exit}' project.yml)
+          sha=$(shasum -a 256 "$DMG" | awk '{print $1}')
+          printf '%s  %s\n' "$sha" "$(basename "$DMG")" > build/SHA256SUMS.txt
+          Scripts/release/generate-cask.sh --version "$version" --tag "$GITHUB_REF_NAME" --sha256 "$sha" --output build/lunula.rb
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "$DMG" --title "Lunula $GITHUB_REF_NAME" --notes-file CHANGELOG.md --verify-tag
+        run: gh release create "$GITHUB_REF_NAME" "$DMG" build/SHA256SUMS.txt build/lunula.rb --title "Lunula $GITHUB_REF_NAME" --notes-file CHANGELOG.md --verify-tag

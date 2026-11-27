@@ -25,6 +25,7 @@ if [[ "$identity" != "-" ]]; then
     codesign --force --options runtime --timestamp --entitlements App/Lunula.entitlements --sign "$identity" "$app"
     codesign --verify --strict --verbose=2 "$app"
 fi
+Scripts/check-entitlements.sh "$app" >&2
 
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
