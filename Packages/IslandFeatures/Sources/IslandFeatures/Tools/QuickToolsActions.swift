@@ -167,6 +167,10 @@ public struct QuickToolsActions {
     public var isScreenRecording: @MainActor () -> Bool = { false }
     public var startScreenRecording: @MainActor (Bool) -> Void = { _ in }
     public var stopScreenRecording: @MainActor () -> Void = {}
+    public var dropletSensitivity: @MainActor () -> DropletSensitivity = { .balanced }
+    public var recordingStartedAt: @MainActor () -> Date? = { nil }
+    public var startScreenRecordingCrop: @MainActor (Bool, Bool) -> Void = { _, _ in }
+    public var latestClipboardText: @MainActor () -> String? = { nil }
 
     public init(
         isKeepAwakeActive: @escaping @MainActor () -> Bool = { false },
@@ -249,7 +253,11 @@ public struct QuickToolsActions {
         stopMirrorPreview: @escaping @MainActor () -> Void = {},
         isScreenRecording: @escaping @MainActor () -> Bool = { false },
         startScreenRecording: @escaping @MainActor (Bool) -> Void = { _ in },
-        stopScreenRecording: @escaping @MainActor () -> Void = {}
+        stopScreenRecording: @escaping @MainActor () -> Void = {},
+        dropletSensitivity: @escaping @MainActor () -> DropletSensitivity = { .balanced },
+        recordingStartedAt: @escaping @MainActor () -> Date? = { nil },
+        startScreenRecordingCrop: @escaping @MainActor (Bool, Bool) -> Void = { _, _ in },
+        latestClipboardText: @escaping @MainActor () -> String? = { nil }
     ) {
         self.isKeepAwakeActive = isKeepAwakeActive
         self.toggleKeepAwake = toggleKeepAwake
@@ -332,6 +340,10 @@ public struct QuickToolsActions {
         self.isScreenRecording = isScreenRecording
         self.startScreenRecording = startScreenRecording
         self.stopScreenRecording = stopScreenRecording
+        self.dropletSensitivity = dropletSensitivity
+        self.recordingStartedAt = recordingStartedAt
+        self.startScreenRecordingCrop = startScreenRecordingCrop
+        self.latestClipboardText = latestClipboardText
     }
 }
 

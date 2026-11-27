@@ -10,24 +10,39 @@ struct ToolsSettingsView: View {
     var hasAIKey: @MainActor (QuickAIProvider) -> Bool
     var saveAIKey: @MainActor (String, QuickAIProvider) -> Void
     var clearAIKey: @MainActor (QuickAIProvider) -> Void
+    var ollamaModels: @MainActor () -> [String]
+    var refreshOllamaModels: @MainActor (String) async -> [String]
+    var testAIConnection: @MainActor (QuickAIConfig) async -> (ok: Bool, message: String)
 
     @State private var copiedIndex: Int?
     @State private var targetedToolKey: String?
     @State private var apiKeyDraft = ""
     @State private var keyStateRevision = 0
+    @State private var discoveredModels: [String] = []
+    @State private var isRefreshingModels = false
+    @State private var isTestingAI = false
+    @State private var testStatus: (ok: Bool, message: String)?
 
     init(
         settings: SettingsStore,
         onSelectTab: ((SettingsTabID) -> Void)? = nil,
         hasAIKey: @escaping @MainActor (QuickAIProvider) -> Bool = { _ in false },
         saveAIKey: @escaping @MainActor (String, QuickAIProvider) -> Void = { _, _ in },
-        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in }
+        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in },
+        ollamaModels: @escaping @MainActor () -> [String] = { [] },
+        refreshOllamaModels: @escaping @MainActor (String) async -> [String] = { _ in [] },
+        testAIConnection: @escaping @MainActor (QuickAIConfig) async -> (ok: Bool, message: String) = { _ in
+            (false, "")
+        }
     ) {
         self.settings = settings
         self.onSelectTab = onSelectTab
         self.hasAIKey = hasAIKey
         self.saveAIKey = saveAIKey
         self.clearAIKey = clearAIKey
+        self.ollamaModels = ollamaModels
+        self.refreshOllamaModels = refreshOllamaModels
+        self.testAIConnection = testAIConnection
     }
 
     private struct ToolItem: Identifiable {
@@ -215,7 +230,7 @@ struct ToolsSettingsView: View {
                 )
             }
 
-            // MARK: - Section 3: lunula:// and Agent Hooks
+            // MARK: - Section 4: lunula:// and Agent Hooks
             VStack(alignment: .leading, spacing: 8) {
                 Text("settings.tools.section.hooks")
                     .font(.system(size: 15, weight: .semibold))
@@ -293,8 +308,10 @@ struct ToolsSettingsView: View {
 
     private var miniAISection: some View {
         let provider = settings.settings.quickAIConfig.provider
-        let _ = keyStateRevision
+        _ = keyStateRevision
         let keySaved = hasAIKey(provider)
+        let cachedModels = ollamaModels()
+        let availableModels = discoveredModels.isEmpty ? cachedModels : discoveredModels
 
         return VStack(alignment: .leading, spacing: 8) {
             Text("settings.tools.section.ai")
@@ -318,6 +335,7 @@ struct ToolsSettingsView: View {
                             get: { settings.settings.quickAIConfig.provider },
                             set: { selected in
                                 apiKeyDraft = ""
+                                testStatus = nil
                                 settings.update { $0.quickAIConfig.provider = selected }
                             }
                         ),
@@ -334,11 +352,12 @@ struct ToolsSettingsView: View {
 
                 Divider().overlay(Color.white.opacity(0.08))
 
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     Text("settings.tools.ai.model")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Palette.textPrimary)
                     Spacer()
+
                     TextField(
                         provider.defaultModel,
                         text: Binding(
@@ -350,13 +369,53 @@ struct ToolsSettingsView: View {
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(Palette.textPrimary)
                     .padding(.horizontal, 10)
-                    .frame(width: 240, height: 28)
+                    .frame(width: provider == .ollama ? 176 : 240, height: 28)
                     .background(Palette.obsidian)
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .stroke(Palette.hairline, lineWidth: 0.5)
                     )
+
+                    if provider == .ollama {
+                        if !availableModels.isEmpty {
+                            Menu {
+                                ForEach(availableModels, id: \.self) { modelName in
+                                    Button {
+                                        settings.update { $0.quickAIConfig.model = modelName }
+                                    } label: {
+                                        if settings.settings.quickAIConfig.model == modelName {
+                                            Label(modelName, systemImage: "checkmark")
+                                        } else {
+                                            Text(modelName)
+                                        }
+                                    }
+                                }
+                            } label: {
+                                Text("settings.tools.ai.pickModel")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(Palette.textPrimary)
+                            }
+                            .menuStyle(.borderlessButton)
+                            .padding(.horizontal, 8)
+                            .frame(height: 24)
+                            .background(Palette.inkPressed)
+                            .clipShape(Capsule())
+                            .fixedSize()
+                        }
+
+                        Button(action: performRefreshOllamaModels) {
+                            if isRefreshingModels {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .frame(width: 14, height: 14)
+                            } else {
+                                Text("settings.tools.ai.refreshModels")
+                            }
+                        }
+                        .buttonStyle(.lunulaBadge)
+                        .disabled(isRefreshingModels)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -462,6 +521,45 @@ struct ToolsSettingsView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                 }
+
+                Divider().overlay(Color.white.opacity(0.08))
+
+                HStack(spacing: 10) {
+                    Button(action: performTestAIConnection) {
+                        HStack(spacing: 6) {
+                            if isTestingAI {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .frame(width: 14, height: 14)
+                            }
+                            Text("settings.tools.ai.testConnection")
+                        }
+                    }
+                    .buttonStyle(.lunulaSecondary)
+                    .disabled(isTestingAI)
+
+                    if let testStatus {
+                        HStack(spacing: 5) {
+                            Image(systemName: testStatus.ok ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text(
+                                testStatus.message.isEmpty
+                                    ? String(
+                                        localized: testStatus.ok
+                                            ? "settings.tools.ai.testSuccess" : "settings.tools.ai.testFailed")
+                                    : testStatus.message
+                            )
+                            .font(.system(size: 11, weight: .medium))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        }
+                        .foregroundStyle(testStatus.ok ? Palette.signalGreen : Palette.signalRed)
+                    }
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
             }
             .background(Palette.inkRaised)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -469,6 +567,34 @@ struct ToolsSettingsView: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(Palette.hairlineContrast, lineWidth: 0.5)
             )
+        }
+    }
+
+    private func performRefreshOllamaModels() {
+        guard !isRefreshingModels else { return }
+        isRefreshingModels = true
+        let endpoint = settings.settings.quickAIConfig.ollamaEndpoint
+        Task { @MainActor in
+            let models = await refreshOllamaModels(endpoint)
+            discoveredModels = models
+            if settings.settings.quickAIConfig.model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                let first = models.first
+            {
+                settings.update { $0.quickAIConfig.model = first }
+            }
+            isRefreshingModels = false
+        }
+    }
+
+    private func performTestAIConnection() {
+        guard !isTestingAI else { return }
+        isTestingAI = true
+        testStatus = nil
+        let config = settings.settings.quickAIConfig
+        Task { @MainActor in
+            let result = await testAIConnection(config)
+            testStatus = result
+            isTestingAI = false
         }
     }
 
@@ -500,7 +626,7 @@ struct ToolsSettingsView: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Palette.textSecondary)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Palette.textSecondary)
             }
             .padding(.horizontal, 12)

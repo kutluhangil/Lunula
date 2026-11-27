@@ -52,6 +52,7 @@ struct ClipboardAndSnippetsPopover: View {
         }
         .padding(10)
         .frame(width: 280)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
     }
 
     private var clipboardView: some View {
@@ -278,6 +279,7 @@ struct SearchAndPalettePopover: View {
         }
         .padding(10)
         .frame(width: 300)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
     }
 
     private func paletteButton(
@@ -366,6 +368,7 @@ struct TeleprompterPopover: View {
         }
         .padding(10)
         .frame(width: 280)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
         .onAppear {
             scriptText = quickTools.teleprompterScript()
             speed = quickTools.teleprompterSpeed()
@@ -551,6 +554,7 @@ struct SystemStatsPopover: View {
         }
         .padding(10)
         .frame(width: 250)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
     }
 }
 
@@ -610,7 +614,7 @@ public struct DetachedMenuBarHubView: View {
                 }
             }
         }
-        .background(Palette.obsidian)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
     }
 }
 
@@ -642,6 +646,7 @@ struct LauncherAndHubPopover: View {
         }
         .padding(10)
         .frame(width: 280)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
     }
 
     private var launcherSection: some View {
@@ -943,12 +948,14 @@ struct LauncherAndHubPopover: View {
 
 struct QuickAIPopover: View {
     @Environment(\.quickTools) private var quickTools
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var prompt = ""
 
     var body: some View {
         let messages = quickTools.quickAIMessages()
         let isGenerating = quickTools.isQuickAIGenerating()
         let errorText = quickTools.quickAIError()
+        let clip = quickTools.latestClipboardText() ?? quickTools.clipboardEntries().first?.text
 
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
@@ -980,34 +987,71 @@ struct QuickAIPopover: View {
                 .disabled(messages.isEmpty && (errorText == nil || errorText?.isEmpty == true))
             }
 
+            if !isGenerating,
+                let clip,
+                !clip.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        aiContextChip(
+                            labelKey: "tools.ai.chip.summarize",
+                            promptKey: "tools.ai.prompt.summarize",
+                            clip: clip
+                        )
+                        aiContextChip(
+                            labelKey: "tools.ai.chip.translate",
+                            promptKey: "tools.ai.prompt.translate",
+                            clip: clip
+                        )
+                        aiContextChip(
+                            labelKey: "tools.ai.chip.explain",
+                            promptKey: "tools.ai.prompt.explain",
+                            clip: clip
+                        )
+                    }
+                }
+            }
+
             if messages.isEmpty && !isGenerating && (errorText == nil || errorText?.isEmpty == true) {
                 Text("tools.ai.empty", bundle: .module)
                     .font(TypeToken.caption.font)
                     .foregroundStyle(Palette.textSecondary)
                     .padding(.vertical, 6)
             } else if !messages.isEmpty {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(messages) { message in
-                            let isUser = message.role == "user"
-                            HStack {
-                                if isUser { Spacer(minLength: 24) }
-                                Text(message.text)
-                                    .font(TypeToken.caption.font)
-                                    .foregroundStyle(Palette.textPrimary)
-                                    .textSelection(.enabled)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        isUser ? Palette.inkPressed : Palette.inkRaised,
-                                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    )
-                                if !isUser { Spacer(minLength: 24) }
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(messages) { message in
+                                let isUser = message.role == "user"
+                                HStack {
+                                    if isUser { Spacer(minLength: 24) }
+                                    Text(message.text)
+                                        .font(TypeToken.caption.font)
+                                        .foregroundStyle(Palette.textPrimary)
+                                        .textSelection(.enabled)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(
+                                            isUser ? Palette.inkPressed : Palette.inkRaised,
+                                            in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        )
+                                    if !isUser { Spacer(minLength: 24) }
+                                }
+                                .id(message.id)
                             }
+                            Color.clear
+                                .frame(height: 1)
+                                .id("quickAI-bottom")
                         }
                     }
+                    .frame(maxHeight: 170)
+                    .onChange(of: messages.count) { _, _ in
+                        scrollToBottom(proxy)
+                    }
+                    .onChange(of: messages.last?.text) { _, _ in
+                        scrollToBottom(proxy)
+                    }
                 }
-                .frame(maxHeight: 170)
             }
 
             if let errorText, !errorText.isEmpty {
@@ -1034,6 +1078,37 @@ struct QuickAIPopover: View {
         }
         .padding(10)
         .frame(width: 300)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
+    }
+
+    private func aiContextChip(
+        labelKey: LocalizedStringKey,
+        promptKey: String.LocalizationValue,
+        clip: String
+    ) -> some View {
+        Button {
+            let chipInstruction = String(localized: promptKey, bundle: .module)
+            quickTools.askQuickAI("\(chipInstruction)\n\n\(String(clip.prefix(1800)))")
+        } label: {
+            Text(labelKey, bundle: .module)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Palette.textPrimary)
+                .lineLimit(1)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Palette.inkPressed, in: Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func scrollToBottom(_ proxy: ScrollViewProxy) {
+        if reduceMotion {
+            proxy.scrollTo("quickAI-bottom", anchor: .bottom)
+        } else {
+            withAnimation(MotionToken.animation(.content, reduceMotion: false)) {
+                proxy.scrollTo("quickAI-bottom", anchor: .bottom)
+            }
+        }
     }
 
     private var canSend: Bool {
@@ -1175,6 +1250,13 @@ struct ToolsGridPageView: View {
                         .foregroundStyle(Palette.signalRed)
                         .lineLimit(1)
                     Spacer(minLength: 0)
+                    if let startedAt = quickTools.recordingStartedAt() {
+                        Text(timerInterval: min(startedAt, .now)...Date.distantFuture, countsDown: false)
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                            .monospacedDigit()
+                            .foregroundStyle(Palette.signalRed)
+                            .lineLimit(1)
+                    }
                 }
                 .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity)
@@ -1186,14 +1268,24 @@ struct ToolsGridPageView: View {
         } else {
             Menu {
                 Button {
-                    quickTools.startScreenRecording(false)
+                    quickTools.startScreenRecordingCrop(false, false)
                 } label: {
                     Text("tools.record.mp4", bundle: .module)
                 }
                 Button {
-                    quickTools.startScreenRecording(true)
+                    quickTools.startScreenRecordingCrop(false, true)
+                } label: {
+                    Text("tools.record.areaMP4", bundle: .module)
+                }
+                Button {
+                    quickTools.startScreenRecordingCrop(true, false)
                 } label: {
                     Text("tools.record.gif", bundle: .module)
+                }
+                Button {
+                    quickTools.startScreenRecordingCrop(true, true)
+                } label: {
+                    Text("tools.record.areaGIF", bundle: .module)
                 }
             } label: {
                 HStack(spacing: 7) {

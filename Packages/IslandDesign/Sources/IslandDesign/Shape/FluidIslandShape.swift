@@ -71,8 +71,8 @@ public struct FluidIslandShape: Shape, Sendable {
         }
 
         let s = max(0, min(shoulderRadius, rect.height, rect.width / 4))
-        let dx = min(max(pullX, -6), 6)
-        let dy = min(max(pullY, 0), 5)
+        let dx = min(max(pullX, -8), 8)
+        let dy = min(max(pullY, 0), 6.5)
         let clampedFocus = min(max(focusX, 0.15), 0.85)
 
         if s > 0 {
@@ -322,6 +322,7 @@ public struct DropletSpecularOverlay: View {
             let strength = min(max(tension.intensity, 0), 1)
             let clampedFocus = min(max(tension.focusX, 0), 1)
             let center = UnitPoint(x: clampedFocus, y: 0.75)
+            let causticCenter = UnitPoint(x: clampedFocus, y: 0.92)
 
             ZStack {
                 RadialGradient(
@@ -333,6 +334,17 @@ public struct DropletSpecularOverlay: View {
                     center: center,
                     startRadius: 2,
                     endRadius: 140
+                )
+                RadialGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .white.opacity(0.14 * strength), location: 0.42),
+                        .init(color: .white.opacity(0.05 * strength), location: 0.68),
+                        .init(color: .clear, location: 1.0),
+                    ],
+                    center: causticCenter,
+                    startRadius: 6,
+                    endRadius: 86
                 )
                 shape.stroke(
                     LinearGradient(

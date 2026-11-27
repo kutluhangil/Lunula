@@ -17,11 +17,26 @@ public enum IslandSurfaceMaterial: String, Codable, Equatable, Hashable, Sendabl
     case liquidGlass
 }
 
+/// User-selectable responsiveness preset for elastic water-droplet pointer deformation.
+public enum DropletSensitivity: String, Codable, Equatable, Hashable, Sendable, CaseIterable {
+    case subtle
+    case balanced
+    case expressive
+
+    public var scaleFactor: Double {
+        switch self {
+        case .subtle: 0.65
+        case .balanced: 1.0
+        case .expressive: 1.45
+        }
+    }
+}
+
 /// Elastic surface-tension deformation state of the island in response to pointer proximity and velocity.
 public struct DropletTension: Equatable, Sendable {
-    /// Horizontal shear/bulge in points (`-6.0 ... 6.0`).
+    /// Horizontal shear/bulge in points (`-8.0 ... 8.0`).
     public var pullX: Double
-    /// Downward meniscus sag in points (`0.0 ... 5.0`); never negative so the top bezel stays flush.
+    /// Downward meniscus sag in points (`0.0 ... 6.5`); never negative so the top bezel stays flush.
     public var pullY: Double
     /// Normalized horizontal cursor focus across the island (`0.0 ... 1.0`, default `0.5`).
     public var focusX: Double
@@ -42,13 +57,14 @@ public struct DropletTension: Equatable, Sendable {
 public enum DropletPhysics: Sendable {
     /// Outer surface-tension influence halo around `islandRect` in points.
     public static let haloMargin: Double = 28.0
-    public static let maxPullX: Double = 6.0
-    public static let maxPullY: Double = 5.0
+    public static let maxPullX: Double = 8.0
+    public static let maxPullY: Double = 6.5
 
     public static func compute(
         pointer: CGPoint?,
         islandRect: CGRect,
-        velocity: CGSize = .zero
+        velocity: CGSize = .zero,
+        sensitivity: DropletSensitivity = .balanced
     ) -> DropletTension {
         guard let p = pointer, islandRect.width > 0, islandRect.height > 0 else {
             return .zero
@@ -77,11 +93,23 @@ public enum DropletPhysics: Sendable {
         let velX = min(max(Double(velocity.width) * 0.004, -3.5), 3.5)
         let velY = min(max(Double(velocity.height) * 0.003, -2.5), 2.5)
 
-        let rawPullX = (normX * 4.2 + velX) * intensity
-        let rawPullY = (normY * 3.4 + velY) * intensity
+        let scale = sensitivity.scaleFactor
+        let rawPullX = (normX * 4.2 + velX) * intensity * scale
+        var rawPullY = (normY * 3.4 + velY) * intensity * scale
 
-        let pullX = min(max(rawPullX, -maxPullX), maxPullX)
-        let pullY = min(max(rawPullY, 0.0), maxPullY)
+        if p.y > islandRect.maxY,
+            p.y <= islandRect.maxY + 16,
+            p.x >= islandRect.minX,
+            p.x <= islandRect.maxX,
+            velocity.height > 30
+        {
+            rawPullY *= 1.22
+        }
+
+        let capX = min(maxPullX, 6.0 * scale)
+        let capY = min(maxPullY, 5.0 * scale)
+        let pullX = min(max(rawPullX, -capX), capX)
+        let pullY = min(max(rawPullY, 0.0), capY)
 
         return DropletTension(
             pullX: pullX == 0 ? 0 : pullX,

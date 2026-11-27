@@ -21,8 +21,11 @@ struct IslandSurface: View {
     @Environment(\.shelfActions) private var shelfActions
     @Environment(\.privacyInfo) private var privacyInfo
     @Environment(\.quickTools) private var quickTools
+    @Namespace private var islandMorph
     @State private var budID: ActivityID?
     @State private var budProgress = 0.0
+    @State private var retreatEndRect: CGRect?
+    @State private var retreatProgress = 0.0
 
     var body: some View {
         let expandedWidth = CGFloat(min(max(quickTools.expandedWidth(), 520), 600))
@@ -56,6 +59,7 @@ struct IslandSurface: View {
                 ZStack {
                     content(size: size, expandedWidth: expandedWidth)
                         .environment(\.islandCardGlass, quickTools.useGlassCards())
+                        .environment(\.islandMorphNamespace, reduceMotion ? nil : islandMorph)
                     DropletSpecularOverlay(tension: tension, shape: fluidShape)
                 }
                 .clipShape(fluidShape)
@@ -106,7 +110,22 @@ struct IslandSurface: View {
                 MetaballBridge(
                     islandRect: island,
                     bubbleStart: end.offsetBy(dx: island.maxX - end.maxX, dy: 0),
-                    bubbleEnd: end, progress: budProgress, islandCornerRadius: baseShape.cornerRadius
+                    bubbleEnd: end,
+                    progress: budProgress,
+                    islandCornerRadius: baseShape.cornerRadius,
+                    surfaceMaterial: material
+                )
+                .allowsHitTesting(false)
+            }
+
+            if let retreatEndRect {
+                MetaballBridge(
+                    islandRect: island,
+                    bubbleStart: retreatEndRect.offsetBy(dx: island.maxX - retreatEndRect.maxX, dy: 0),
+                    bubbleEnd: retreatEndRect,
+                    progress: retreatProgress,
+                    islandCornerRadius: baseShape.cornerRadius,
+                    surfaceMaterial: material
                 )
                 .allowsHitTesting(false)
             }
@@ -117,7 +136,22 @@ struct IslandSurface: View {
             MotionToken.animation(Self.motionToken(for: state.phase), reduceMotion: reduceMotion), value: state.phase
         )
         .animation(MotionToken.animation(.morph, reduceMotion: reduceMotion), value: state.layout)
-        .onChange(of: state.layout.detached.map(\.id)) { old, new in startBud(old: old, new: new) }
+        .onChange(of: state.layout.detached.map(\.id)) { old, new in
+            startBud(old: old, new: new)
+            if !reduceMotion,
+                state.phase != .hidden,
+                let removedIdx = old.firstIndex(where: { !new.contains($0) })
+            {
+                let endRect = Self.bubbleRect(index: removedIdx, island: island, side: notch.size.height)
+                retreatEndRect = endRect
+                retreatProgress = 1.0
+                withAnimation(MotionToken.animation(.bud, reduceMotion: false)) {
+                    retreatProgress = 0.0
+                } completion: {
+                    retreatEndRect = nil
+                }
+            }
+        }
     }
 
     @ViewBuilder private func content(size: CGSize, expandedWidth: CGFloat) -> some View {

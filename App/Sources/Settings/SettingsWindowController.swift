@@ -17,7 +17,15 @@ import SwiftUI
         searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] },
         hasAIKey: @escaping @MainActor (QuickAIProvider) -> Bool = { _ in false },
         saveAIKey: @escaping @MainActor (String, QuickAIProvider) -> Void = { _, _ in },
-        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in }
+        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in },
+        extraPermission: @escaping @MainActor (ExtraPermissionKind) -> PermissionState = { _ in .notRequested },
+        requestExtraPermission: @escaping @MainActor (ExtraPermissionKind) -> Void = { _ in },
+        ollamaModels: @escaping @MainActor () -> [String] = { [] },
+        refreshOllamaModels: @escaping @MainActor (String) async -> [String] = { _ in [] },
+        testAIConnection: @escaping @MainActor (QuickAIConfig) async -> (ok: Bool, message: String) = { _ in
+            (false, "")
+        },
+        resetDefaults: (@MainActor () -> Void)? = nil
     ) {
         self.settingsStore = settings
         self.tabs = SettingsTab.allTabs(
@@ -28,7 +36,13 @@ import SwiftUI
             searchWeatherCity: searchWeatherCity,
             hasAIKey: hasAIKey,
             saveAIKey: saveAIKey,
-            clearAIKey: clearAIKey
+            clearAIKey: clearAIKey,
+            extraPermission: extraPermission,
+            requestExtraPermission: requestExtraPermission,
+            ollamaModels: ollamaModels,
+            refreshOllamaModels: refreshOllamaModels,
+            testAIConnection: testAIConnection,
+            resetDefaults: resetDefaults
         )
 
         let rootView = SettingsWindowView(
@@ -39,7 +53,13 @@ import SwiftUI
             searchWeatherCity: searchWeatherCity,
             hasAIKey: hasAIKey,
             saveAIKey: saveAIKey,
-            clearAIKey: clearAIKey
+            clearAIKey: clearAIKey,
+            extraPermission: extraPermission,
+            requestExtraPermission: requestExtraPermission,
+            ollamaModels: ollamaModels,
+            refreshOllamaModels: refreshOllamaModels,
+            testAIConnection: testAIConnection,
+            resetDefaults: resetDefaults
         )
         let hosting = NSHostingController(rootView: rootView)
 

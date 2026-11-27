@@ -21,6 +21,7 @@ struct ExpandedView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.shelfActions) private var shelf
     @Environment(\.quickTools) private var quickTools
+    @Namespace private var tabCapsuleNamespace
     @State private var activePopover: ActiveToolPopover?
     @State private var showsOverflowPopover = false
     @State private var draftNote = ""
@@ -103,8 +104,11 @@ struct ExpandedView: View {
             .frame(height: notch.size.height)
 
             content
+                .id(page)
+                .transition(reduceMotion ? MotionToken.reducedTransition : AnyTransition(.blurReplace))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.top, Spacing.expandedPadding)
+                .animation(MotionToken.animation(.content, reduceMotion: reduceMotion), value: page)
         }
         .padding(.horizontal, Spacing.expandedPadding)
         .padding(.bottom, Spacing.expandedPadding)
@@ -192,7 +196,8 @@ struct ExpandedView: View {
                     ) {
                         quickTools.openURL(url)
                     }
-                }
+                },
+                material: quickTools.surfaceMaterial()
             )
         }
     }
@@ -420,11 +425,21 @@ struct ExpandedView: View {
         case QuickToolID.record.rawValue:
             if quickTools.isScreenRecording() {
                 Button(action: quickTools.stopScreenRecording) {
-                    Image(systemName: "stop.circle.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                        .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
-                        .frame(width: 22, height: 22)
-                        .contentShape(Rectangle())
+                    HStack(spacing: 3) {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
+                        if let startedAt = quickTools.recordingStartedAt() {
+                            Text(timerInterval: min(startedAt, .now)...Date.distantFuture, countsDown: false)
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .monospacedDigit()
+                                .lineLimit(1)
+                        }
+                    }
+                    .padding(.horizontal, quickTools.recordingStartedAt() == nil ? 0 : 4)
+                    .frame(minWidth: 22, minHeight: 22)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Palette.signalRed)
@@ -432,14 +447,24 @@ struct ExpandedView: View {
             } else {
                 Menu {
                     Button {
-                        quickTools.startScreenRecording(false)
+                        quickTools.startScreenRecordingCrop(false, false)
                     } label: {
                         Text("tools.record.mp4", bundle: .module)
                     }
                     Button {
-                        quickTools.startScreenRecording(true)
+                        quickTools.startScreenRecordingCrop(false, true)
+                    } label: {
+                        Text("tools.record.areaMP4", bundle: .module)
+                    }
+                    Button {
+                        quickTools.startScreenRecordingCrop(true, false)
                     } label: {
                         Text("tools.record.gif", bundle: .module)
+                    }
+                    Button {
+                        quickTools.startScreenRecordingCrop(true, true)
+                    } label: {
+                        Text("tools.record.areaGIF", bundle: .module)
                     }
                 } label: {
                     Image(systemName: "record.circle")
@@ -467,6 +492,7 @@ struct ExpandedView: View {
         }
         .padding(8)
         .frame(width: 210)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
     }
 
     @ViewBuilder
@@ -546,27 +572,59 @@ struct ExpandedView: View {
             }
         case QuickToolID.record.rawValue:
             if quickTools.isScreenRecording() {
-                overflowButton(
-                    symbol: "stop.circle.fill",
-                    key: "tools.record.stop",
-                    tint: Palette.signalRed
-                ) {
+                Button {
                     showsOverflowPopover = false
                     quickTools.stopScreenRecording()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
+                            .foregroundStyle(Palette.signalRed)
+                            .frame(width: 16)
+                        Text("tools.record.stop", bundle: .module)
+                            .font(TypeToken.caption.font)
+                            .foregroundStyle(Palette.signalRed)
+                            .lineLimit(1)
+                        Spacer()
+                        if let startedAt = quickTools.recordingStartedAt() {
+                            Text(timerInterval: min(startedAt, .now)...Date.distantFuture, countsDown: false)
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .monospacedDigit()
+                                .foregroundStyle(Palette.signalRed)
+                                .lineLimit(1)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             } else {
                 Menu {
                     Button {
                         showsOverflowPopover = false
-                        quickTools.startScreenRecording(false)
+                        quickTools.startScreenRecordingCrop(false, false)
                     } label: {
                         Text("tools.record.mp4", bundle: .module)
                     }
                     Button {
                         showsOverflowPopover = false
-                        quickTools.startScreenRecording(true)
+                        quickTools.startScreenRecordingCrop(false, true)
+                    } label: {
+                        Text("tools.record.areaMP4", bundle: .module)
+                    }
+                    Button {
+                        showsOverflowPopover = false
+                        quickTools.startScreenRecordingCrop(true, false)
                     } label: {
                         Text("tools.record.gif", bundle: .module)
+                    }
+                    Button {
+                        showsOverflowPopover = false
+                        quickTools.startScreenRecordingCrop(true, true)
+                    } label: {
+                        Text("tools.record.areaGIF", bundle: .module)
                     }
                 } label: {
                     HStack(spacing: 8) {
@@ -674,6 +732,7 @@ struct ExpandedView: View {
         }
         .padding(10)
         .frame(width: 240)
+        .islandPopoverChrome(quickTools.surfaceMaterial())
     }
 
     private func submitDraftNote() {
@@ -746,7 +805,9 @@ struct ExpandedView: View {
     private func tab(_ key: LocalizedStringKey, _ target: IslandPage) -> some View {
         let isActive = page == target
         return Button {
-            send(.pageSelected(target))
+            withAnimation(MotionToken.animation(.content, reduceMotion: reduceMotion)) {
+                send(.pageSelected(target))
+            }
         } label: {
             Text(key, bundle: .module)
                 .font(TypeToken.caption.font)
@@ -755,7 +816,13 @@ struct ExpandedView: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, 5)
                 .frame(height: 22)
-                .background(isActive ? Palette.inkPressed : .clear, in: Capsule())
+                .background {
+                    if isActive {
+                        Capsule()
+                            .fill(Palette.inkPressed)
+                            .matchedGeometryEffect(id: "expandedTabCapsule", in: tabCapsuleNamespace)
+                    }
+                }
         }
         .buttonStyle(.plain)
     }

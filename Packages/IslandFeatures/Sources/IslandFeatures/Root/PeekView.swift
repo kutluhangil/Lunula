@@ -9,6 +9,9 @@ struct PeekView: View {
     var notchWidth: CGFloat = 188
     let notchHeight: CGFloat
     @Environment(\.nowPlayingActions) private var nowPlayingActions
+    @Environment(\.quickTools) private var quickTools
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         if let primary = layout.primary {
@@ -38,18 +41,36 @@ struct PeekView: View {
     }
 
     private func nowPlayingPeek(track: NowPlayingSnapshot, accent: RGBAColor?) -> some View {
-        ZStack(alignment: .topLeading) {
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
-                Color.clear.frame(width: notchWidth)
-                NowPlayingCompactTrailing(snapshot: track, accent: accent)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+        let style = quickTools.visualStyle()
+        return ZStack(alignment: .topLeading) {
+            if style == .boring, !reduceTransparency, contrast != .increased {
+                let glowTint = accent.map(Palette.color) ?? Palette.amberGold
+                RadialGradient(
+                    colors: [
+                        glowTint.opacity(0.18),
+                        glowTint.opacity(0.06),
+                        .clear,
+                    ],
+                    center: .topLeading,
+                    startRadius: 4,
+                    endRadius: 180
+                )
+                .allowsHitTesting(false)
             }
-            .padding(.horizontal, Spacing.expandedPadding)
-            .frame(height: notchHeight)
 
-            HStack(alignment: .bottom, spacing: 12) {
-                ArtworkImage(snapshot: track, side: 34, radius: Radii.artworkMedium)
+            if style != .alcove {
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    Color.clear.frame(width: notchWidth)
+                    NowPlayingCompactTrailing(snapshot: track, accent: accent)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .padding(.horizontal, Radii.expandedShoulder + Spacing.compactPadding)
+                .frame(height: notchHeight)
+            }
+
+            HStack(alignment: .center, spacing: 12) {
+                ArtworkImage(snapshot: track, side: 34, radius: Radii.artworkMedium, morphID: "hero-artwork")
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     MarqueeText(text: track.title, font: TypeToken.title.font)
                         .foregroundStyle(Palette.textPrimary)
@@ -60,16 +81,47 @@ struct PeekView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                HStack(spacing: 2) {
-                    peekTransportButton("backward.fill", AccessibilityLabels.previous, nowPlayingActions.previous)
-                    peekTransportButton(
-                        track.isPlaying ? "pause.fill" : "play.fill",
-                        AccessibilityLabels.playPause(isPlaying: track.isPlaying),
-                        nowPlayingActions.playPause)
-                    peekTransportButton("forward.fill", AccessibilityLabels.next, nowPlayingActions.next)
+                if style == .alcove {
+                    HStack(alignment: .center, spacing: 8) {
+                        if let duration = track.duration, duration > 0 {
+                            TimelineView(.periodic(from: .now, by: 1)) { context in
+                                let remaining = max(0, duration - NowPlayingProgress.position(track, at: context.date))
+                                Text(verbatim: "-\(IslandFormat.countdown(remaining))")
+                                    .font(TypeToken.caption.font.monospacedDigit())
+                                    .foregroundStyle(Palette.textSecondary)
+                                    .lineLimit(1)
+                            }
+                        }
+                        peekTransportButton(
+                            track.isPlaying ? "pause.fill" : "play.fill",
+                            AccessibilityLabels.playPause(isPlaying: track.isPlaying),
+                            nowPlayingActions.playPause)
+                    }
+                } else {
+                    HStack(alignment: .center, spacing: 6) {
+                        if style == .boring {
+                            AudioSpectrumBarsView(
+                                levels: quickTools.audioSpectrumBands(),
+                                isPlaying: track.isPlaying,
+                                accent: accent,
+                                barWidth: 2.5,
+                                height: 14
+                            )
+                        }
+                        HStack(spacing: 2) {
+                            peekTransportButton(
+                                "backward.fill", AccessibilityLabels.previous, nowPlayingActions.previous)
+                            peekTransportButton(
+                                track.isPlaying ? "pause.fill" : "play.fill",
+                                AccessibilityLabels.playPause(isPlaying: track.isPlaying),
+                                nowPlayingActions.playPause)
+                            peekTransportButton("forward.fill", AccessibilityLabels.next, nowPlayingActions.next)
+                        }
+                    }
                 }
             }
-            .padding(Spacing.expandedPadding)
+            .padding(.horizontal, Radii.expandedShoulder + Spacing.compactPadding)
+            .padding(.vertical, Spacing.expandedPadding)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
     }
@@ -118,6 +170,6 @@ struct PeekView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             .padding(.bottom, Spacing.expandedPadding)
         }
-        .padding(.horizontal, Spacing.expandedPadding)
+        .padding(.horizontal, Radii.expandedShoulder + Spacing.compactPadding)
     }
 }

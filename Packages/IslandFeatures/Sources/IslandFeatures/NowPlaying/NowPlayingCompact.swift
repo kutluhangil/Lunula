@@ -7,7 +7,9 @@ struct NowPlayingCompactLeading: View {
 
     init(snapshot: NowPlayingSnapshot) { self.snapshot = snapshot }
 
-    var body: some View { ArtworkImage(snapshot: snapshot, side: 20, radius: Radii.artworkSmall) }
+    var body: some View {
+        ArtworkImage(snapshot: snapshot, side: 20, radius: Radii.artworkSmall, morphID: "hero-artwork")
+    }
 }
 
 struct NowPlayingCompactTrailing: View {

@@ -800,6 +800,23 @@
         }
       }
     },
+    "onboarding.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet notch island with zero permission prompts at launch."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açılışta izin istemeyen, sessiz ve akıcı çentik adası."
+          }
+        }
+      }
+    },
     "onboarding.title": {
       "extractionState": "manual",
       "localizations": {
@@ -1170,6 +1187,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çift Option (⌥) tuşuyla adayı aç/kapat"
+          }
+        }
+      }
+    },
+    "settings.appearance.droplet.balanced": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balanced"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dengeli"
+          }
+        }
+      }
+    },
+    "settings.appearance.droplet.expressive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expressive"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belirgin"
+          }
+        }
+      }
+    },
+    "settings.appearance.droplet.subtle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtle"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hafif"
+          }
+        }
+      }
+    },
+    "settings.appearance.dropletSensitivity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Droplet sensitivity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Damla hassasiyeti"
+          }
+        }
+      }
+    },
+    "settings.appearance.dropletSensitivity.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls how strongly the island stretches toward the pointer."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adanın imlece doğru esneme ve çekim gücünü ayarlar."
           }
         }
       }
@@ -2517,6 +2619,108 @@
         }
       }
     },
+    "settings.general.reset.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resets appearance, activities and toolbar preferences to defaults."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görünüm, etkinlikler ve araç çubuğu tercihlerini varsayılana döndürür."
+          }
+        }
+      }
+    },
+    "settings.general.reset.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore default settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan ayarlara dön"
+          }
+        }
+      }
+    },
+    "settings.general.resetButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset to Defaults"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılanlara Sıfırla"
+          }
+        }
+      }
+    },
+    "settings.general.resetCancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vazgeç"
+          }
+        }
+      }
+    },
+    "settings.general.resetConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Reset"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıfırlamayı Onayla"
+          }
+        }
+      }
+    },
+    "settings.general.resetDone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defaults restored"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılanlara döndürüldü"
+          }
+        }
+      }
+    },
     "settings.general.section.displays": {
       "extractionState": "manual",
       "localizations": {
@@ -2564,6 +2768,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hareketler"
+          }
+        }
+      }
+    },
+    "settings.general.section.reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıfırlama"
           }
         }
       }
@@ -2738,6 +2959,23 @@
         }
       }
     },
+    "settings.permission.audioCapture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System Audio"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem Sesi"
+          }
+        }
+      }
+    },
     "settings.permission.automation": {
       "extractionState": "manual",
       "localizations": {
@@ -2772,6 +3010,23 @@
         }
       }
     },
+    "settings.permission.camera": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera"
+          }
+        }
+      }
+    },
     "settings.permission.location": {
       "extractionState": "manual",
       "localizations": {
@@ -2785,6 +3040,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Konum"
+          }
+        }
+      }
+    },
+    "settings.permission.reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anımsatıcılar"
+          }
+        }
+      }
+    },
+    "settings.permission.screenCapture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekran Kaydı"
           }
         }
       }
@@ -3078,6 +3367,23 @@
         }
       }
     },
+    "settings.preview.stage.style": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style & physics"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stil ve fizik"
+          }
+        }
+      }
+    },
     "settings.preview.stage.tools": {
       "extractionState": "manual",
       "localizations": {
@@ -3091,6 +3397,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Genişlemiş araçlar"
+          }
+        }
+      }
+    },
+    "settings.preview.style.agendaChip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "14:30 Sync"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "14:30 Toplantı"
+          }
+        }
+      }
+    },
+    "settings.preview.style.alcoveFocus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deep Focus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Derin Odak"
+          }
+        }
+      }
+    },
+    "settings.preview.style.trackTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midnight Echo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gece Yankısı"
           }
         }
       }
@@ -3605,6 +3962,23 @@
         }
       }
     },
+    "settings.tools.ai.pickModel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seç"
+          }
+        }
+      }
+    },
     "settings.tools.ai.provider": {
       "extractionState": "manual",
       "localizations": {
@@ -3639,6 +4013,23 @@
         }
       }
     },
+    "settings.tools.ai.refreshModels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Models"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelleri Yenile"
+          }
+        }
+      }
+    },
     "settings.tools.ai.saveKey": {
       "extractionState": "manual",
       "localizations": {
@@ -3652,6 +4043,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anahtarı Kaydet"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.testConnection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test Connection"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıyı Test Et"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.testFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection failed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı kurulamadı"
+          }
+        }
+      }
+    },
+    "settings.tools.ai.testSuccess": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection verified"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı doğrulandı"
           }
         }
       }
@@ -4332,6 +4774,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosyaları buraya bırak"
+          }
+        }
+      }
+    },
+    "record.region.instruction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to select area · Esc to cancel"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alan seçmek için sürükle · İptal için Esc"
           }
         }
       }

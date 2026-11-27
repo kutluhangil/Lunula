@@ -13,6 +13,10 @@ import Observation
     public private(set) var messages: [QuickAIMessage] = []
     public private(set) var isGenerating = false
     public private(set) var lastError: String?
+    public private(set) var availableOllamaModels: [String] = []
+    public private(set) var isTestingConnection = false
+    public private(set) var connectionStatusMessage: String?
+    public private(set) var connectionSucceeded: Bool?
 
     public init(session: URLSession = .shared, secrets: SecretStoring = KeychainSecretStore()) {
         self.session = session
@@ -44,6 +48,98 @@ import Observation
         lastError = nil
     }
 
+    @discardableResult
+    public func fetchOllamaModels(endpoint: String) async -> [String] {
+        do {
+            let request = try Self.buildOllamaTagsRequest(endpoint: endpoint)
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                return []
+            }
+            let models = try Self.parseOllamaModels(data: data)
+            availableOllamaModels = models
+            return models
+        } catch {
+            return []
+        }
+    }
+
+    @discardableResult
+    public func testConnection(config: QuickAIConfig) async -> Bool {
+        isTestingConnection = true
+        defer { isTestingConnection = false }
+
+        if config.provider == .ollama {
+            do {
+                let request = try Self.buildOllamaTagsRequest(endpoint: config.ollamaEndpoint)
+                let (data, response) = try await session.data(for: request)
+                guard let http = response as? HTTPURLResponse else {
+                    connectionSucceeded = false
+                    connectionStatusMessage = "Invalid server response."
+                    return false
+                }
+                guard (200..<300).contains(http.statusCode) else {
+                    connectionSucceeded = false
+                    connectionStatusMessage =
+                        Self.parseServerError(data: data)
+                        ?? "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                    return false
+                }
+                let models = try Self.parseOllamaModels(data: data)
+                availableOllamaModels = models
+                connectionSucceeded = true
+                connectionStatusMessage = "Ollama connected (\(availableOllamaModels.count) models)"
+                return true
+            } catch {
+                connectionSucceeded = false
+                connectionStatusMessage = error.localizedDescription
+                return false
+            }
+        }
+
+        guard
+            let key = secrets.read(account: config.provider.rawValue)?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+            !key.isEmpty
+        else {
+            connectionSucceeded = false
+            connectionStatusMessage = "Missing API key"
+            return false
+        }
+
+        do {
+            let request = try Self.buildRequest(
+                prompt: "Ping", config: config, apiKey: key, stream: false)
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                connectionSucceeded = false
+                connectionStatusMessage = "Invalid server response."
+                return false
+            }
+            guard (200..<300).contains(http.statusCode) else {
+                connectionSucceeded = false
+                connectionStatusMessage =
+                    Self.parseServerError(data: data)
+                    ?? "HTTP \(http.statusCode) from \(config.provider.displayName)."
+                return false
+            }
+            let reply = try Self.parseReply(data: data, provider: config.provider)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !reply.isEmpty else {
+                connectionSucceeded = false
+                connectionStatusMessage = "Empty response from \(config.provider.displayName)."
+                return false
+            }
+            connectionSucceeded = true
+            connectionStatusMessage = "\(config.provider.displayName) connected"
+            return true
+        } catch {
+            connectionSucceeded = false
+            connectionStatusMessage = error.localizedDescription
+            return false
+        }
+    }
+
     public func ask(_ prompt: String, config: QuickAIConfig) async {
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPrompt.isEmpty, !isGenerating else { return }
@@ -68,44 +164,177 @@ import Observation
         isGenerating = true
         defer { isGenerating = false }
 
+        let assistantID = UUID()
+        var didAppendPlaceholder = false
+        var accumulatedText = ""
+
         do {
             let request = try Self.buildRequest(
-                prompt: trimmedPrompt, config: config, apiKey: apiKey)
-            let (data, response) = try await session.data(for: request)
+                prompt: trimmedPrompt, config: config, apiKey: apiKey, stream: true)
+            let (bytes, response) = try await session.bytes(for: request)
             guard let http = response as? HTTPURLResponse else {
                 lastError = "Invalid server response."
                 return
             }
             guard (200..<300).contains(http.statusCode) else {
+                var errorData = Data()
+                for try await byte in bytes {
+                    errorData.append(byte)
+                }
                 lastError =
-                    Self.parseServerError(data: data)
+                    Self.parseServerError(data: errorData)
                     ?? "HTTP \(http.statusCode) from \(config.provider.displayName)."
                 return
             }
-            let reply = try Self.parseReply(data: data, provider: config.provider)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !reply.isEmpty else {
+
+            var handledAsStream = false
+            var fallbackLines: [String] = []
+
+            for try await rawLine in bytes.lines {
+                let trimmed = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmed.isEmpty {
+                    continue
+                }
+
+                if trimmed.hasPrefix("event:")
+                    || trimmed.hasPrefix("id:")
+                    || trimmed.hasPrefix("retry:")
+                    || trimmed.hasPrefix(":")
+                {
+                    continue
+                }
+
+                if trimmed.hasPrefix("data:") {
+                    handledAsStream = true
+                    let payload = String(trimmed.dropFirst(5)).trimmingCharacters(in: .whitespaces)
+                    if payload.isEmpty || payload == "[DONE]" {
+                        continue
+                    }
+                    if let delta = try Self.parseSSEDelta(payload: payload, provider: config.provider),
+                        !delta.isEmpty
+                    {
+                        appendDelta(
+                            delta,
+                            assistantID: assistantID,
+                            didAppendPlaceholder: &didAppendPlaceholder,
+                            accumulatedText: &accumulatedText
+                        )
+                    }
+                    continue
+                }
+
+                if config.provider == .ollama,
+                    let outcome = try Self.parseOllamaLine(trimmed)
+                {
+                    handledAsStream = true
+                    if let delta = outcome.delta, !delta.isEmpty {
+                        appendDelta(
+                            delta,
+                            assistantID: assistantID,
+                            didAppendPlaceholder: &didAppendPlaceholder,
+                            accumulatedText: &accumulatedText
+                        )
+                    }
+                    continue
+                }
+
+                fallbackLines.append(rawLine)
+            }
+
+            if !handledAsStream, !fallbackLines.isEmpty {
+                let fallbackBuffer = fallbackLines.joined(separator: "\n")
+                accumulatedText = try Self.parseReply(
+                    data: Data(fallbackBuffer.utf8), provider: config.provider)
+            }
+
+            let finalReply = accumulatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !finalReply.isEmpty else {
+                if didAppendPlaceholder {
+                    messages.removeAll { $0.id == assistantID }
+                }
                 lastError = "Empty response from \(config.provider.displayName)."
                 return
             }
-            messages.append(QuickAIMessage(role: "assistant", text: reply))
+
+            if didAppendPlaceholder {
+                if let index = messages.lastIndex(where: { $0.id == assistantID }) {
+                    messages[index].text = finalReply
+                }
+            } else {
+                messages.append(QuickAIMessage(id: assistantID, role: "assistant", text: finalReply))
+            }
         } catch {
+            if didAppendPlaceholder,
+                accumulatedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            {
+                messages.removeAll { $0.id == assistantID }
+            }
             lastError = error.localizedDescription
         }
     }
 
+    private func appendDelta(
+        _ delta: String,
+        assistantID: UUID,
+        didAppendPlaceholder: inout Bool,
+        accumulatedText: inout String
+    ) {
+        if !didAppendPlaceholder {
+            messages.append(QuickAIMessage(id: assistantID, role: "assistant", text: ""))
+            didAppendPlaceholder = true
+        }
+        accumulatedText += delta
+        if let index = messages.lastIndex(where: { $0.id == assistantID }) {
+            messages[index].text = accumulatedText
+        }
+    }
+
+    private static func normalizedOllamaBase(_ endpoint: String) -> String {
+        let rawBase =
+            endpoint
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        return rawBase.isEmpty ? "http://127.0.0.1:11434" : rawBase
+    }
+
+    private static func buildOllamaTagsRequest(endpoint: String) throws -> URLRequest {
+        let base = normalizedOllamaBase(endpoint)
+        guard let url = URL(string: "\(base)/api/tags") else {
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 6
+        return request
+    }
+
+    private static func parseOllamaModels(data: Data) throws -> [String] {
+        let decoded = try JSONDecoder().decode(OllamaTagsResponse.self, from: data)
+        var seen = Set<String>()
+        var names: [String] = []
+        for entry in decoded.models ?? [] {
+            guard
+                let name = entry.name?.trimmingCharacters(in: .whitespacesAndNewlines),
+                !name.isEmpty
+            else {
+                continue
+            }
+            if seen.insert(name).inserted {
+                names.append(name)
+            }
+        }
+        return names
+    }
+
     private static func buildRequest(
-        prompt: String, config: QuickAIConfig, apiKey: String?
+        prompt: String, config: QuickAIConfig, apiKey: String?, stream: Bool
     ) throws -> URLRequest {
         let model = config.resolvedModel
         let encoder = JSONEncoder()
 
         switch config.provider {
         case .ollama:
-            let rawBase = config.ollamaEndpoint
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            let base = rawBase.isEmpty ? "http://127.0.0.1:11434" : rawBase
+            let base = normalizedOllamaBase(config.ollamaEndpoint)
             guard let url = URL(string: "\(base)/api/generate") else {
                 throw URLError(.badURL)
             }
@@ -114,7 +343,8 @@ import Observation
             request.timeoutInterval = 30
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try encoder.encode(
-                OllamaRequest(model: model, prompt: prompt, system: systemInstruction, stream: false))
+                OllamaRequest(
+                    model: model, prompt: prompt, system: systemInstruction, stream: stream))
             return request
 
         case .openAI:
@@ -131,6 +361,7 @@ import Observation
             request.httpBody = try encoder.encode(
                 OpenAIRequest(
                     model: model,
+                    stream: stream,
                     messages: [
                         .init(role: "system", content: systemInstruction),
                         .init(role: "user", content: prompt),
@@ -154,14 +385,19 @@ import Observation
                     model: model,
                     system: systemInstruction,
                     maxTokens: 300,
+                    stream: stream,
                     messages: [.init(role: "user", content: prompt)]))
             return request
 
         case .gemini:
-            let encodedModel = model.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? model
+            let encodedModel =
+                model.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? model
+            let endpointAction = stream ? "streamGenerateContent?alt=sse" : "generateContent"
             guard
                 let url = URL(
-                    string: "https://generativelanguage.googleapis.com/v1beta/models/\(encodedModel):generateContent")
+                    string:
+                        "https://generativelanguage.googleapis.com/v1beta/models/\(encodedModel):\(endpointAction)"
+                )
             else {
                 throw URLError(.badURL)
             }
@@ -180,6 +416,66 @@ import Observation
         }
     }
 
+    private static func parseOllamaLine(_ line: String) throws -> (delta: String?, done: Bool)? {
+        let data = Data(line.utf8)
+        guard let decoded = try? JSONDecoder().decode(OllamaStreamChunk.self, from: data) else {
+            return nil
+        }
+        if let errorMessage = decoded.error, !errorMessage.isEmpty {
+            throw QuickAIStreamError(message: errorMessage)
+        }
+        guard decoded.response != nil || decoded.done != nil else {
+            return nil
+        }
+        return (decoded.response, decoded.done ?? false)
+    }
+
+    private static func parseSSEDelta(
+        payload: String, provider: QuickAIProvider
+    ) throws -> String? {
+        let data = Data(payload.utf8)
+        let decoder = JSONDecoder()
+
+        switch provider {
+        case .ollama:
+            let decoded = try decoder.decode(OllamaStreamChunk.self, from: data)
+            if let errorMessage = decoded.error, !errorMessage.isEmpty {
+                throw QuickAIStreamError(message: errorMessage)
+            }
+            return decoded.response
+
+        case .openAI:
+            let decoded = try decoder.decode(OpenAIStreamChunk.self, from: data)
+            guard let choice = decoded.choices?.first else {
+                if let errorMessage = parseServerError(data: data) {
+                    throw QuickAIStreamError(message: errorMessage)
+                }
+                return nil
+            }
+            return choice.delta?.content ?? choice.message?.content
+
+        case .anthropic:
+            let decoded = try decoder.decode(AnthropicStreamChunk.self, from: data)
+            if decoded.type == "error", let errorMessage = parseServerError(data: data) {
+                throw QuickAIStreamError(message: errorMessage)
+            }
+            if decoded.type == "content_block_delta" {
+                return decoded.delta?.text
+            }
+            if decoded.type == nil || decoded.type == "message" {
+                return decoded.content?.first?.text
+            }
+            return nil
+
+        case .gemini:
+            let decoded = try decoder.decode(GeminiResponse.self, from: data)
+            if decoded.candidates == nil, let errorMessage = parseServerError(data: data) {
+                throw QuickAIStreamError(message: errorMessage)
+            }
+            return extractGeminiText(from: decoded)
+        }
+    }
+
     private static func parseReply(data: Data, provider: QuickAIProvider) throws -> String {
         let decoder = JSONDecoder()
         switch provider {
@@ -193,9 +489,27 @@ import Observation
             let decoded = try decoder.decode(AnthropicResponse.self, from: data)
             return decoded.content?.first?.text ?? ""
         case .gemini:
-            let decoded = try decoder.decode(GeminiResponse.self, from: data)
-            return decoded.candidates?.first?.content?.parts?.first?.text ?? ""
+            if let decoded = try? decoder.decode(GeminiResponse.self, from: data) {
+                return extractGeminiText(from: decoded)
+            }
+            let arrayDecoded = try decoder.decode([GeminiResponse].self, from: data)
+            var combined = ""
+            for item in arrayDecoded {
+                combined += extractGeminiText(from: item)
+            }
+            return combined
         }
+    }
+
+    private static func extractGeminiText(from response: GeminiResponse) -> String {
+        guard let parts = response.candidates?.first?.content?.parts else { return "" }
+        var output = ""
+        for part in parts {
+            if let text = part.text {
+                output += text
+            }
+        }
+        return output
     }
 
     private static func parseServerError(data: Data) -> String? {
@@ -213,6 +527,21 @@ import Observation
     }
 }
 
+private struct QuickAIStreamError: LocalizedError, Sendable {
+    let message: String
+
+    var errorDescription: String? {
+        message
+    }
+}
+
+private struct OllamaTagsResponse: Decodable {
+    struct ModelEntry: Decodable {
+        var name: String?
+    }
+    var models: [ModelEntry]?
+}
+
 private struct OllamaRequest: Encodable {
     var model: String
     var prompt: String
@@ -224,12 +553,19 @@ private struct OllamaResponse: Decodable {
     var response: String?
 }
 
+private struct OllamaStreamChunk: Decodable {
+    var response: String?
+    var done: Bool?
+    var error: String?
+}
+
 private struct OpenAIRequest: Encodable {
     struct Message: Encodable {
         var role: String
         var content: String
     }
     var model: String
+    var stream: Bool
     var messages: [Message]
 }
 
@@ -243,6 +579,17 @@ private struct OpenAIResponse: Decodable {
     var choices: [Choice]?
 }
 
+private struct OpenAIStreamChunk: Decodable {
+    struct Choice: Decodable {
+        struct ContentPayload: Decodable {
+            var content: String?
+        }
+        var delta: ContentPayload?
+        var message: ContentPayload?
+    }
+    var choices: [Choice]?
+}
+
 private struct AnthropicRequest: Encodable {
     struct Message: Encodable {
         var role: String
@@ -251,12 +598,14 @@ private struct AnthropicRequest: Encodable {
     var model: String
     var system: String
     var maxTokens: Int
+    var stream: Bool
     var messages: [Message]
 
     enum CodingKeys: String, CodingKey {
         case model
         case system
         case maxTokens = "max_tokens"
+        case stream
         case messages
     }
 }
@@ -265,6 +614,19 @@ private struct AnthropicResponse: Decodable {
     struct ContentBlock: Decodable {
         var text: String?
     }
+    var content: [ContentBlock]?
+}
+
+private struct AnthropicStreamChunk: Decodable {
+    struct Delta: Decodable {
+        var type: String?
+        var text: String?
+    }
+    struct ContentBlock: Decodable {
+        var text: String?
+    }
+    var type: String?
+    var delta: Delta?
     var content: [ContentBlock]?
 }
 

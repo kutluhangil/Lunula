@@ -27,16 +27,43 @@ struct TimerCompactLeading: View {
     let snapshot: TimerSnapshot
     @Environment(\.quickTools) private var quickTools
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandMorphNamespace) private var morphNamespace
 
     var body: some View {
         let mascot = quickTools.timerMascot()
-        let animates = !reduceMotion && mascot != .none && snapshot.endsAt != nil
-        Image(systemName: mascot.symbolName ?? snapshot.phase.symbol)
+        let animates = !reduceMotion && snapshot.endsAt != nil
+        if let morphNamespace {
+            mascotSymbol(mascot: mascot, animates: animates)
+                .frame(width: 16, height: 16)
+                .matchedGeometryEffect(id: "hero-timer-icon", in: morphNamespace)
+        } else {
+            mascotSymbol(mascot: mascot, animates: animates)
+                .frame(width: 16, height: 16)
+        }
+    }
+
+    @ViewBuilder
+    private func mascotSymbol(mascot: TimerMascot, animates: Bool) -> some View {
+        let base = Image(systemName: mascot.symbolName ?? snapshot.phase.symbol)
             .font(TypeToken.body.font)
             .symbolRenderingMode(.hierarchical)
             .foregroundStyle(Palette.signalOrange)
-            .symbolEffect(.pulse, options: .repeating, isActive: animates)
-            .frame(width: 16, height: 16)
+        switch mascot {
+        case .none:
+            base
+        case .flame:
+            base.symbolEffect(.variableColor.iterative, options: .repeating, isActive: animates)
+        case .hare:
+            if reduceMotion {
+                base
+            } else {
+                base
+                    .symbolEffect(.bounce, value: snapshot.phase)
+                    .symbolEffect(.pulse, options: .repeating, isActive: animates)
+            }
+        case .tortoise, .cat, .bird:
+            base.symbolEffect(.breathe, options: .repeating, isActive: animates)
+        }
     }
 }
 

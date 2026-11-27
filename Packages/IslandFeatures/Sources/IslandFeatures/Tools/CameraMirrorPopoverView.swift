@@ -43,6 +43,7 @@ public struct CameraMirrorPopoverView: View {
     private let startPreview: @MainActor () async -> NSView?
     private let stopPreview: @MainActor () -> Void
     private let openSystemSettings: @MainActor () -> Void
+    private let material: IslandSurfaceMaterial
 
     @State private var previewView: NSView?
     @State private var isStarting = false
@@ -53,13 +54,15 @@ public struct CameraMirrorPopoverView: View {
         isDenied: Bool,
         startPreview: @escaping @MainActor () async -> NSView?,
         stopPreview: @escaping @MainActor () -> Void,
-        openSystemSettings: @escaping @MainActor () -> Void
+        openSystemSettings: @escaping @MainActor () -> Void,
+        material: IslandSurfaceMaterial = .obsidian
     ) {
         self.isAuthorized = isAuthorized
         self.isDenied = isDenied
         self.startPreview = startPreview
         self.stopPreview = stopPreview
         self.openSystemSettings = openSystemSettings
+        self.material = material
     }
 
     public var body: some View {
@@ -86,7 +89,7 @@ public struct CameraMirrorPopoverView: View {
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
         .padding(8)
-        .background(Palette.obsidian)
+        .islandPopoverChrome(material)
         .task(id: isAuthorized) {
             guard isAuthorized, previewView == nil else { return }
             await activateMirror()

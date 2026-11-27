@@ -6,6 +6,14 @@ public enum PermissionState: Equatable, Sendable {
     case notRequested, granted, denied, unavailable
 }
 
+public enum ExtraPermissionKind: String, CaseIterable, Sendable {
+    case reminders
+    case camera
+    case audioTap
+    case screenCapture
+    case spotify
+}
+
 /// One privacy permission badge: status dot, status label and direct action button.
 public struct PermissionRow: View {
     public enum Action: Equatable, Sendable {
@@ -92,5 +100,15 @@ public struct PermissionRow: View {
     /// System Settings › Privacy & Security panes.
     public static func settingsURL(_ pane: String) -> URL {
         URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")!
+    }
+
+    public static func extraSettingsURL(_ kind: ExtraPermissionKind) -> URL {
+        switch kind {
+        case .reminders: settingsURL("Privacy_Reminders")
+        case .camera: settingsURL("Privacy_Camera")
+        case .audioTap: settingsURL("Privacy_AudioCapture")
+        case .screenCapture: settingsURL("Privacy_ScreenCapture")
+        case .spotify: settingsURL("Privacy_Automation")
+        }
     }
 }

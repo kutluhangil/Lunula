@@ -89,14 +89,32 @@ public struct SettingsTab: Identifiable {
         searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] },
         hasAIKey: @escaping @MainActor (QuickAIProvider) -> Bool = { _ in false },
         saveAIKey: @escaping @MainActor (String, QuickAIProvider) -> Void = { _, _ in },
-        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in }
+        clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in },
+        extraPermission: @escaping @MainActor (ExtraPermissionKind) -> PermissionState = { _ in .notRequested },
+        requestExtraPermission: @escaping @MainActor (ExtraPermissionKind) -> Void = { _ in },
+        ollamaModels: @escaping @MainActor () -> [String] = { [] },
+        refreshOllamaModels: @escaping @MainActor (String) async -> [String] = { _ in [] },
+        testAIConnection: @escaping @MainActor (QuickAIConfig) async -> (ok: Bool, message: String) = { _ in
+            (false, "")
+        },
+        resetDefaults: (@MainActor () -> Void)? = nil
     ) -> [SettingsTab] {
         [
             SettingsTab(
                 id: SettingsTabID.general.rawValue,
                 titleKey: SettingsTabID.general.titleKey,
                 symbol: SettingsTabID.general.symbol,
-                makeView: { AnyView(GeneralSettingsView(settings: settings, launchAtLogin: launchAtLogin)) }
+                makeView: {
+                    AnyView(
+                        GeneralSettingsView(
+                            settings: settings,
+                            launchAtLogin: launchAtLogin,
+                            onResetDefaults: resetDefaults.map { action in
+                                { MainActor.assumeIsolated { action() } }
+                            }
+                        )
+                    )
+                }
             ),
             SettingsTab(
                 id: SettingsTabID.appearance.rawValue,
@@ -111,8 +129,14 @@ public struct SettingsTab: Identifiable {
                 makeView: {
                     AnyView(
                         ActivitiesSettingsView(
-                            settings: settings, permission: permission, request: request,
-                            searchWeatherCity: searchWeatherCity))
+                            settings: settings,
+                            permission: permission,
+                            request: request,
+                            searchWeatherCity: searchWeatherCity,
+                            extraPermission: extraPermission,
+                            requestExtraPermission: requestExtraPermission
+                        )
+                    )
                 }
             ),
             SettingsTab(
@@ -125,7 +149,10 @@ public struct SettingsTab: Identifiable {
                             settings: settings,
                             hasAIKey: hasAIKey,
                             saveAIKey: saveAIKey,
-                            clearAIKey: clearAIKey
+                            clearAIKey: clearAIKey,
+                            ollamaModels: ollamaModels,
+                            refreshOllamaModels: refreshOllamaModels,
+                            testAIConnection: testAIConnection
                         )
                     )
                 }

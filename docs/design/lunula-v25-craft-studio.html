@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunula v2.5 — Akışkan Hareket, Liquid Glass ve Ayarlar Stüdyosu</title>
+<style>
+  :root {
+    --bench: #07080B;
+    --panel: #0E1016;
+    --panel-raised: #141720;
+    --obsidian: #000000;
+    --ink-raised: #111114;
+    --ink-pressed: #1D1E24;
+    --hairline: rgba(255, 255, 255, 0.10);
+    --hairline-strong: rgba(255, 255, 255, 0.20);
+    --text-primary: #F5F5F7;
+    --text-secondary: rgba(245, 245, 247, 0.64);
+    --text-tertiary: rgba(245, 245, 247, 0.40);
+    --lunar-gold: #F5C97B;
+    --amber: #FF9F0A;
+    --green: #32D74B;
+    --red: #FF453A;
+    --ice: #8CC8FF;
+    --violet: #9D7BFF;
+    --spring: cubic-bezier(0.22, 1.10, 0.36, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+    background: radial-gradient(1100px 480px at 50% -120px, rgba(140, 200, 255, 0.08), transparent 70%), var(--bench);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+    padding-bottom: 88px;
+  }
+
+  .container {
+    max-width: 1220px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  header.top-header {
+    padding: 34px 0 24px;
+    border-bottom: 1px solid var(--hairline);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .crescent-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #000;
+    border: 1px solid var(--hairline-strong);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.65), 0 0 20px rgba(245, 201, 123, 0.16);
+  }
+
+  .identity h1 {
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .identity p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .jump-links {
+    display: flex;
+    gap: 6px;
+    background: var(--panel);
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+  }
+
+  .jump-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 6px 13px;
+    border-radius: 999px;
+    transition: background 0.18s, color 0.18s;
+  }
+
+  .jump-links a:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  section.block {
+    margin-top: 44px;
+  }
+
+  .section-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .section-bar h2 {
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .section-bar p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    max-width: 72ch;
+  }
+
+  /* Control Dock */
+  .control-dock {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .seg {
+    display: inline-flex;
+    background: #06070A;
+    border: 1px solid var(--hairline);
+    border-radius: 9px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.16s, color 0.16s;
+  }
+
+  .seg button.active {
+    background: var(--ink-pressed);
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.22);
+  }
+
+  .action-btn {
+    appearance: none;
+    border: 1px solid var(--hairline-strong);
+    background: var(--panel-raised);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.14s, background 0.16s, border-color 0.16s;
+  }
+
+  .action-btn:hover {
+    background: #1C202C;
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+
+  .action-btn.gold {
+    border-color: rgba(245, 201, 123, 0.45);
+    color: var(--lunar-gold);
+  }
+
+  /* Live Display Stage */
+  .display-frame {
+    position: relative;
+    height: 440px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
+    user-select: none;
+    transition: background 0.4s ease;
+  }
+
+  .display-frame.wp-aurora {
+    background:
+      radial-gradient(540px 280px at 22% 18%, rgba(126, 86, 255, 0.52), transparent 72%),
+      radial-gradient(520px 300px at 78% 12%, rgba(56, 172, 255, 0.44), transparent 70%),
+      radial-gradient(640px 360px at 50% 82%, rgba(255, 122, 92, 0.22), transparent 75%),
+      linear-gradient(180deg, #121528 0%, #090B14 100%);
+  }
+
+  .display-frame.wp-sunset {
+    background:
+      radial-gradient(580px 260px at 35% 8%, rgba(255, 148, 82, 0.62), transparent 70%),
+      radial-gradient(540px 320px at 74% 24%, rgba(214, 72, 132, 0.50), transparent 72%),
+      linear-gradient(180deg, #241322 0%, #0D0914 100%);
+  }
+
+  .display-frame.wp-daylight {
+    background:
+      radial-gradient(620px 290px at 30% 15%, rgba(92, 158, 255, 0.55), transparent 70%),
+      radial-gradient(520px 280px at 72% 18%, rgba(120, 224, 210, 0.48), transparent 72%),
+      linear-gradient(180deg, #DCE8F8 0%, #9EB6D8 100%);
+  }
+
+  .menubar {
+    position: relative;
+    z-index: 2;
+    height: 32px;
+    padding: 0 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    transition: background 0.25s;
+  }
+
+  .wp-daylight .menubar {
+    color: #0D1320;
+  }
+
+  .menubar.hide-notch-bar {
+    background: #000000 !important;
+    color: rgba(255, 255, 255, 0.88) !important;
+  }
+
+  .mb-left, .mb-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* Island Host */
+  .island-stage {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 760px;
+    height: 320px;
+    z-index: 6;
+    pointer-events: auto;
+  }
+
+  svg.island-svg {
+    position: absolute;
+    inset: 0;
+    width: 760px;
+    height: 320px;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  /* Glass backdrop layer clipped to exact dynamic SVG path via clip-path */
+  .island-glass-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 760px;
+    height: 320px;
+    backdrop-filter: blur(24px) saturate(185%);
+    -webkit-backdrop-filter: blur(24px) saturate(185%);
+    background: rgba(10, 12, 18, 0.48);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  }
+
+  .island-glass-backdrop.active {
+    opacity: 1;
+  }
+
+  /* Hardware Notch Cap (#000000 always over physical camera cutout) */
+  .hardware-notch-cap {
+    position: absolute;
+    top: 0;
+    left: calc(380px - 94px);
+    width: 188px;
+    height: 32px;
+    background: #000000;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    z-index: 9;
+    pointer-events: none;
+  }
+
+  .camera-lens {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #1F3254 0%, #090D16 55%, #040508 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  /* Morphing Hero Artwork Element (Compact 20px -> Peek 34px -> Expanded 64px) */
+  .hero-artwork {
+    position: absolute;
+    z-index: 12;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #6E56CF 0%, #EC4899 55%, #F59E0B 100%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42), inset 0 0 0 0.5px rgba(255, 255, 255, 0.28);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    transition:
+      left 0.44s var(--spring),
+      top 0.44s var(--spring),
+      width 0.44s var(--spring),
+      height 0.44s var(--spring),
+      border-radius 0.44s var(--spring),
+      opacity 0.22s ease;
+    pointer-events: none;
+  }
+
+  /* Island Content Overlay */
+  .island-content {
+    position: absolute;
+    z-index: 10;
+    overflow: hidden;
+    transition:
+      left 0.42s var(--spring),
+      top 0.42s var(--spring),
+      width 0.42s var(--spring),
+      height 0.42s var(--spring);
+  }
+
+  /* Boring ambient wash */
+  .boring-wash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(240px 160px at 14% 24%, rgba(236, 72, 153, 0.26), rgba(110, 86, 207, 0.10) 55%, transparent 80%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .boring-wash.visible {
+    opacity: 1;
+  }
+
+  /* Top header inside expanded */
+  .exp-top {
+    height: 32px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .exp-left-tools {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 170px;
+  }
+
+  .mini-icon-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .mini-icon-btn:hover, .mini-icon-btn.active {
+    background: rgba(255, 255, 255, 0.10);
+    color: var(--text-primary);
+  }
+
+  /* Sliding Tab Capsule */
+  .exp-tabs {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 999px;
+  }
+
+  .tab-pill-indicator {
+    position: absolute;
+    top: 2px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--ink-pressed);
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.22);
+    transition: left 0.30s var(--spring), width 0.30s var(--spring);
+    pointer-events: none;
+  }
+
+  .exp-tab-btn {
+    position: relative;
+    z-index: 1;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    width: 44px;
+    height: 22px;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.18s;
+  }
+
+  .exp-tab-btn.active {
+    color: var(--text-primary);
+  }
+
+  /* Page Body with directional blurReplace transition */
+  .exp-body {
+    padding: 12px 14px 14px;
+    height: calc(100% - 32px);
+    transition: opacity 0.22s ease, filter 0.22s ease, transform 0.24s var(--spring);
+  }
+
+  .exp-body.switching {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateX(var(--slide-dir, 10px)) scale(0.985);
+  }
+
+  .hero-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .artwork-slot {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+  }
+
+  .track-meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .track-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .track-title {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-artist {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .spectrum {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 18px;
+  }
+
+  .spectrum span {
+    width: 3px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #F472B6, #A78BFA);
+    transition: height 0.12s ease;
+  }
+
+  .progress-bar {
+    margin-top: 7px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.14);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    width: 44%;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #EC4899, #F59E0B);
+  }
+
+  .lyric-pair {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lyric-pair small {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
+  .transport-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .transport-btns {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .play-filled {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 0;
+    background: #F5F5F7;
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .boring-agenda-box {
+    width: 132px;
+    padding: 8px 10px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
+  }
+
+  .boring-agenda-box .ag-head {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+    margin-bottom: 4px;
+  }
+
+  .boring-agenda-box .ag-row {
+    font-size: 11px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.45;
+  }
+
+  .boring-agenda-box .ag-row.dim {
+    color: var(--text-secondary);
+  }
+
+  .tiles-row {
+    margin-top: 11px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 112px;
+    gap: 8px;
+  }
+
+  .isl-card {
+    background: rgba(20, 21, 26, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 11px;
+    padding: 8px 10px;
+    height: 54px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .isl-card.glass-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03));
+    border-color: rgba(255, 255, 255, 0.20);
+  }
+
+  .isl-card .k-title {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .isl-card .k-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Detached Bubble + Floating Basket + Glass Popover on Stage */
+  .detached-bubble {
+    position: absolute;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #000;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    color: var(--amber);
+    z-index: 11;
+    transition: left 0.45s var(--spring), transform 0.45s var(--spring), opacity 0.32s ease, background 0.25s;
+  }
+
+  .detached-bubble.glass {
+    background: rgba(12, 14, 20, 0.48);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+  }
+
+  .floating-basket {
+    position: absolute;
+    right: 20px;
+    top: 150px;
+    width: 164px;
+    height: 116px;
+    border-radius: 18px;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 9px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 8;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
+    transition: transform 0.28s var(--spring), opacity 0.22s, background 0.25s;
+  }
+
+  .floating-basket.glass {
+    background: rgba(12, 14, 22, 0.48);
+    backdrop-filter: blur(22px) saturate(185%);
+    -webkit-backdrop-filter: blur(22px) saturate(185%);
+    border-color: rgba(255, 255, 255, 0.24);
+  }
+
+  .floating-basket.hidden {
+    opacity: 0;
+    transform: translateX(24px) scale(0.95);
+    pointer-events: none;
+  }
+
+  .basket-count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(255, 159, 10, 0.20);
+    color: var(--amber);
+    border: 1px solid rgba(255, 159, 10, 0.38);
+  }
+
+  /* Telemetry HUD */
+  .telemetry-strip {
+    position: absolute;
+    left: 16px;
+    bottom: 14px;
+    right: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: rgba(6, 8, 12, 0.72);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 12px;
+    color: var(--text-secondary);
+    z-index: 15;
+  }
+
+  .telemetry-strip code {
+    color: var(--text-primary);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11.5px;
+  }
+
+  /* Two-Column Lab Section: Settings 680x540 + Streaming AI & Recorder */
+  .lab-split {
+    display: grid;
+    grid-template-columns: 680px 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+
+  @media (max-width: 1140px) {
+    .lab-split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Authentic 680x540 Settings Window Replica */
+  .settings-win {
+    width: 100%;
+    max-width: 680px;
+    height: 540px;
+    background: #08080A;
+    border-radius: 16px;
+    border: 1px solid var(--hairline-strong);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sw-titlebar {
+    height: 32px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .traffic-lights {
+    display: flex;
+    gap: 7px;
+    width: 110px;
+  }
+
+  .traffic-lights i {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .sw-stage {
+    margin: 0 12px 10px;
+    height: 88px;
+    border-radius: 12px;
+    border: 1px solid var(--hairline);
+    background:
+      radial-gradient(240px 90px at 18% 0%, rgba(72, 88, 178, 0.55), transparent 75%),
+      radial-gradient(240px 90px at 84% 0%, rgba(138, 62, 130, 0.48), transparent 75%),
+      #0C0E15;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  .sw-stage-island {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    height: 40px;
+    background: #000;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+    border: 1px solid rgba(255, 159, 10, 0.42);
+    border-top: 0;
+    box-shadow: 0 6px 24px rgba(255, 159, 10, 0.24);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    font-size: 12px;
+    transition: transform 0.18s ease-out, width 0.25s var(--spring), background 0.25s;
+  }
+
+  .sw-stage-island.glass {
+    background: rgba(12, 14, 22, 0.46);
+    backdrop-filter: blur(16px) saturate(180%);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  .sw-tabs {
+    margin: 0 12px 12px;
+    height: 36px;
+    padding: 4px;
+    border-radius: 999px;
+    background: #000;
+    border: 1px solid var(--hairline);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+
+  .sw-tabs button {
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+  }
+
+  .sw-tabs button.active {
+    background: var(--ink-pressed);
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.24);
+  }
+
+  .sw-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 20px;
+    mask-image: linear-gradient(180deg, #000 88%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent 100%);
+  }
+
+  .sw-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sw-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 99px;
+  }
+
+  .sw-card {
+    background: var(--ink-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .sw-row {
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 13px;
+  }
+
+  .sw-row:last-child { border-bottom: 0; }
+
+  .sw-row small {
+    display: block;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .perm-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+
+  .perm-pill.ok {
+    background: rgba(50, 215, 75, 0.16);
+    color: var(--green);
+  }
+
+  .perm-pill.ask {
+    background: rgba(255, 159, 10, 0.16);
+    color: var(--amber);
+    cursor: pointer;
+  }
+
+  /* Side Interactive Cards: Quick AI Streaming + Region Recorder */
+  .side-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .tool-box {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .tool-box h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .tool-box p.desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .chip-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .chip {
+    border: 1px solid var(--hairline-strong);
+    background: var(--ink-pressed);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .chip:hover {
+    border-color: var(--lunar-gold);
+    color: var(--lunar-gold);
+  }
+
+  .ai-stream-out {
+    min-height: 84px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #06070A;
+    border: 1px solid var(--hairline);
+    font-size: 12.5px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  .crop-canvas {
+    position: relative;
+    height: 148px;
+    border-radius: 12px;
+    background:
+      linear-gradient(135deg, rgba(94, 139, 255, 0.22), rgba(244, 114, 182, 0.20)),
+      #090B12;
+    border: 1px dashed rgba(255, 255, 255, 0.22);
+    cursor: crosshair;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .crop-rect {
+    position: absolute;
+    border: 1.5px solid var(--amber);
+    background: rgba(255, 159, 10, 0.10);
+    pointer-events: none;
+    display: none;
+  }
+
+  .crop-badge {
+    position: absolute;
+    bottom: -22px;
+    right: 0;
+    background: #000;
+    color: var(--amber);
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="top-header">
+    <div class="identity">
+      <div class="crescent-badge" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 44 44">
+          <defs>
+            <linearGradient id="lunGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#FFF2D6"/>
+              <stop offset="100%" stop-color="#FF9F0A"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#lunGrad)" fill-rule="evenodd"
+            d="M22 2a20 20 0 1 0 0 40 20 20 0 0 0 0-40Zm5-2a19 19 0 1 0 0 38 19 19 0 0 0 0-38Z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Lunula v2.5 — Akışkan Hareket, Yüzey ve Ayarlar Stüdyosu</h1>
+        <p>Gerçek su damlası menisküs matematiği, uçarak büyüyen albüm kapağı, çift yönlü metaball ve macOS 26 Liquid Glass bütünlüğü</p>
+      </div>
+    </div>
+
+    <nav class="jump-links">
+      <a href="#stage">Canlı Ada &amp; Fizik</a>
+      <a href="#settings-lab">v2.5 Ayarlar &amp; İzinler</a>
+      <a href="#onboarding-preview">İlk Açılış Seçici</a>
+    </nav>
+  </header>
+
+  <!-- SECTION 1: LIVE INTERACTIVE ISLAND & DROPLET PHYSICS -->
+  <section class="block" id="stage">
+    <div class="section-bar">
+      <div>
+        <h2>1. Canlı Su Damlası Fiziği, Uçan Kapak (`matchedGeometryEffect`) ve Cam Yüzeyler</h2>
+        <p>İmleci çentiğin üzerinde gezdirip alt kenardan hızla aşağı çekerek <code>1.22×</code> kopma uzamasını dene; fazları değiştirerek albüm kapağının <code>20 → 34 → 64 pt</code> fiziksel akışını izle.</p>
+      </div>
+    </div>
+
+    <div class="control-dock">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Faz:</span>
+        <div class="seg" id="phaseSeg">
+          <button data-phase="compact">Dar · Müzik + Söz</button>
+          <button data-phase="peek">Göz Atma (Peek)</button>
+          <button data-phase="expanded" class="active">Genişlemiş</button>
+          <button data-phase="recording">Kayıt · REC</button>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <span class="ctrl-label">Stil:</span>
+        <div class="seg" id="styleSeg">
+          <button data-style="lunula" class="active">Lunula</button>
+          <button data-style="alcove">Alcove</button>
+          <button data-style="boring">Boring</button>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <span class="ctrl-label">Yüzey:</span>
+        <div class="seg" id="matSeg">
+          <button data-mat="obsidian" class="active">Obsidyen #000</button>
+          <button data-mat="glass">Liquid Glass</button>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <span class="ctrl-label">Damla Hassasiyeti:</span>
+        <div class="seg" id="sensSeg">
+          <button data-sens="0.65">Hafif</button>
+          <button data-sens="1.0" class="active">Dengeli</button>
+          <button data-sens="1.45">Belirgin</button>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <span class="ctrl-label">Duvar Kağıdı:</span>
+        <div class="seg" id="wpSeg">
+          <button data-wp="wp-aurora" class="active">Kuzey Işığı</button>
+          <button data-wp="wp-sunset">Gün Batımı</button>
+          <button data-wp="wp-daylight">Açık Cam</button>
+        </div>
+      </div>
+
+      <button class="action-btn gold" id="metaballBtn">Baloncuk Geri Em / Doğur</button>
+      <button class="action-btn" id="basketBtn">Yüzen Sepeti Göster</button>
+    </div>
+
+    <div class="display-frame wp-aurora" id="displayFrame">
+      <div class="menubar" id="menubar">
+        <div class="mb-left">
+          <strong>&#63743;</strong>
+          <strong>Xcode</strong>
+          <span>Dosya</span>
+          <span>Düzen</span>
+          <span>Görünüm</span>
+        </div>
+        <div class="mb-right">
+          <span>Wi-Fi</span>
+          <span>94%</span>
+          <span>Cum 14:20</span>
+        </div>
+      </div>
+
+      <div class="island-stage" id="islandStage">
+        <div class="island-glass-backdrop" id="glassBackdrop"></div>
+
+        <svg class="island-svg" viewBox="0 0 760 320">
+          <defs>
+            <filter id="gooeyFilter">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur"/>
+              <feColorMatrix in="blur" mode="matrix"
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo"/>
+            </filter>
+            <radialGradient id="causticGlow" cx="50%" cy="78%" r="55%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+              <stop offset="55%" stop-color="rgba(140,200,255,0.07)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </radialGradient>
+            <filter id="haloBlur" x="-20%" y="-20%" width="140%" height="150%">
+              <feGaussianBlur stdDeviation="10"/>
+            </filter>
+          </defs>
+
+          <!-- Outer Halo -->
+          <path id="haloPath" fill="none" stroke="#EC4899" stroke-width="3" stroke-opacity="0.42" filter="url(#haloBlur)"/>
+
+          <!-- Gooey Metaball Bridge Group -->
+          <g id="gooeyGroup" filter="url(#gooeyFilter)" opacity="0">
+            <rect id="gooIslandRect" x="240" y="0" width="280" height="32" rx="14" fill="#000000"/>
+            <circle id="gooBubbleCircle" cx="520" cy="16" r="16" fill="#000000"/>
+          </g>
+
+          <!-- Main Fluid Island Shell -->
+          <path id="islandPath" fill="#000000" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+
+          <!-- Droplet Specular Caustic Highlight -->
+          <path id="specularPath" fill="url(#causticGlow)" opacity="0"/>
+        </svg>
+
+        <!-- Hardware Notch Cap (#000000 invariant over camera) -->
+        <div class="hardware-notch-cap">
+          <div class="camera-lens"></div>
+        </div>
+
+        <!-- Morphing Hero Artwork -->
+        <div class="hero-artwork" id="heroArtwork">&#9835;</div>
+
+        <!-- Detached Bubble (Glass-aware) -->
+        <div class="detached-bubble" id="detachedBubble" title="Ayrık Pomodoro Baloncuğu (24:18)">&#9201;</div>
+
+        <!-- Dynamic Content Container -->
+        <div class="island-content" id="islandContent"></div>
+      </div>
+
+      <!-- Glass-aware Floating Drop Basket with Shelf Count Badge -->
+      <div class="floating-basket hidden" id="floatingBasket">
+        <span class="basket-count">3 öğe</span>
+        <div style="text-align:center; padding-top:10px;">
+          <div style="font-size:18px; color:var(--lunar-gold);">&#8615;</div>
+          <div style="font-size:12px; font-weight:600; margin-top:2px;">Rafa Bırak</div>
+          <div style="font-size:11px; color:var(--text-secondary);">Dosyaları buraya sal</div>
+        </div>
+        <div style="height:28px; border-radius:9px; background:rgba(255,255,255,0.08); display:grid; place-items:center; font-size:11px; color:var(--text-secondary);">
+          AirDrop ile Gönder
+        </div>
+      </div>
+
+      <div class="telemetry-strip">
+        <div>
+          Su Damlası Gerilimi:
+          <code id="telPull">pullX: 0.0 pt · pullY: 0.0 pt · focusX: 0.50 · intensity: 0.00</code>
+        </div>
+        <div>
+          Yüzey &amp; Geçiş:
+          <code id="telState">Expanded · Lunula · Obsidyen #000000</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: v2.5 SETTINGS + STREAMING AI & REGION RECORDER -->
+  <section class="block" id="settings-lab">
+    <div class="section-bar">
+      <div>
+        <h2>2. Canlı v2.5 Ayarlar Sahnesi, 7'li İzin Merkezi, Akışlı Mini AI ve Alan Kaydedici</h2>
+        <p>Üstteki <code>656 × 88 pt</code> sahnenin üzerinde fareyi gezdirerek önizleme çentiğinin canlı esnemesini dene; sekmeler arasında geçip 7 iznin tamamını ve iki adımlı sıfırlamayı incele.</p>
+      </div>
+    </div>
+
+    <div class="lab-split">
+      <!-- Left: 680x540 Settings Window -->
+      <div class="settings-win">
+        <div class="sw-titlebar">
+          <div class="traffic-lights">
+            <i style="background:#FF5F57"></i>
+            <i style="background:#FEBC2E"></i>
+            <i style="background:#28C840"></i>
+          </div>
+          <strong style="color:var(--text-primary); font-weight:600;">Lunula Ayarları</strong>
+          <span id="swStageLabel" style="width:150px; text-align:right;">Sahne: Su Damlası + Cam</span>
+        </div>
+
+        <div class="sw-stage" id="swStage" title="Fareyi gezdirerek canlı önizleme fiziğini test et">
+          <div class="sw-stage-island" id="swStageIsland">
+            <span style="color:var(--amber); font-weight:600;">&#9201; Odak</span>
+            <span id="swStageStyleTag" style="font-size:11px; color:var(--text-secondary);">Lunula · 520 pt</span>
+            <span style="font-weight:600;">24:18</span>
+          </div>
+        </div>
+
+        <div class="sw-tabs" id="swTabs">
+          <button data-tab="appearance" class="active">Görünüm</button>
+          <button data-tab="permissions">Etkinlik &amp; İzinler</button>
+          <button data-tab="ai">Araçlar &amp; AI</button>
+          <button data-tab="general">Genel</button>
+          <button data-tab="onboarding" id="onboarding-preview">İlk Açılış</button>
+        </div>
+
+        <div class="sw-scroll" id="swBody"></div>
+      </div>
+
+      <!-- Right: Streaming AI + Region Crop Recorder -->
+      <div class="side-stack">
+        <div class="tool-box">
+          <h3>Akışlı (Streaming) Mini AI + Pano Kısayol Çipleri</h3>
+          <p class="desc"><code>URLSession.bytes(for:)</code> ile kelime kelime SSE/NDJSON akışı ve tek tıkla panodaki metni özetleme/çevirme.</p>
+          <div class="chip-row">
+            <button class="chip" data-prompt="Panodaki son metni 2 cümlede özetle:">Panoyu Özetle</button>
+            <button class="chip" data-prompt="Panodaki metni doğal Türkçeye çevir:">Türkçeye Çevir</button>
+            <button class="chip" data-prompt="Bu Swift 6 Sendable hatasını kısaca açıkla:">Kodu Açıkla</button>
+          </div>
+          <div class="ai-stream-out" id="aiStreamOut">Üstteki kısayol çiplerinden birine tıkla; yanıt kelime kelime akarak gelsin.</div>
+        </div>
+
+        <div class="tool-box">
+          <h3>Seçili Alan MP4 / GIF Kaydedici (`ScreenRegionSelector`)</h3>
+          <p class="desc">Aşağıdaki sahnede fareyle sürükleyerek kayıt bölgesi seç; AppKit sol-alt koordinatı otomatik <code>SCStreamConfiguration.sourceRect</code> sol-üst uzayına çevrilir.</p>
+          <div class="crop-canvas" id="cropCanvas">
+            <span>Kayıt alanı seçmek için burada sürükle (min 32 × 32 pt)</span>
+            <div class="crop-rect" id="cropRect">
+              <span class="crop-badge" id="cropBadge">0 × 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const state = {
+    phase: 'expanded',
+    page: 'home',
+    style: 'lunula',
+    material: 'obsidian',
+    sensitivity: 1.0,
+    wallpaper: 'wp-aurora',
+    bubblePresent: true,
+    basketVisible: false,
+    pullX: 0,
+    pullY: 0,
+    focusX: 0.5,
+    intensity: 0,
+    targetPullX: 0,
+    targetPullY: 0,
+    targetFocusX: 0.5,
+    targetIntensity: 0,
+    lastMouseX: null,
+    lastMouseY: null,
+    lastMouseT: 0,
+    recSeconds: 14,
+    resetConfirm: false,
+    ollamaModels: ['qwen2.5-coder:7b', 'llama3.2:latest', 'gemma3:4b'],
+    selectedModel: 'qwen2.5-coder:7b',
+    connStatus: ''
+  };
+
+  const islandStage = document.getElementById('islandStage');
+  const islandPath = document.getElementById('islandPath');
+  const haloPath = document.getElementById('haloPath');
+  const specularPath = document.getElementById('specularPath');
+  const glassBackdrop = document.getElementById('glassBackdrop');
+  const islandContent = document.getElementById('islandContent');
+  const heroArtwork = document.getElementById('heroArtwork');
+  const detachedBubble = document.getElementById('detachedBubble');
+  const floatingBasket = document.getElementById('floatingBasket');
+  const gooeyGroup = document.getElementById('gooeyGroup');
+  const gooIslandRect = document.getElementById('gooIslandRect');
+  const gooBubbleCircle = document.getElementById('gooBubbleCircle');
+  const telPull = document.getElementById('telPull');
+  const telState = document.getElementById('telState');
+
+  function currentIslandBox() {
+    if (state.phase === 'compact' || state.phase === 'recording') {
+      return { x: (760 - 328) / 2, y: 0, w: 328, h: 32, shoulder: 8, corner: 11 };
+    }
+    if (state.phase === 'peek') {
+      return { x: (760 - 412) / 2, y: 0, w: 412, h: 78, shoulder: 12, corner: 22 };
+    }
+    const bodyH = state.style === 'alcove' ? 104 : (state.page === 'home' ? 168 : 156);
+    const w = state.style === 'alcove' ? 464 : (state.style === 'boring' ? 616 : 564);
+    return { x: (760 - w) / 2, y: 0, w, h: 32 + bodyH, shoulder: 12, corner: 26 };
+  }
+
+  function buildFluidNotchPath(box, pullX, pullY, focusX) {
+    const s = box.shoulder;
+    const c = Math.min(box.corner, (box.w - 2 * s) / 2, box.h - s);
+    const k = 0.55228475;
+    const lean = pullX * 0.55;
+
+    const minX = box.x;
+    const maxX = box.x + box.w;
+    const minY = box.y;
+    const maxY = box.y + box.h;
+
+    const leftTopX = minX + s;
+    const rightTopX = maxX - s;
+    const wallTopY = minY + s;
+    const leftBotX = leftTopX + lean;
+    const rightBotX = rightTopX + lean;
+    const cornerStartY = maxY - c;
+    const wallMidY = (wallTopY + cornerStartY) * 0.5;
+
+    const leftSpanX = leftBotX + c;
+    const rightSpanX = rightBotX - c;
+    const rawPeakX = minX + box.w * focusX;
+    const peakX = Math.max(leftSpanX, Math.min(rightSpanX, rawPeakX));
+    const peakY = maxY + pullY;
+
+    const sk = s * k;
+    const ck = c * k;
+    const rHalf = (rightSpanX - peakX) * 0.5;
+    const lHalf = (peakX - leftSpanX) * 0.5;
+
+    return [
+      `M ${minX.toFixed(2)} ${minY.toFixed(2)}`,
+      `L ${maxX.toFixed(2)} ${minY.toFixed(2)}`,
+      `C ${(maxX - sk).toFixed(2)} ${minY.toFixed(2)}, ${rightTopX.toFixed(2)} ${(wallTopY - sk).toFixed(2)}, ${rightTopX.toFixed(2)} ${wallTopY.toFixed(2)}`,
+      `C ${rightTopX.toFixed(2)} ${wallMidY.toFixed(2)}, ${rightBotX.toFixed(2)} ${wallMidY.toFixed(2)}, ${rightBotX.toFixed(2)} ${cornerStartY.toFixed(2)}`,
+      `C ${rightBotX.toFixed(2)} ${(cornerStartY + ck).toFixed(2)}, ${(rightSpanX + ck).toFixed(2)} ${maxY.toFixed(2)}, ${rightSpanX.toFixed(2)} ${maxY.toFixed(2)}`,
+      `C ${(rightSpanX - rHalf).toFixed(2)} ${maxY.toFixed(2)}, ${(peakX + rHalf).toFixed(2)} ${peakY.toFixed(2)}, ${peakX.toFixed(2)} ${peakY.toFixed(2)}`,
+      `C ${(peakX - lHalf).toFixed(2)} ${peakY.toFixed(2)}, ${(leftSpanX + lHalf).toFixed(2)} ${maxY.toFixed(2)}, ${leftSpanX.toFixed(2)} ${maxY.toFixed(2)}`,
+      `C ${(leftSpanX - ck).toFixed(2)} ${maxY.toFixed(2)}, ${leftBotX.toFixed(2)} ${(cornerStartY + ck).toFixed(2)}, ${leftBotX.toFixed(2)} ${cornerStartY.toFixed(2)}`,
+      `C ${leftBotX.toFixed(2)} ${wallMidY.toFixed(2)}, ${leftTopX.toFixed(2)} ${wallMidY.toFixed(2)}, ${leftTopX.toFixed(2)} ${wallTopY.toFixed(2)}`,
+      `C ${leftTopX.toFixed(2)} ${(wallTopY - sk).toFixed(2)}, ${(minX + sk).toFixed(2)} ${minY.toFixed(2)}, ${minX.toFixed(2)} ${minY.toFixed(2)}`,
+      'Z'
+    ].join(' ');
+  }
+
+  function layoutHeroAndBubble() {
+    const box = currentIslandBox();
+    const innerLeft = box.x + box.shoulder;
+    const innerWidth = box.w - 2 * box.shoulder;
+
+    islandContent.style.left = `${innerLeft}px`;
+    islandContent.style.top = `${box.y}px`;
+    islandContent.style.width = `${innerWidth}px`;
+    islandContent.style.height = `${box.h}px`;
+    islandContent.style.borderBottomLeftRadius = `${box.corner}px`;
+    islandContent.style.borderBottomRightRadius = `${box.corner}px`;
+
+    // Hero artwork matchedGeometryEffect positions (all strictly inside inner walls)
+    if (state.phase === 'recording') {
+      heroArtwork.style.opacity = '0';
+    } else if (state.phase === 'compact') {
+      heroArtwork.style.opacity = '1';
+      heroArtwork.style.left = `${innerLeft + 10}px`;
+      heroArtwork.style.top = '6px';
+      heroArtwork.style.width = '20px';
+      heroArtwork.style.height = '20px';
+      heroArtwork.style.borderRadius = '5px';
+    } else if (state.phase === 'peek') {
+      heroArtwork.style.opacity = '1';
+      heroArtwork.style.left = `${innerLeft + 14}px`;
+      heroArtwork.style.top = '32px';
+      heroArtwork.style.width = '34px';
+      heroArtwork.style.height = '34px';
+      heroArtwork.style.borderRadius = '9px';
+    } else {
+      const showHeroArt = state.page === 'home';
+      heroArtwork.style.opacity = showHeroArt ? '1' : '0';
+      heroArtwork.style.left = `${innerLeft + 14}px`;
+      heroArtwork.style.top = state.style === 'alcove' ? '48px' : '46px';
+      heroArtwork.style.width = '64px';
+      heroArtwork.style.height = '64px';
+      heroArtwork.style.borderRadius = '13px';
+    }
+
+    // Detached bubble placement
+    const bubbleLeft = box.x + box.w + 8;
+    detachedBubble.style.left = state.bubblePresent ? `${bubbleLeft}px` : `${box.x + box.w - 34}px`;
+    detachedBubble.style.opacity = state.bubblePresent ? '1' : '0';
+    detachedBubble.style.transform = state.bubblePresent ? 'scale(1)' : 'scale(0.55)';
+    detachedBubble.classList.toggle('glass', state.material === 'glass');
+    floatingBasket.classList.toggle('glass', state.material === 'glass');
+  }
+
+  function renderIslandContent(slideDir = 0) {
+    const box = currentIslandBox();
+    layoutHeroAndBubble();
+
+    if (state.phase === 'compact') {
+      islandContent.innerHTML = `
+        <div style="height:32px; display:flex; align-items:center; justify-content:space-between; padding:0 10px;">
+          <span style="width:24px;"></span>
+          <span style="font-size:11px; color:#F472B6; max-width:56px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Bir derdim</span>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.phase === 'recording') {
+      const mm = String(Math.floor(state.recSeconds / 60)).padStart(2, '0');
+      const ss = String(state.recSeconds % 60).padStart(2, '0');
+      islandContent.innerHTML = `
+        <div style="height:32px; display:flex; align-items:center; justify-content:space-between; padding:0 10px;">
+          <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--red); font-weight:600;">
+            <i style="width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block;"></i>REC
+          </span>
+          <span style="font-size:11px; font-weight:600; color:var(--text-primary);">${mm}:${ss} · GIF</span>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.phase === 'peek') {
+      const extraRight = state.style === 'boring'
+        ? `<div class="spectrum" style="height:14px;">
+             <span style="height:6px"></span><span style="height:13px"></span><span style="height:9px"></span><span style="height:14px"></span><span style="height:7px"></span>
+           </div>`
+        : `<span style="font-size:11px; color:var(--text-secondary);">-2:21</span>`;
+      islandContent.innerHTML = `
+        <div class="boring-wash ${state.style === 'boring' ? 'visible' : ''}"></div>
+        <div style="height:78px; display:flex; align-items:flex-end; justify-content:space-between; gap:10px; padding:12px 14px 12px 58px;">
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Bir Derdim Var</div>
+            <div style="font-size:11.5px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">mor ve ötesi · Dünya Yalan Söylüyor</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+            ${extraRight}
+            <button class="mini-icon-btn" style="background:rgba(255,255,255,0.12); border-radius:50%;">&#10074;&#10074;</button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Expanded phase
+    const isAlcove = state.style === 'alcove' && state.page === 'home';
+    const isBoring = state.style === 'boring';
+    const glassCardCls = state.material === 'glass' ? 'glass-card' : '';
+
+    let bodyHTML = '';
+    if (state.page === 'home') {
+      bodyHTML = `
+        <div class="hero-row">
+          <div class="artwork-slot"></div>
+          <div class="track-meta">
+            <div class="track-title-row">
+              <div>
+                <div class="track-title">Bir Derdim Var</div>
+                <div class="track-artist">mor ve ötesi</div>
+              </div>
+              ${(isBoring || state.style === 'lunula') ? `
+                <div class="spectrum" id="liveSpec">
+                  <span style="height:7px"></span><span style="height:15px"></span><span style="height:10px"></span><span style="height:17px"></span><span style="height:12px"></span><span style="height:8px"></span><span style="height:14px"></span><span style="height:6px"></span>
+                </div>` : ''}
+            </div>
+            <div class="progress-bar">
+              <span>1:42</span>
+              <div class="progress-track"><div class="progress-fill"></div></div>
+              <span>-2:23</span>
+            </div>
+            ${!isAlcove ? `
+              <div class="lyric-pair">
+                &#9834; Bir derdim var artık tutamam içimde
+                <small>Gitsem nereye kadar, kalsam neye yarar</small>
+              </div>` : ''}
+          </div>
+
+          <div class="transport-col">
+            <div class="transport-btns">
+              ${isBoring ? `<button class="mini-icon-btn" title="Karıştır">&#8646;</button>` : ''}
+              <button class="mini-icon-btn">&#9198;</button>
+              <button class="play-filled">&#10074;&#10074;</button>
+              <button class="mini-icon-btn">&#9197;</button>
+              ${isBoring ? `<button class="mini-icon-btn" title="Tekrarla">&#8635;</button>` : ''}
+            </div>
+          </div>
+
+          ${isBoring ? `
+            <div class="boring-agenda-box">
+              <div class="ag-head">Bugün</div>
+              <div class="ag-row">14:30 Tasarım Kritiği</div>
+              <div class="ag-row dim">16:30 Sprint Demo</div>
+            </div>` : ''}
+        </div>
+
+        ${!isAlcove ? `
+          <div class="tiles-row">
+            <div class="isl-card ${glassCardCls}">
+              <div class="k-title">14:30 Tasarım Kritiği</div>
+              <div class="k-sub">Google Meet · 10 dk kaldı</div>
+            </div>
+            <div class="isl-card ${glassCardCls}">
+              <div class="k-title">İstanbul · 19°C</div>
+              <div class="k-sub">Açık · Rüzgâr 11 km/sa</div>
+            </div>
+            <div class="isl-card ${glassCardCls}">
+              <div class="k-title">&#8595; 4.8 MB/s</div>
+              <div class="k-sub">&#8593; 0.6 MB/s</div>
+            </div>
+          </div>` : ''}
+      `;
+    } else if (state.page === 'shelf') {
+      bodyHTML = `
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; height:100%;">
+          <div class="isl-card ${glassCardCls}" style="height:auto;">
+            <div class="k-title">Lunula-Kayit.gif</div>
+            <div class="k-sub">Az önce · Alan kaydı</div>
+          </div>
+          <div class="isl-card ${glassCardCls}" style="height:auto;">
+            <div class="k-title">mimari-sema.png</div>
+            <div class="k-sub">OCR · HEIC / PDF hazır</div>
+          </div>
+          <div class="isl-card ${glassCardCls}" style="height:auto; border-style:dashed;">
+            <div class="k-title" style="color:var(--lunar-gold);">+ Dosya veya Panodan Görsel</div>
+            <div class="k-sub">AirDrop · ZIP sıkıştır</div>
+          </div>
+        </div>
+      `;
+    } else {
+      bodyHTML = `
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+          <div class="isl-card ${glassCardCls}" style="height:36px;"><div class="k-title" style="color:var(--lunar-gold);">&#10024; Mini AI (Akışlı)</div></div>
+          <div class="isl-card ${glassCardCls}" style="height:36px;"><div class="k-title">&#128249; Alan MP4 / GIF</div></div>
+          <div class="isl-card ${glassCardCls}" style="height:36px;"><div class="k-title">&#128247; Kamera Aynası</div></div>
+          <div class="isl-card ${glassCardCls}" style="height:36px;"><div class="k-title">&#9749; Uyanık Tut</div></div>
+          <div class="isl-card ${glassCardCls}" style="height:36px;"><div class="k-title">&#128203; Pano Geçmişi</div></div>
+          <div class="isl-card ${glassCardCls}" style="height:36px;"><div class="k-title">&#127912; Renk Seçici</div></div>
+        </div>
+      `;
+    }
+
+    const tabIndex = state.page === 'home' ? 0 : (state.page === 'shelf' ? 1 : 2);
+    const pillLeft = 2 + tabIndex * 46;
+
+    islandContent.innerHTML = `
+      <div class="boring-wash ${isBoring ? 'visible' : ''}"></div>
+      <div class="exp-top">
+        <div class="exp-left-tools">
+          <span style="color:#EC4899; font-size:13px;">&#9835;</span>
+          ${!isAlcove ? `
+            <button class="mini-icon-btn" title="Uyanık Tut">&#9749;</button>
+            <button class="mini-icon-btn" title="Alan / Tam Ekran Kayıt">&#9673;</button>
+          ` : ''}
+        </div>
+        <div style="width:188px;"></div>
+        <div style="display:flex; align-items:center; gap:4px; width:170px; justify-content:flex-end;">
+          ${!isAlcove ? `
+            <div class="exp-tabs">
+              <div class="tab-pill-indicator" style="left:${pillLeft}px; width:44px;"></div>
+              <button class="exp-tab-btn ${state.page === 'home' ? 'active' : ''}" onclick="switchIslandPage('home')">Ev</button>
+              <button class="exp-tab-btn ${state.page === 'shelf' ? 'active' : ''}" onclick="switchIslandPage('shelf')">Raf</button>
+              <button class="exp-tab-btn ${state.page === 'tools' ? 'active' : ''}" onclick="switchIslandPage('tools')">Araç</button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+      <div class="exp-body ${slideDir !== 0 ? 'switching' : ''}" style="--slide-dir:${slideDir * 14}px" id="expBodyInner">
+        ${bodyHTML}
+      </div>
+    `;
+
+    if (slideDir !== 0) {
+      requestAnimationFrame(() => {
+        const inner = document.getElementById('expBodyInner');
+        if (inner) inner.classList.remove('switching');
+      });
+    }
+  }
+
+  window.switchIslandPage = function(nextPage) {
+    const order = { home: 0, shelf: 1, tools: 2 };
+    if (nextPage === state.page) return;
+    const dir = order[nextPage] > order[state.page] ? 1 : -1;
+    state.page = nextPage;
+    renderIslandContent(dir);
+  };
+
+  // Pointer Droplet Physics Loop
+  islandStage.addEventListener('mousemove', (e) => {
+    const r = islandStage.getBoundingClientRect();
+    const px = e.clientX - r.left;
+    const py = e.clientY - r.top;
+    const now = performance.now();
+    let vx = 0, vy = 0;
+    if (state.lastMouseX !== null && now - state.lastMouseT > 4) {
+      const dt = (now - state.lastMouseT) / 1000;
+      vx = (px - state.lastMouseX) / dt;
+      vy = (py - state.lastMouseY) / dt;
+    }
+    state.lastMouseX = px;
+    state.lastMouseY = py;
+    state.lastMouseT = now;
+
+    const box = currentIslandBox();
+    const dx = Math.max(box.x - px, 0, px - (box.x + box.w));
+    const dy = Math.max(box.y - py, 0, py - (box.y + box.h));
+    const dist = Math.hypot(dx, dy);
+    const haloMargin = 32;
+
+    if (dist >= haloMargin) {
+      state.targetPullX = 0;
+      state.targetPullY = 0;
+      state.targetIntensity = 0;
+      return;
+    }
+
+    const u = dist <= 0 ? 1 : (1 - dist / haloMargin);
+    const intensity = u * u * (3 - 2 * u);
+    const focusX = Math.max(0.08, Math.min(0.92, (px - box.x) / box.w));
+    const normX = (focusX - 0.5) * 2;
+    const normY = Math.max(0, Math.min(1.3, (py - box.y) / Math.max(box.h, 1)));
+    const velX = Math.max(-3.5, Math.min(3.5, vx * 0.004));
+    const velY = Math.max(-2.5, Math.min(2.5, vy * 0.003));
+
+    let rawX = (normX * 4.2 + velX) * intensity * state.sensitivity;
+    let rawY = (normY * 3.4 + velY) * intensity * state.sensitivity;
+
+    // Bottom meniscus snap-stretch (1.22x) when sliding off bottom edge
+    if (py > box.y + box.h && py <= box.y + box.h + 18 && vy > 30) {
+      rawY *= 1.22;
+    }
+
+    const capX = Math.min(8.0, 6.0 * state.sensitivity);
+    const capY = Math.min(6.5, 5.0 * state.sensitivity);
+    state.targetPullX = Math.max(-capX, Math.min(capX, rawX));
+    state.targetPullY = Math.max(0, Math.min(capY, rawY));
+    state.targetFocusX = focusX;
+    state.targetIntensity = intensity;
+  });
+
+  islandStage.addEventListener('mouseleave', () => {
+    state.targetPullX = 0;
+    state.targetPullY = 0;
+    state.targetIntensity = 0;
+    state.lastMouseX = null;
+  });
+
+  function tick() {
+    state.pullX += (state.targetPullX - state.pullX) * 0.18;
+    state.pullY += (state.targetPullY - state.pullY) * 0.18;
+    state.focusX += (state.targetFocusX - state.focusX) * 0.22;
+    state.intensity += (state.targetIntensity - state.intensity) * 0.20;
+
+    const box = currentIslandBox();
+    const d = buildFluidNotchPath(box, state.pullX, state.pullY, state.focusX);
+    islandPath.setAttribute('d', d);
+    haloPath.setAttribute('d', d);
+    specularPath.setAttribute('d', d);
+
+    const isGlass = state.material === 'glass';
+    islandPath.setAttribute('fill', isGlass ? 'rgba(10, 12, 20, 0.34)' : '#000000');
+    islandPath.setAttribute('stroke', isGlass ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.12)');
+    glassBackdrop.classList.toggle('active', isGlass);
+    glassBackdrop.style.clipPath = `path('${d}')`;
+    haloPath.style.opacity = (state.style === 'alcove' && state.phase === 'expanded') ? '0' : '1';
+    specularPath.setAttribute('opacity', (state.intensity * 0.95).toFixed(2));
+
+    telPull.textContent =
+      `pullX: ${state.pullX.toFixed(1)} pt · pullY: ${state.pullY.toFixed(1)} pt · focusX: ${state.focusX.toFixed(2)} · intensity: ${state.intensity.toFixed(2)}`;
+    telState.textContent =
+      `${state.phase} · ${state.style} · ${isGlass ? 'Liquid Glass (+ #000 çentik kapağı)' : 'Obsidyen #000000'}`;
+
+    requestAnimationFrame(tick);
+  }
+
+  // Bidirectional Gooey Metaball Animation
+  document.getElementById('metaballBtn').addEventListener('click', () => {
+    const box = currentIslandBox();
+    const startX = box.x + box.w - 18;
+    const endX = box.x + box.w + 24;
+    const fill = state.material === 'glass' ? 'rgba(32, 36, 48, 0.80)' : '#000000';
+    gooIslandRect.setAttribute('x', box.x);
+    gooIslandRect.setAttribute('width', box.w);
+    gooIslandRect.setAttribute('fill', fill);
+    gooBubbleCircle.setAttribute('fill', fill);
+
+    const absorbing = state.bubblePresent;
+    state.bubblePresent = !state.bubblePresent;
+    layoutHeroAndBubble();
+
+    gooeyGroup.setAttribute('opacity', '1');
+    const t0 = performance.now();
+    function stepBridge(now) {
+      const p = Math.min(1, (now - t0) / 520);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const cx = absorbing ? (endX + (startX - endX) * eased) : (startX + (endX - startX) * eased);
+      gooBubbleCircle.setAttribute('cx', cx.toFixed(1));
+      if (p < 1) {
+        requestAnimationFrame(stepBridge);
+      } else {
+        gooeyGroup.setAttribute('opacity', '0');
+      }
+    }
+    requestAnimationFrame(stepBridge);
+  });
+
+  document.getElementById('basketBtn').addEventListener('click', () => {
+    state.basketVisible = !state.basketVisible;
+    floatingBasket.classList.toggle('hidden', !state.basketVisible);
+  });
+
+  // Segmented controls wiring
+  function bindSeg(id, key, transform = (v) => v) {
+    const wrap = document.getElementById(id);
+    wrap.querySelectorAll('button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        wrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const val = transform(btn.dataset[key]);
+        if (key === 'wp') {
+          const df = document.getElementById('displayFrame');
+          df.className = 'display-frame ' + val;
+        } else {
+          state[key === 'mat' ? 'material' : (key === 'sens' ? 'sensitivity' : key)] = val;
+          renderIslandContent();
+        }
+      });
+    });
+  }
+
+  bindSeg('phaseSeg', 'phase');
+  bindSeg('styleSeg', 'style');
+  bindSeg('matSeg', 'mat');
+  bindSeg('sensSeg', 'sens', parseFloat);
+  bindSeg('wpSeg', 'wp');
+
+  setInterval(() => {
+    state.recSeconds += 1;
+    if (state.phase === 'recording') renderIslandContent();
+    const spec = document.getElementById('liveSpec');
+    if (spec) {
+      spec.querySelectorAll('span').forEach((bar) => {
+        bar.style.height = `${5 + Math.round(Math.random() * 13)}px`;
+      });
+    }
+  }, 260);
+
+  // SECTION 2: Settings Window Interactive Tabs & Live Stage Hover
+  const swStage = document.getElementById('swStage');
+  const swStageIsland = document.getElementById('swStageIsland');
+  const swStageStyleTag = document.getElementById('swStageStyleTag');
+  const swBody = document.getElementById('swBody');
+
+  swStage.addEventListener('mousemove', (e) => {
+    const r = swStage.getBoundingClientRect();
+    const dx = ((e.clientX - r.left) / r.width - 0.5) * 14;
+    const dy = Math.max(0, ((e.clientY - r.top) / r.height) * 5);
+    swStageIsland.style.transform = `translateX(calc(-50% + ${dx.toFixed(1)}px)) scaleY(${(1 + dy * 0.03).toFixed(3)})`;
+  });
+
+  swStage.addEventListener('mouseleave', () => {
+    swStageIsland.style.transform = 'translateX(-50%) scaleY(1)';
+  });
+
+  function renderSettingsTab(tab) {
+    if (tab === 'appearance') {
+      swBody.innerHTML = `
+        <div class="sw-card">
+          <div class="sw-row">
+            <div>Görsel Stil<small>Lunula hibrit, Alcove minimal veya Boring ekolayzer + ajanda</small></div>
+            <div class="seg">
+              <button class="active" onclick="previewStageSet('Lunula', false)">Lunula</button>
+              <button onclick="previewStageSet('Alcove', false)">Alcove</button>
+              <button onclick="previewStageSet('Boring', false)">Boring</button>
+            </div>
+          </div>
+          <div class="sw-row">
+            <div>Ada Yüzey Malzemesi<small>Donanım çentiği her iki modda da #000000 maskelenir</small></div>
+            <div class="seg">
+              <button class="active" onclick="previewStageSet('Obsidyen', false)">Obsidyen</button>
+              <button onclick="previewStageSet('Liquid Glass', true)">Liquid Glass</button>
+            </div>
+          </div>
+          <div class="sw-row">
+            <div>Su Damlası Hassasiyeti<small>İmleç esnemesi ve alt kenar kopma gerilimi</small></div>
+            <div class="seg">
+              <button>Hafif</button>
+              <button class="active">Dengeli</button>
+              <button>Belirgin</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (tab === 'permissions') {
+      swBody.innerHTML = `
+        <div class="sw-card">
+          <div class="sw-row"><div>Apple Music &amp; Spotify Otomasyonu<small>Şu an Çalan ve ses kaydırıcısı</small></div><span class="perm-pill ok">Verildi</span></div>
+          <div class="sw-row"><div>Takvim (EventKit)<small>Tam gün ajanda ve toplantıya katıl</small></div><span class="perm-pill ok">Verildi</span></div>
+          <div class="sw-row"><div>Apple Anımsatıcılar (EventKit)<small>Çift yönlü görev tamamlama ve ekleme</small></div><span class="perm-pill ok">Verildi</span></div>
+          <div class="sw-row"><div>Kamera Aynası (AVCaptureSession)<small>Yalnız Ayna açıldığında çalışır, kapanınca durur</small></div><span class="perm-pill ask">İzin İste</span></div>
+          <div class="sw-row"><div>Canlı Ses Spektrumu (CoreAudio Tap)<small>8-bant FFT · İzinsizse ritmik dalgaya düşer</small></div><span class="perm-pill ask">İzin İste</span></div>
+          <div class="sw-row"><div>Ekran &amp; GIF Kaydı (ScreenCaptureKit)<small>CGPreflightScreenCaptureAccess salt-okunur kontrol</small></div><span class="perm-pill ok">Hazır</span></div>
+          <div class="sw-row"><div>Hava Durumu Konumu<small>Open-Meteo yerel hava ve gün ışığı hâlesi</small></div><span class="perm-pill ok">Verildi</span></div>
+        </div>
+      `;
+    } else if (tab === 'ai') {
+      swBody.innerHTML = `
+        <div class="sw-card">
+          <div class="sw-row">
+            <div>Yerel Ollama Modelleri (<code>/api/tags</code>)<small>Kurulu modeller tek tıkla çekilir</small></div>
+            <button class="action-btn" onclick="alert('Ollama /api/tags taranıyor: 3 yerel model bulundu')">Modelleri Yenile</button>
+          </div>
+          <div class="sw-row">
+            <div>Seçili Model<small>${state.selectedModel}</small></div>
+            <button class="action-btn gold" onclick="this.textContent='Bağlantı Başarılı (18 ms)'">Bağlantıyı Test Et</button>
+          </div>
+        </div>
+      `;
+    } else if (tab === 'general') {
+      swBody.innerHTML = `
+        <div class="sw-card">
+          <div class="sw-row">
+            <div>Ayarları Varsayılanlara Döndür<small>Yanlışlıkla sıfırlamayı önleyen iki adımlı onay</small></div>
+            <button class="action-btn" id="resetBtn" onclick="handleResetClick(this)">Varsayılanlara Dön</button>
+          </div>
+        </div>
+      `;
+    } else {
+      swBody.innerHTML = `
+        <div class="sw-card">
+          <div class="sw-row">
+            <div>İlk Açılış Stil &amp; Yüzey Seçici (440 × 390 pt)<small>Sıfır izin istemiyle ilk günden kendi adanı seç</small></div>
+            <span class="perm-pill ok">Hazır</span>
+          </div>
+          <div class="sw-row">
+            <div>1. Stil: <strong>Lunula / Alcove / Boring</strong> · 2. Yüzey: <strong>Obsidyen / Liquid Glass</strong><small>Kullanıcı "Başla" demeden hiçbir servis tetiklenmez</small></div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  window.previewStageSet = function(label, glass) {
+    swStageStyleTag.textContent = label + ' · 520 pt';
+    swStageIsland.classList.toggle('glass', glass);
+  };
+
+  window.handleResetClick = function(btn) {
+    if (!state.resetConfirm) {
+      state.resetConfirm = true;
+      btn.textContent = 'Emin misin? Onayla';
+      btn.style.borderColor = 'var(--red)';
+      btn.style.color = 'var(--red)';
+    } else {
+      state.resetConfirm = false;
+      btn.textContent = 'Sıfırlandı';
+      btn.style.borderColor = 'var(--green)';
+      btn.style.color = 'var(--green)';
+    }
+  };
+
+  document.querySelectorAll('#swTabs button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#swTabs button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderSettingsTab(btn.dataset.tab);
+    });
+  });
+
+  // Streaming AI Simulator
+  const aiOut = document.getElementById('aiStreamOut');
+  let streamTimer = null;
+  document.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      clearInterval(streamTimer);
+      const sample = chip.dataset.prompt.includes('özetle')
+        ? 'Panodaki toplantı notu, v2.5 sürümünde albüm kapağı geçişinin matchedGeometryEffect ile birleştirildiğini ve tüm ikincil yüzeylerin Liquid Glass ile uyumlu hale getirildiğini belirtiyor.'
+        : (chip.dataset.prompt.includes('çevir')
+          ? 'Çentik kabuğu donanım kamerasını her zaman saf siyah (#000000) ile maskelerken kanatları macOS 26 sıvı camıyla kırar.'
+          : 'OSAllocatedUnfairLock.withLock kapanışı @Sendable olduğu için var değişkenini doğrudan yakalayamaz; kilit öncesinde let kopyasına bağlayarak veri yarışını derleme zamanında önlersin.');
+      const words = sample.split(' ');
+      aiOut.textContent = '';
+      let idx = 0;
+      streamTimer = setInterval(() => {
+        if (idx < words.length) {
+          aiOut.textContent += (idx === 0 ? '' : ' ') + words[idx++];
+        } else {
+          clearInterval(streamTimer);
+        }
+      }, 42);
+    });
+  });
+
+  // Interactive Region Crop Selector Demo
+  const cropCanvas = document.getElementById('cropCanvas');
+  const cropRect = document.getElementById('cropRect');
+  const cropBadge = document.getElementById('cropBadge');
+  let dragStart = null;
+
+  cropCanvas.addEventListener('mousedown', (e) => {
+    const r = cropCanvas.getBoundingClientRect();
+    dragStart = { x: e.clientX - r.left, y: e.clientY - r.top, h: r.height };
+    cropRect.style.display = 'block';
+  });
+
+  cropCanvas.addEventListener('mousemove', (e) => {
+    if (!dragStart) return;
+    const r = cropCanvas.getBoundingClientRect();
+    const cx = Math.max(0, Math.min(r.width, e.clientX - r.left));
+    const cy = Math.max(0, Math.min(r.height, e.clientY - r.top));
+    const x = Math.min(dragStart.x, cx);
+    const y = Math.min(dragStart.y, cy);
+    const w = Math.round(Math.abs(cx - dragStart.x));
+    const h = Math.round(Math.abs(cy - dragStart.y));
+    cropRect.style.left = `${x}px`;
+    cropRect.style.top = `${y}px`;
+    cropRect.style.width = `${w}px`;
+    cropRect.style.height = `${h}px`;
+    cropBadge.textContent = `${w * 2} × ${h * 2} pt · sourceRect y:${Math.round(y * 2)}`;
+  });
+
+  window.addEventListener('mouseup', () => { dragStart = null; });
+
+  renderIslandContent();
+  renderSettingsTab('appearance');
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

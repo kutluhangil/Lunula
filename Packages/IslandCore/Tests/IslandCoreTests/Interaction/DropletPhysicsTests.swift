@@ -89,4 +89,69 @@ import Testing
         #expect(extremeNegative.pullX == -6.0)
         #expect(extremeNegative.pullY >= 0.0 && extremeNegative.pullY <= 5.0)
     }
+
+    @Test func sensitivityScalesPullMagnitudeMonotonically() {
+        let probe = CGPoint(x: 365, y: 26)
+        let vel = CGSize(width: 120, height: 80)
+
+        let subtle = DropletPhysics.compute(
+            pointer: probe,
+            islandRect: island,
+            velocity: vel,
+            sensitivity: .subtle
+        )
+        let balanced = DropletPhysics.compute(
+            pointer: probe,
+            islandRect: island,
+            velocity: vel,
+            sensitivity: .balanced
+        )
+        let expressive = DropletPhysics.compute(
+            pointer: probe,
+            islandRect: island,
+            velocity: vel,
+            sensitivity: .expressive
+        )
+
+        #expect(abs(subtle.pullX) < abs(balanced.pullX))
+        #expect(abs(balanced.pullX) < abs(expressive.pullX))
+        #expect(subtle.pullY < balanced.pullY)
+        #expect(balanced.pullY < expressive.pullY)
+
+        let maxExpressive = DropletPhysics.compute(
+            pointer: CGPoint(x: 398, y: 35),
+            islandRect: island,
+            velocity: CGSize(width: 50_000, height: 50_000),
+            sensitivity: .expressive
+        )
+        #expect(maxExpressive.pullX == DropletPhysics.maxPullX)
+        #expect(maxExpressive.pullY == DropletPhysics.maxPullY)
+    }
+
+    @Test func meniscusSnapStretchBoostsDownwardBottomExitAndNeverGoesNegative() {
+        let exitPoint = CGPoint(x: 300, y: island.maxY + 8)
+        let belowThreshold = DropletPhysics.compute(
+            pointer: exitPoint,
+            islandRect: island,
+            velocity: CGSize(width: 0, height: 29),
+            sensitivity: .expressive
+        )
+        let snappingExit = DropletPhysics.compute(
+            pointer: exitPoint,
+            islandRect: island,
+            velocity: CGSize(width: 0, height: 35),
+            sensitivity: .expressive
+        )
+        #expect(snappingExit.pullY > belowThreshold.pullY * 1.20)
+
+        for sensitivity in DropletSensitivity.allCases {
+            let upward = DropletPhysics.compute(
+                pointer: CGPoint(x: 300, y: 2),
+                islandRect: island,
+                velocity: CGSize(width: 0, height: -50_000),
+                sensitivity: sensitivity
+            )
+            #expect(upward.pullY >= 0.0)
+        }
+    }
 }

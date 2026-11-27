@@ -96,6 +96,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var quickToolOrder: [String] = QuickToolID.defaultOrder
     /// Elastic surface-tension deformation and specular highlight when hovering near the island.
     public var waterDropletEffect = true
+    /// Sensitivity preset scaling elastic water-droplet pull distance.
+    public var dropletSensitivity: DropletSensitivity = .balanced
     /// High-level aesthetic personality of the island shell and inner layout.
     public var visualStyle: IslandVisualStyle = .lunula
     /// Outer shell material of the island surface.
@@ -135,8 +137,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
             hideNotchBar, useGlassCards
         case doubleTapOptionToToggle, expandedWidth, pomodoroPlan, hoverToPeekEnabled, swipeGesturesEnabled
         case enabledQuickTools, quickToolOrder
-        case waterDropletEffect, visualStyle, surfaceMaterial, compactWingLyrics, floatingShelfBasket,
-            liveAudioSpectrumEnabled, quickAIConfig
+        case waterDropletEffect, dropletSensitivity, visualStyle, surfaceMaterial, compactWingLyrics,
+            floatingShelfBasket, liveAudioSpectrumEnabled, quickAIConfig
     }
 
     /// Missing, unknown or malformed keys fall back to the default per key, so old or future data never breaks.
@@ -189,6 +191,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         enabledQuickTools = value(.enabledQuickTools, d.enabledQuickTools)
         quickToolOrder = QuickToolID.normalizedOrder(value(.quickToolOrder, d.quickToolOrder))
         waterDropletEffect = value(.waterDropletEffect, d.waterDropletEffect)
+        dropletSensitivity = value(.dropletSensitivity, d.dropletSensitivity)
         visualStyle = value(.visualStyle, d.visualStyle)
         surfaceMaterial = value(.surfaceMaterial, d.surfaceMaterial)
         compactWingLyrics = value(.compactWingLyrics, d.compactWingLyrics)
@@ -231,6 +234,7 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         try c.encode(enabledQuickTools, forKey: .enabledQuickTools)
         try c.encode(QuickToolID.normalizedOrder(quickToolOrder), forKey: .quickToolOrder)
         try c.encode(waterDropletEffect, forKey: .waterDropletEffect)
+        try c.encode(dropletSensitivity, forKey: .dropletSensitivity)
         try c.encode(visualStyle, forKey: .visualStyle)
         try c.encode(surfaceMaterial, forKey: .surfaceMaterial)
         try c.encode(compactWingLyrics, forKey: .compactWingLyrics)

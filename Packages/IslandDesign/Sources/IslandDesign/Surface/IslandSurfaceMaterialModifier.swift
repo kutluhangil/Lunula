@@ -143,4 +143,89 @@ extension View {
             )
         }
     }
+
+    /// Applies secondary popover chrome matching the active island surface material.
+    public func islandPopoverChrome(
+        _ material: IslandSurfaceMaterial,
+        cornerRadius: CGFloat = 14
+    ) -> some View {
+        modifier(IslandPopoverChromeModifier(material: material, cornerRadius: cornerRadius))
+    }
+}
+
+/// Circular surface background for detached secondary buds (`BubbleView`).
+public struct IslandBubbleBackground: View {
+    public var material: IslandSurfaceMaterial
+
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    public init(material: IslandSurfaceMaterial) {
+        self.material = material
+    }
+
+    public var body: some View {
+        let allowGlass = material == .liquidGlass && !reduceTransparency && contrast != .increased
+
+        if allowGlass {
+            ZStack {
+                if #available(macOS 26.0, *) {
+                    Circle()
+                        .fill(Color.black.opacity(0.46))
+                        .glassEffect(.regular, in: Circle())
+                } else {
+                    Circle().fill(Palette.obsidian)
+                }
+                Circle()
+                    .strokeBorder(.white.opacity(0.22), lineWidth: 0.8)
+            }
+        } else {
+            ZStack {
+                Circle().fill(Palette.obsidian)
+                if contrast == .increased {
+                    Circle().strokeBorder(Palette.hairlineContrast, lineWidth: 1.5)
+                }
+            }
+        }
+    }
+}
+
+private struct IslandPopoverChromeModifier: ViewModifier {
+    let material: IslandSurfaceMaterial
+    let cornerRadius: CGFloat
+
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let allowGlass = material == .liquidGlass && !reduceTransparency && contrast != .increased
+
+        content
+            .background {
+                if allowGlass {
+                    if #available(macOS 26.0, *) {
+                        shape
+                            .fill(Color.black.opacity(0.52))
+                            .glassEffect(.regular, in: shape)
+                    } else {
+                        shape.fill(Palette.obsidian)
+                    }
+                } else {
+                    shape.fill(Palette.obsidian)
+                }
+            }
+            .overlay {
+                if allowGlass {
+                    shape.strokeBorder(.white.opacity(0.20), lineWidth: 0.8)
+                        .allowsHitTesting(false)
+                } else {
+                    shape.strokeBorder(
+                        contrast == .increased ? Palette.hairlineContrast : Palette.hairline,
+                        lineWidth: contrast == .increased ? 1.5 : 1.0
+                    )
+                    .allowsHitTesting(false)
+                }
+            }
+    }
 }

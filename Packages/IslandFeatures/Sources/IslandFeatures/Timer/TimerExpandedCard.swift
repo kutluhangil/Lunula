@@ -7,12 +7,13 @@ struct TimerExpandedCard: View {
     @Environment(\.timerActions) private var actions
     @Environment(\.quickTools) private var quickTools
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandMorphNamespace) private var morphNamespace
 
     init(snapshot: TimerSnapshot) { self.snapshot = snapshot }
 
     var body: some View {
         let mascot = quickTools.timerMascot()
-        let animates = !reduceMotion && mascot != .none && snapshot.endsAt != nil
+        let animates = !reduceMotion && snapshot.endsAt != nil
         let streak = quickTools.focusStreakDays()
         let focusDays = quickTools.focusLast7Days()
 
@@ -25,9 +26,7 @@ struct TimerExpandedCard: View {
                         Text(snapshot.phase.titleKey, bundle: .module)
                     }
                 } icon: {
-                    Image(systemName: mascot.symbolName ?? snapshot.phase.symbol)
-                        .foregroundStyle(Palette.signalOrange)
-                        .symbolEffect(.pulse, options: .repeating, isActive: animates)
+                    timerIcon(mascot: mascot, animates: animates)
                 }
                 .font(TypeToken.title.font)
                 .foregroundStyle(Palette.textPrimary)
@@ -74,6 +73,38 @@ struct TimerExpandedCard: View {
         }
         .padding(14)
         .islandCard()
+    }
+
+    @ViewBuilder
+    private func timerIcon(mascot: TimerMascot, animates: Bool) -> some View {
+        if let morphNamespace {
+            mascotSymbol(mascot: mascot, animates: animates)
+                .matchedGeometryEffect(id: "hero-timer-icon", in: morphNamespace)
+        } else {
+            mascotSymbol(mascot: mascot, animates: animates)
+        }
+    }
+
+    @ViewBuilder
+    private func mascotSymbol(mascot: TimerMascot, animates: Bool) -> some View {
+        let base = Image(systemName: mascot.symbolName ?? snapshot.phase.symbol)
+            .foregroundStyle(Palette.signalOrange)
+        switch mascot {
+        case .none:
+            base
+        case .flame:
+            base.symbolEffect(.variableColor.iterative, options: .repeating, isActive: animates)
+        case .hare:
+            if reduceMotion {
+                base
+            } else {
+                base
+                    .symbolEffect(.bounce, value: snapshot.phase)
+                    .symbolEffect(.pulse, options: .repeating, isActive: animates)
+            }
+        case .tortoise, .cat, .bird:
+            base.symbolEffect(.breathe, options: .repeating, isActive: animates)
+        }
     }
 
     private func control(_ symbol: String, _ key: LocalizedStringKey, _ action: @escaping @MainActor () -> Void)

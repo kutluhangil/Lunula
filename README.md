@@ -77,7 +77,7 @@ Four local Swift packages, generated into an Xcode project with XcodeGen so para
 | **Guarded architecture** | `check-architecture.sh` fails the build if IslandCore imports anything beyond Foundation and Observation, if Features import Services, if Services import SwiftUI, if a private API or process escape appears, or if code hops synchronously onto the main queue. |
 | **Reproducible project** | `Lunula.xcodeproj` is generated with XcodeGen, and CI checks that the generated plist and entitlements are committed. |
 | **No unsigned releases** | The release workflow refuses to run unless every signing secret is present, imports the Developer ID certificate into a temporary keychain and notarises the build. |
-| **Tested** | 95 test files (426 tests) across the four packages and the app, run in CI with a release build. |
+| **Tested** | 96 test files (437 tests) across the four packages and the app, run in CI with a release build. |
 
 <img src="docs/media/divider.svg" width="100%" alt="">
 

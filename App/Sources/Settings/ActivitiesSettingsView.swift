@@ -1,3 +1,4 @@
+import AppKit
 import IslandCore
 import IslandDesign
 import SwiftUI
@@ -12,6 +13,8 @@ public struct ActivitiesSettingsView: View {
     let settings: SettingsStore
     let permission: @MainActor (IslandFeature) -> PermissionState?
     let request: @MainActor (IslandFeature) -> Void
+    let extraPermission: @MainActor (ExtraPermissionKind) -> PermissionState
+    let requestExtraPermission: @MainActor (ExtraPermissionKind) -> Void
     let searchWeatherCity: @MainActor (String) async -> [GeoPlace]
 
     @State private var locationMode: LocationMode = .automatic
@@ -25,12 +28,16 @@ public struct ActivitiesSettingsView: View {
         settings: SettingsStore,
         permission: @escaping @MainActor (IslandFeature) -> PermissionState?,
         request: @escaping @MainActor (IslandFeature) -> Void,
-        searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] }
+        searchWeatherCity: @escaping @MainActor (String) async -> [GeoPlace] = { _ in [] },
+        extraPermission: @escaping @MainActor (ExtraPermissionKind) -> PermissionState = { _ in .notRequested },
+        requestExtraPermission: @escaping @MainActor (ExtraPermissionKind) -> Void = { _ in }
     ) {
         self.settings = settings
         self.permission = permission
         self.request = request
         self.searchWeatherCity = searchWeatherCity
+        self.extraPermission = extraPermission
+        self.requestExtraPermission = requestExtraPermission
         if case .city(let name, _, _) = settings.settings.weatherLocation {
             _locationMode = State(initialValue: .manual)
             _cityQuery = State(initialValue: name)
@@ -54,6 +61,22 @@ public struct ActivitiesSettingsView: View {
                     permissionName: String(localized: "settings.permission.automation")
                 ) {
                     VStack(alignment: .leading, spacing: 6) {
+                        #if LUNULA_SPOTIFY
+                            PermissionRow(
+                                name: "Spotify",
+                                state: extraPermission(.spotify),
+                                onRequest: { requestExtraPermission(.spotify) },
+                                onOpenSettings: { NSWorkspace.shared.open(PermissionRow.extraSettingsURL(.spotify)) }
+                            )
+                        #endif
+
+                        PermissionRow(
+                            name: String(localized: "settings.permission.audioCapture"),
+                            state: extraPermission(.audioTap),
+                            onRequest: { requestExtraPermission(.audioTap) },
+                            onOpenSettings: { NSWorkspace.shared.open(PermissionRow.extraSettingsURL(.audioTap)) }
+                        )
+
                         HStack(spacing: 12) {
                             Text("settings.nowPlaying.liveSpectrum")
                                 .font(.system(size: 13, weight: .medium))
@@ -157,7 +180,19 @@ public struct ActivitiesSettingsView: View {
                     symbol: "calendar",
                     permissionState: permission(.calendar) ?? .notRequested,
                     permissionName: String(localized: "settings.permission.calendar")
-                )
+                ) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        PermissionRow(
+                            name: String(localized: "settings.permission.reminders"),
+                            state: extraPermission(.reminders),
+                            onRequest: { requestExtraPermission(.reminders) },
+                            onOpenSettings: { NSWorkspace.shared.open(PermissionRow.extraSettingsURL(.reminders)) }
+                        )
+                    }
+                    .padding(.leading, 52)
+                    .padding(.trailing, 12)
+                    .padding(.bottom, 12)
+                }
 
                 Divider().background(Palette.hairline)
 
@@ -350,7 +385,26 @@ public struct ActivitiesSettingsView: View {
                     symbol: "camera.fill",
                     permissionState: .unavailable,
                     permissionName: nil
-                )
+                ) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        PermissionRow(
+                            name: String(localized: "settings.permission.camera"),
+                            state: extraPermission(.camera),
+                            onRequest: { requestExtraPermission(.camera) },
+                            onOpenSettings: { NSWorkspace.shared.open(PermissionRow.extraSettingsURL(.camera)) }
+                        )
+
+                        PermissionRow(
+                            name: String(localized: "settings.permission.screenCapture"),
+                            state: extraPermission(.screenCapture),
+                            onRequest: { requestExtraPermission(.screenCapture) },
+                            onOpenSettings: { NSWorkspace.shared.open(PermissionRow.extraSettingsURL(.screenCapture)) }
+                        )
+                    }
+                    .padding(.leading, 52)
+                    .padding(.trailing, 12)
+                    .padding(.bottom, 12)
+                }
 
                 Divider().background(Palette.hairline)
 
@@ -455,7 +509,7 @@ public struct ActivitiesSettingsView: View {
                                     .foregroundColor(Palette.textPrimary)
                                 Spacer()
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 10, weight: .semibold))
+                                    .font(.system(size: 11, weight: .semibold))
                                     .foregroundColor(Palette.textSecondary)
                                     .opacity(isSelectedCity(place) ? 1 : 0)
                             }

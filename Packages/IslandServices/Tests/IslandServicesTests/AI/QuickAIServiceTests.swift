@@ -15,7 +15,7 @@ import Testing
             {
                 #expect(json["model"] as? String == "llama3.2")
                 #expect(json["prompt"] as? String == "What is Swift?")
-                #expect(json["stream"] as? Bool == false)
+                #expect(json["stream"] as? Bool == true)
             } else {
                 Issue.record("Expected JSON body for Ollama request")
             }
@@ -43,12 +43,15 @@ import Testing
         let (session, sessionID) = StubURLProtocol.makeSession { request in
             let urlString = request.url?.absoluteString ?? ""
             if urlString == "https://api.openai.com/v1/chat/completions" {
-                #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer sk-test-openai")
+                #expect(
+                    request.value(forHTTPHeaderField: "Authorization") == "Bearer sk-test-openai")
                 let payload = Data(
                     #"{"choices":[{"message":{"content":"Actors isolate mutable state."}}]}"#.utf8)
                 return (200, payload)
             }
-            if urlString == "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" {
+            if urlString
+                == "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse"
+            {
                 #expect(request.value(forHTTPHeaderField: "x-goog-api-key") == "AIza-test-gemini")
                 #expect(urlString.contains("AIza") == false)
                 let payload = Data(
@@ -96,6 +99,148 @@ import Testing
         #expect(service.messages.isEmpty)
         #expect(service.isGenerating == false)
     }
+
+    @Test @MainActor func fetchOllamaModelsParsesAndDeduplicatesTagsEndpoint() async {
+        let secrets = InMemorySecretStore()
+        let (session, sessionID) = StubURLProtocol.makeSession { request in
+            #expect(request.url?.absoluteString == "http://127.0.0.1:11434/api/tags")
+            #expect(request.httpMethod == "GET")
+            let payload = Data(
+                #"{"models":[{"name":"llama3.2:latest"},{"name":"qwen2.5:7b"},{"name":"llama3.2:latest"},{"name":"   "}]}"#
+                    .utf8)
+            return (200, payload)
+        }
+        defer { StubURLProtocol.unregister(sessionID) }
+
+        let service = QuickAIService(session: session, secrets: secrets)
+        let models = await service.fetchOllamaModels(endpoint: "  http://127.0.0.1:11434/// ")
+
+        #expect(models == ["llama3.2:latest", "qwen2.5:7b"])
+        #expect(service.availableOllamaModels == ["llama3.2:latest", "qwen2.5:7b"])
+    }
+
+    @Test @MainActor func streamingNDJSONForOllamaAndSSEForOpenAIAssembleAssistantReply() async {
+        let secrets = InMemorySecretStore()
+        let (session, sessionID) = StubURLProtocol.makeChunkedSession { request in
+            let urlString = request.url?.absoluteString ?? ""
+            if urlString == "http://127.0.0.1:11434/api/generate" {
+                let chunks: [Data] = [
+                    Data(#"{"model":"llama3.2","response":"Swift ","done":false}"#.utf8 + [0x0A]),
+                    Data(#"{"model":"llama3.2","response":"streams ","done":false}"#.utf8 + [0x0A]),
+                    Data(
+                        #"{"model":"llama3.2","response":"tokens.","done":false}"#.utf8 + [0x0A]
+                            + #"{"model":"llama3.2","response":"","done":true}"#.utf8 + [0x0A]),
+                ]
+                return (200, chunks)
+            }
+            if urlString == "https://api.openai.com/v1/chat/completions" {
+                if let body = StubURLProtocol.readBody(from: request),
+                    let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+                {
+                    #expect(json["stream"] as? Bool == true)
+                } else {
+                    Issue.record("Expected JSON body for OpenAI streaming request")
+                }
+                let chunks: [Data] = [
+                    Data(
+                        "data: {\"choices\":[{\"delta\":{\"role\":\"assistant\",\"content\":\"\"}}]}\n\n"
+                            .utf8),
+                    Data("data: {\"choices\":[{\"delta\":{\"content\":\"SSE \"}}]}\n\n".utf8),
+                    Data(
+                        "data: {\"choices\":[{\"delta\":{\"content\":\"assembled.\"}}]}\n\ndata: [DONE]\n\n"
+                            .utf8),
+                ]
+                return (200, chunks)
+            }
+            return (404, [])
+        }
+        defer { StubURLProtocol.unregister(sessionID) }
+
+        let service = QuickAIService(session: session, secrets: secrets)
+        service.saveAPIKey("sk-stream-openai", for: .openAI)
+
+        await service.ask("Stream Ollama", config: QuickAIConfig(provider: .ollama))
+        #expect(service.lastError == nil)
+        #expect(service.isGenerating == false)
+        #expect(service.messages.count == 2)
+        #expect(service.messages[1].role == "assistant")
+        #expect(service.messages[1].text == "Swift streams tokens.")
+
+        await service.ask("Stream OpenAI", config: QuickAIConfig(provider: .openAI))
+        #expect(service.lastError == nil)
+        #expect(service.isGenerating == false)
+        #expect(service.messages.count == 4)
+        #expect(service.messages[3].role == "assistant")
+        #expect(service.messages[3].text == "SSE assembled.")
+    }
+
+    @Test @MainActor func testConnectionReportsSuccessAndFailureStates() async {
+        let secrets = InMemorySecretStore()
+        let ollamaShouldSucceed = AtomicFlag(initial: true)
+        let openAIShouldSucceed = AtomicFlag(initial: true)
+
+        let (session, sessionID) = StubURLProtocol.makeSession { request in
+            let urlString = request.url?.absoluteString ?? ""
+            if urlString == "http://127.0.0.1:11434/api/tags" {
+                if ollamaShouldSucceed.get() {
+                    let payload = Data(
+                        #"{"models":[{"name":"llama3.2:latest"},{"name":"mistral:7b"}]}"#.utf8)
+                    return (200, payload)
+                }
+                let errorPayload = Data(#"{"error":"Ollama daemon offline"}"#.utf8)
+                return (503, errorPayload)
+            }
+            if urlString == "https://api.openai.com/v1/chat/completions" {
+                if let body = StubURLProtocol.readBody(from: request),
+                    let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+                {
+                    #expect(json["stream"] as? Bool == false)
+                }
+                if openAIShouldSucceed.get() {
+                    let payload = Data(
+                        #"{"choices":[{"message":{"content":"Pong"}}]}"#.utf8)
+                    return (200, payload)
+                }
+                let errorPayload = Data(
+                    #"{"error":{"message":"Incorrect API key provided"}}"#.utf8)
+                return (401, errorPayload)
+            }
+            return (404, Data())
+        }
+        defer { StubURLProtocol.unregister(sessionID) }
+
+        let service = QuickAIService(session: session, secrets: secrets)
+
+        let ollamaOK = await service.testConnection(config: QuickAIConfig(provider: .ollama))
+        #expect(ollamaOK == true)
+        #expect(service.isTestingConnection == false)
+        #expect(service.connectionSucceeded == true)
+        #expect(service.connectionStatusMessage == "Ollama connected (2 models)")
+        #expect(service.availableOllamaModels == ["llama3.2:latest", "mistral:7b"])
+
+        ollamaShouldSucceed.set(false)
+        let ollamaFail = await service.testConnection(config: QuickAIConfig(provider: .ollama))
+        #expect(ollamaFail == false)
+        #expect(service.connectionSucceeded == false)
+        #expect(service.connectionStatusMessage == "Ollama daemon offline")
+
+        let missingKeyOK = await service.testConnection(config: QuickAIConfig(provider: .openAI))
+        #expect(missingKeyOK == false)
+        #expect(service.connectionSucceeded == false)
+        #expect(service.connectionStatusMessage == "Missing API key")
+
+        service.saveAPIKey("sk-valid", for: .openAI)
+        let openAIOK = await service.testConnection(config: QuickAIConfig(provider: .openAI))
+        #expect(openAIOK == true)
+        #expect(service.connectionSucceeded == true)
+        #expect(service.connectionStatusMessage == "OpenAI connected")
+
+        openAIShouldSucceed.set(false)
+        let openAIFail = await service.testConnection(config: QuickAIConfig(provider: .openAI))
+        #expect(openAIFail == false)
+        #expect(service.connectionSucceeded == false)
+        #expect(service.connectionStatusMessage == "Incorrect API key provided")
+    }
 }
 
 private final class InMemorySecretStore: SecretStoring, @unchecked Sendable {
@@ -139,13 +284,42 @@ private final class CallCounter: @unchecked Sendable {
     }
 }
 
+private final class AtomicFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Bool
+
+    init(initial: Bool) {
+        self.value = initial
+    }
+
+    func get() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return value
+    }
+
+    func set(_ newValue: Bool) {
+        lock.lock()
+        defer { lock.unlock() }
+        value = newValue
+    }
+}
+
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     typealias Handler = @Sendable (URLRequest) -> (Int, Data)
+    typealias ChunkedHandler = @Sendable (URLRequest) -> (Int, [Data])
 
     private static let headerName = "X-Lunula-Test-Session"
     private static let registry = HandlerRegistry()
 
     static func makeSession(handler: @escaping Handler) -> (URLSession, String) {
+        makeChunkedSession { request in
+            let (status, data) = handler(request)
+            return (status, [data])
+        }
+    }
+
+    static func makeChunkedSession(handler: @escaping ChunkedHandler) -> (URLSession, String) {
         let id = UUID().uuidString
         registry.set(handler, for: id)
         let config = URLSessionConfiguration.ephemeral
@@ -190,7 +364,7 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
         }
-        let (status, data) = handler(request)
+        let (status, chunks) = handler(request)
         guard
             let response = HTTPURLResponse(
                 url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)
@@ -199,7 +373,9 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
             return
         }
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: data)
+        for chunk in chunks where !chunk.isEmpty {
+            client?.urlProtocol(self, didLoad: chunk)
+        }
         client?.urlProtocolDidFinishLoading(self)
     }
 
@@ -208,15 +384,15 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
 
 private final class HandlerRegistry: @unchecked Sendable {
     private let lock = NSLock()
-    private var handlers: [String: StubURLProtocol.Handler] = [:]
+    private var handlers: [String: StubURLProtocol.ChunkedHandler] = [:]
 
-    func set(_ handler: @escaping StubURLProtocol.Handler, for id: String) {
+    func set(_ handler: @escaping StubURLProtocol.ChunkedHandler, for id: String) {
         lock.lock()
         defer { lock.unlock() }
         handlers[id] = handler
     }
 
-    func get(_ id: String) -> StubURLProtocol.Handler? {
+    func get(_ id: String) -> StubURLProtocol.ChunkedHandler? {
         lock.lock()
         defer { lock.unlock() }
         return handlers[id]

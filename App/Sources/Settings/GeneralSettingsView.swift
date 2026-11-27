@@ -8,16 +8,22 @@ public struct GeneralSettingsView: View {
     let settings: SettingsStore
     let launchAtLogin: LaunchAtLoginService
     var onDisplayModeChanged: ((DisplayMode) -> Void)?
+    var onResetDefaults: (() -> Void)?
+
     @State private var loginError = false
+    @State private var confirmingReset = false
+    @State private var didReset = false
 
     public init(
         settings: SettingsStore,
         launchAtLogin: LaunchAtLoginService,
-        onDisplayModeChanged: ((DisplayMode) -> Void)? = nil
+        onDisplayModeChanged: ((DisplayMode) -> Void)? = nil,
+        onResetDefaults: (() -> Void)? = nil
     ) {
         self.settings = settings
         self.launchAtLogin = launchAtLogin
         self.onDisplayModeChanged = onDisplayModeChanged
+        self.onResetDefaults = onResetDefaults
     }
 
     public var body: some View {
@@ -291,6 +297,94 @@ public struct GeneralSettingsView: View {
                     .padding(.horizontal, 12)
                     .frame(minHeight: 44)
                 }
+                .background(Palette.inkRaised)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Palette.hairline, lineWidth: 0.5)
+                )
+            }
+
+            // MARK: - Reset
+            VStack(alignment: .leading, spacing: 8) {
+                Text("settings.general.section.reset")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Palette.textPrimary)
+                    .padding(.horizontal, 4)
+
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("settings.general.reset.title")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Palette.textPrimary)
+                        if didReset && !confirmingReset {
+                            Text("settings.general.resetDone")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.signalGreen)
+                        } else {
+                            Text("settings.general.reset.subtitle")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Palette.textSecondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    if confirmingReset {
+                        HStack(spacing: 8) {
+                            Button {
+                                withAnimation(.smooth(duration: 0.20)) {
+                                    confirmingReset = false
+                                }
+                            } label: {
+                                Text("settings.general.resetCancel")
+                            }
+                            .buttonStyle(.lunulaSecondary)
+
+                            Button {
+                                withAnimation(.smooth(duration: 0.20)) {
+                                    if let onResetDefaults {
+                                        onResetDefaults()
+                                    } else {
+                                        settings.update {
+                                            var d = IslandSettings.default
+                                            d.hasCompletedOnboarding = true
+                                            $0 = d
+                                        }
+                                    }
+                                    confirmingReset = false
+                                    didReset = true
+                                }
+                            } label: {
+                                Text("settings.general.resetConfirm")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(Palette.signalRed)
+                                    .frame(height: 24)
+                                    .padding(.horizontal, 10)
+                                    .background(Palette.inkPressed)
+                                    .clipShape(Capsule())
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(Palette.signalRed.opacity(0.45), lineWidth: 0.5)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    } else {
+                        Button {
+                            withAnimation(.smooth(duration: 0.20)) {
+                                didReset = false
+                                confirmingReset = true
+                            }
+                        } label: {
+                            Text("settings.general.resetButton")
+                        }
+                        .buttonStyle(.lunulaSecondary)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(minHeight: 44)
                 .background(Palette.inkRaised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(

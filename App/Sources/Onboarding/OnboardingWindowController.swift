@@ -27,8 +27,15 @@ import SwiftUI
         window.backgroundColor = NSColor(Palette.basalt)
         window.isReleasedWhenClosed = false
         super.init(window: window)
+        let current = settings.settings
         window.contentViewController = NSHostingController(
-            rootView: OnboardingView { [weak self] in self?.finish(launchAtLogin: $0) })
+            rootView: OnboardingView(
+                initialStyle: current.visualStyle,
+                initialMaterial: current.surfaceMaterial
+            ) { [weak self] launch, style, material in
+                self?.finish(launchAtLogin: launch, visualStyle: style, surfaceMaterial: material)
+            }
+        )
         window.setContentSize(NSSize(width: 420, height: 320))
         window.center()
     }
@@ -43,9 +50,17 @@ import SwiftUI
     }
 
     /// Login item registers only if the user turned the switch on (App Review 2.4.5(iii)).
-    func finish(launchAtLogin: Bool) {
+    func finish(
+        launchAtLogin: Bool,
+        visualStyle: IslandVisualStyle = .lunula,
+        surfaceMaterial: IslandSurfaceMaterial = .obsidian
+    ) {
         if launchAtLogin { try? launchAtLoginService.setEnabled(true) }
-        settings.update { $0.hasCompletedOnboarding = true }
+        settings.update {
+            $0.visualStyle = visualStyle
+            $0.surfaceMaterial = surfaceMaterial
+            $0.hasCompletedOnboarding = true
+        }
         window?.close()
         onFinish()
     }

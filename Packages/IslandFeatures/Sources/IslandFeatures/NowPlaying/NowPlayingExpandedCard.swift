@@ -7,6 +7,7 @@ struct NowPlayingExpandedCard: View {
     let accent: RGBAColor?
     @Environment(\.nowPlayingActions) private var actions
     @Environment(\.quickTools) private var quickTools
+    @Environment(\.calendarActions) private var calendarActions
 
     init(snapshot: NowPlayingSnapshot, accent: RGBAColor?) {
         self.snapshot = snapshot
@@ -17,8 +18,8 @@ struct NowPlayingExpandedCard: View {
         let style = quickTools.visualStyle()
         let bands = quickTools.audioSpectrumBands()
 
-        HStack(alignment: .center, spacing: 12) {
-            ArtworkImage(snapshot: snapshot, side: 64, radius: Radii.artworkLarge)
+        HStack(alignment: .center, spacing: style == .boring ? 10 : 12) {
+            ArtworkImage(snapshot: snapshot, side: 64, radius: Radii.artworkLarge, morphID: "hero-artwork")
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .center, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -88,6 +89,9 @@ struct NowPlayingExpandedCard: View {
                         .foregroundStyle(Palette.textSecondary)
                         .accessibilityLabel(Text("nowPlaying.favorite", bundle: .module))
                     }
+                    if style == .boring {
+                        secondaryControl("shuffle", "nowPlaying.shuffle", actions.toggleShuffle)
+                    }
                     control("backward.fill", AccessibilityLabels.previous, actions.previous)
                     if style == .lunula || style == .boring {
                         playPauseFilledButton
@@ -97,10 +101,17 @@ struct NowPlayingExpandedCard: View {
                             AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying), actions.playPause)
                     }
                     control("forward.fill", AccessibilityLabels.next, actions.next)
+                    if style == .boring {
+                        secondaryControl("repeat", "nowPlaying.repeat", actions.cycleRepeat)
+                    }
                 }
                 if let volume = snapshot.soundVolume {
                     NowPlayingVolumeSlider(volume: volume, accent: accent)
                 }
+            }
+
+            if style == .boring {
+                boringTodayAgendaCard
             }
         }
         .frame(maxWidth: .infinity)
@@ -139,6 +150,89 @@ struct NowPlayingExpandedCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(AccessibilityLabels.playPause(isPlaying: snapshot.isPlaying)))
+    }
+
+    private func secondaryControl(
+        _ symbol: String, _ key: LocalizedStringKey, _ action: @escaping @MainActor () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 26, height: 26)
+                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Palette.textSecondary)
+        .accessibilityLabel(Text(key, bundle: .module))
+    }
+
+    private var boringTodayAgendaCard: some View {
+        let upcoming = calendarActions.upcomingToday()
+        let fallback = calendarActions.nextEvent().map { [$0] } ?? []
+        let events = Array((upcoming.isEmpty ? fallback : upcoming).prefix(2))
+
+        return VStack(alignment: .leading, spacing: 4) {
+            Text("calendar.today", bundle: .module)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Palette.amberGold)
+                .lineLimit(1)
+
+            if events.isEmpty {
+                Text("calendar.agenda.empty", bundle: .module)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Palette.textSecondary)
+                    .lineLimit(2)
+            } else {
+                ForEach(events, id: \.eventID) { event in
+                    boringAgendaEventRow(event)
+                }
+            }
+        }
+        .padding(8)
+        .frame(width: 126, alignment: .leading)
+        .islandCard()
+    }
+
+    @ViewBuilder
+    private func boringAgendaEventRow(_ event: EventSnapshot) -> some View {
+        let row = VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(event.calendarColor.map(Palette.color) ?? Palette.signalOrange)
+                    .frame(width: 5, height: 5)
+                Text(event.title)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Palette.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            if event.isAllDay {
+                Text("calendar.agenda.allDay", bundle: .module)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Palette.textSecondary)
+                    .lineLimit(1)
+            } else {
+                Text(event.start, format: .dateTime.hour().minute())
+                    .font(.system(size: 11).monospacedDigit())
+                    .foregroundStyle(Palette.textSecondary)
+                    .lineLimit(1)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+
+        if let url = event.meetingLink?.url {
+            Button {
+                calendarActions.join(url)
+            } label: {
+                row
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(AccessibilityLabels.join))
+        } else {
+            row
+        }
     }
 
     private func control(_ symbol: String, _ label: LocalizedStringResource, _ action: @escaping @MainActor () -> Void)

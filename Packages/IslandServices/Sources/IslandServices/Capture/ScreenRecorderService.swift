@@ -145,6 +145,10 @@ private final class CaptureSessionBox: @unchecked Sendable {
 
     @ObservationIgnored private var activeSession: ActiveSession?
 
+    public nonisolated static var hasScreenCaptureAccess: Bool {
+        CGPreflightScreenCaptureAccess()
+    }
+
     public private(set) var isRecording = false
     public private(set) var startedAt: Date?
     public private(set) var lastError: String?

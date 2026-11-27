@@ -7,22 +7,21 @@ import IslandFeatures
 import IslandServices
 import OSLog
 import SwiftUI
-import UniformTypeIdentifiers
 
 /// The only place concrete services are created and wired together.
 @MainActor
 final class CompositionRoot {
     static let shared = CompositionRoot()
 
-    private let logger = Logger(subsystem: "com.kutluhangul.lunula", category: "app")
-    private let time = SystemTime()
-    private let settings = SettingsStore(defaults: .standard)
-    private let launchAtLogin = LaunchAtLoginService()
-    private let windows = IslandWindowManager()
-    private lazy var hub = ActivityHub(time: time, settings: settings)
-    private lazy var timer = TimerController(
+    let logger = Logger(subsystem: "com.kutluhangul.lunula", category: "app")
+    let time = SystemTime()
+    let settings = SettingsStore(defaults: .standard)
+    let launchAtLogin = LaunchAtLoginService()
+    let windows = IslandWindowManager()
+    lazy var hub = ActivityHub(time: time, settings: settings)
+    lazy var timer = TimerController(
         time: time, defaults: .standard, planProvider: { [unowned self] in settings.settings.pomodoroPlan })
-    private lazy var nowPlaying: NowPlayingCoordinator = {
+    lazy var nowPlaying: NowPlayingCoordinator = {
         let runner = ScriptRunner()
         var sources: [NowPlayingSource] = [MusicSource(runner: runner)]
         #if LUNULA_SPOTIFY
@@ -32,40 +31,41 @@ final class CompositionRoot {
         return NowPlayingCoordinator(
             sources: sources, time: time, accents: ArtworkAccentStore(), permissions: AutomationPermissionChecker())
     }()
-    private var artworkImage: (key: String, image: NSImage)?
-    private lazy var calendar = CalendarService(reader: EventKitReader(), time: time)
-    private lazy var shelf = ShelfStore(
+    var artworkImage: (key: String, image: NSImage)?
+    lazy var calendar = CalendarService(reader: EventKitReader(), time: time)
+    lazy var shelf = ShelfStore(
         directory: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Shelf"),
         bookmarks: SecurityScopedBookmarkCoding(), time: time, settings: settings)
-    private lazy var fileDrags = FileDragMonitor(
+    lazy var fileDrags = FileDragMonitor(
         screens: { [unowned self] in islands.values.map(\.screen) },
         send: { [unowned self] id, event in islands[id]?.store.send(event) })
-    private var shelfIcons: [UUID: NSImage] = [:]
-    private let power = PowerMonitor()
-    private lazy var keepAwake = KeepAwakeService(time: time)
-    private lazy var audioDevices = AudioDeviceService()
-    private lazy var quickNotes = QuickNotesStore(defaults: .standard, time: time)
-    private lazy var clipboardStore = ClipboardHistoryStore(defaults: .standard, time: time)
-    private lazy var pasteboardMonitor = PasteboardMonitor(store: clipboardStore)
-    private lazy var teleprompter = TeleprompterStore(defaults: .standard)
-    private lazy var appLauncher = AppLauncherStore(defaults: .standard)
-    private lazy var remindersStore = QuickRemindersStore(defaults: .standard, time: time)
-    private lazy var appleReminders = RemindersService(reader: EventKitReminderReader())
-    private lazy var stocksStore = StocksWatchlistStore(defaults: .standard)
-    private lazy var stocksService = StocksService(store: stocksStore)
-    private lazy var aiUsageStore = AIUsageStore(defaults: .standard, time: time)
-    private lazy var focusHistory = FocusHistoryStore(defaults: .standard)
-    private lazy var systemStats = SystemStatsService()
-    private lazy var externalDrives = ExternalDriveMonitor()
-    private lazy var capsLock = CapsLockMonitor()
-    private lazy var keyboardLock = KeyboardLockController()
-    private lazy var lyrics = LyricsService()
-    private lazy var quickAI = QuickAIService()
-    private lazy var audioSpectrum = AudioSpectrumService(time: time)
-    private lazy var cameraMirror = CameraMirrorService()
-    private lazy var screenRecorder = ScreenRecorderService()
-    private lazy var shelfBasket = FloatingShelfBasketController(
+    var shelfIcons: [UUID: NSImage] = [:]
+    let power = PowerMonitor()
+    lazy var keepAwake = KeepAwakeService(time: time)
+    lazy var audioDevices = AudioDeviceService()
+    lazy var quickNotes = QuickNotesStore(defaults: .standard, time: time)
+    lazy var clipboardStore = ClipboardHistoryStore(defaults: .standard, time: time)
+    lazy var pasteboardMonitor = PasteboardMonitor(store: clipboardStore)
+    lazy var teleprompter = TeleprompterStore(defaults: .standard)
+    lazy var appLauncher = AppLauncherStore(defaults: .standard)
+    lazy var remindersStore = QuickRemindersStore(defaults: .standard, time: time)
+    lazy var appleReminders = RemindersService(reader: EventKitReminderReader())
+    lazy var stocksStore = StocksWatchlistStore(defaults: .standard)
+    lazy var stocksService = StocksService(store: stocksStore)
+    lazy var aiUsageStore = AIUsageStore(defaults: .standard, time: time)
+    lazy var focusHistory = FocusHistoryStore(defaults: .standard)
+    lazy var systemStats = SystemStatsService()
+    lazy var externalDrives = ExternalDriveMonitor()
+    lazy var capsLock = CapsLockMonitor()
+    lazy var keyboardLock = KeyboardLockController()
+    lazy var lyrics = LyricsService()
+    lazy var quickAI = QuickAIService()
+    lazy var audioSpectrum = AudioSpectrumService(time: time)
+    lazy var cameraMirror = CameraMirrorService()
+    lazy var screenRecorder = ScreenRecorderService()
+    lazy var regionSelector = ScreenRegionSelector()
+    lazy var shelfBasket = FloatingShelfBasketController(
         title: String(localized: "shelf.basket.title"),
         subtitle: String(localized: "shelf.basket.subtitle"),
         airDropLabel: String(localized: "shelf.airdrop"),
@@ -75,10 +75,10 @@ final class CompositionRoot {
         onAirDropURLs: { urls in
             NSSharingService(named: .sendViaAirDrop)?.perform(withItems: urls)
         })
-    private lazy var downloads = DownloadsWatcher()
-    private lazy var deviceUsage = DeviceUsageMonitor(reader: SystemDeviceUsageReader())
+    lazy var downloads = DownloadsWatcher()
+    lazy var deviceUsage = DeviceUsageMonitor(reader: SystemDeviceUsageReader())
     lazy var custom = CustomActivityController(time: time)
-    private lazy var router = URLRouter(
+    lazy var router = URLRouter(
         custom: custom, timer: timer,
         aiUsage: aiUsageStore,
         onAgentApprovalRequested: { [unowned self] req in
@@ -98,24 +98,29 @@ final class CompositionRoot {
         },
         toggle: { [unowned self] in activeIsland()?.store.send(.toggleRequested) },
         time: time)
-    private lazy var weather = WeatherService(
+    lazy var weather = WeatherService(
         provider: OpenMeteoProvider(),
         cache: WeatherCache(
             fileURL: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("weather.json")),
         location: LocationService(), settings: settings, time: time)
-    private lazy var feedback = SystemFeedbackPlayer(preferences: { [unowned self] in
+    lazy var feedback = SystemFeedbackPlayer(preferences: { [unowned self] in
         let muted = isMuted
         return (settings.settings.hapticsEnabled && !muted, settings.settings.soundsEnabled && !muted)
     })
-    private lazy var statusItem = StatusItemController(menu: { [unowned self] in contextMenu() })
-    private var screenService: ScreenService?
-    private var islands: [UInt32: ScreenIsland] = [:]
-    private var screens: [ScreenDescriptor] = []
-    private var settingsWindow: SettingsWindowController?
-    private var onboarding: OnboardingWindowController?
-    private lazy var competing = CompetingAppNotice(settings: settings)
-    private var tasks: [Task<Void, Never>] = []
+    lazy var statusItem = StatusItemController(menu: { [unowned self] in contextMenu() })
+    var screenService: ScreenService?
+    var islands: [UInt32: ScreenIsland] = [:]
+    var screens: [ScreenDescriptor] = []
+    var settingsWindow: SettingsWindowController?
+    var onboarding: OnboardingWindowController?
+    var appliedSettings: IslandSettings?
+    lazy var competing = CompetingAppNotice(settings: settings)
+    var tasks: [Task<Void, Never>] = []
+
+    lazy var fullscreen = FullscreenMonitor(
+        screens: { [unowned self] in screens },
+        frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier })
 
     func start() {
         logger.info("start")
@@ -138,7 +143,9 @@ final class CompositionRoot {
                 isDragging: isDragging,
                 mouse: point,
                 screens: screens,
-                enabled: settings.settings.enabledFeatures.contains(.shelf) && settings.settings.floatingShelfBasket)
+                enabled: settings.settings.enabledFeatures.contains(.shelf) && settings.settings.floatingShelfBasket,
+                surfaceMaterial: settings.settings.surfaceMaterial,
+                shelfItemCount: shelf.items.count)
         }
         hub.onAlert = { [unowned self] alert in
             broadcast(.alertRaised(alert))
@@ -232,18 +239,14 @@ final class CompositionRoot {
             })
     }
 
-    private lazy var fullscreen = FullscreenMonitor(
-        screens: { [unowned self] in screens },
-        frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier })
-
     func handle(_ url: URL) {
         Signposts.island.emitEvent("url")
         router.handle(url)
     }
 
-    // MARK: - Windows
+    // MARK: - Windows & Droplet Physics
 
-    private func syncWindows() {
+    func syncWindows() {
         let signpost = Signposts.island.beginInterval("syncWindows")
         defer { Signposts.island.endInterval("syncWindows", signpost) }
         let controllers = windows.sync(screens: screens, mode: settings.settings.displayMode) { [unowned self] screen in
@@ -252,7 +255,6 @@ final class CompositionRoot {
         islands = islands.filter { controllers[$0.key] != nil }
         for (id, controller) in controllers {
             guard let island = islands[id], let screen = screens.first(where: { $0.id == id }) else { continue }
-            // Displays keep their id across rearrangement and resolution changes; refresh the geometry.
             island.screen = screen
             let notch = NotchGeometry.metrics(for: screen)
             if notch != island.notch {
@@ -283,7 +285,6 @@ final class CompositionRoot {
 
     private func makeIsland(for screen: ScreenDescriptor) -> AnyView {
         let panel = PanelProxy()
-        // Alerts reach every screen's store; only the main display's island plays sounds, so one alert = one sound.
         let screenFeedback = ScreenFeedback(
             base: feedback,
             playsSounds: { [unowned self] in
@@ -346,7 +347,6 @@ final class CompositionRoot {
                     addToShelf: { [unowned self] url in shelfActions.add([url]) })))
     }
 
-    /// While closed the hot zone hugs the visible island, which widens when an activity shows in the wings.
     private func layoutHotZone(_ id: UInt32) {
         guard let island = islands[id], let controller = windows.controller(for: id) else { return }
         let rect = IslandMetrics.hotZone(
@@ -414,8 +414,7 @@ final class CompositionRoot {
         return (island, bubbles)
     }
 
-    /// Feature phases bind their inputs here as they land.
-    private var homeInputs: HomeInputs {
+    var homeInputs: HomeInputs {
         HomeInputs(
             pendingPermission: nowPlaying.pendingConsent, hasNowPlaying: nowPlaying.snapshot != nil,
             hasImminentMeeting: calendar.activities.isEmpty == false,
@@ -424,7 +423,7 @@ final class CompositionRoot {
             calendarAccessUndetermined: calendar.authorization == .notDetermined)
     }
 
-    private var weatherForHome: (snapshot: WeatherSnapshot, units: UnitChoice)? {
+    var weatherForHome: (snapshot: WeatherSnapshot, units: UnitChoice)? {
         guard settings.settings.enabledFeatures.contains(.weather), let snapshot = weather.snapshot else { return nil }
         let units = UnitPreferences.resolve(
             locale: .current, systemTemperatureSetting: UserDefaults.standard.string(forKey: "AppleTemperatureUnit"),
@@ -432,506 +431,7 @@ final class CompositionRoot {
         return (snapshot, units)
     }
 
-    private var shelfActions: ShelfActions {
-        ShelfActions(
-            items: { [unowned self] in shelfModels },
-            add: { [unowned self] urls in
-                guard !urls.isEmpty else { return }
-                do {
-                    try shelf.add(urls)
-                    feedback.play(.levelChange)
-                } catch {
-                    logger.error("shelf add failed: \(error.localizedDescription, privacy: .public)")
-                }
-            },
-            remove: { [unowned self] id in
-                shelf.remove(id)
-                shelfIcons[id] = nil
-            },
-            reveal: { [unowned self] id in
-                guard let item = shelf.items.first(where: { $0.id == id }) else { return }
-                _ = shelf.withAccess(to: item) { NSWorkspace.shared.activateFileViewerSelecting([$0]) }
-            },
-            airDrop: { [unowned self] ids in shareFiles(ids, via: NSSharingService(named: .sendViaAirDrop)) },
-            share: { [unowned self] ids in shareFiles(ids, via: nil) },
-            dragItem: { [unowned self] id in
-                guard let item = shelf.items.first(where: { $0.id == id }),
-                    case .available(let url) = shelf.status(of: item)
-                else { return nil }
-                return NSItemProvider(contentsOf: url)
-            },
-            convertImage: { [unowned self] id, rawFormat in
-                convertShelfImage(id: id, rawFormat: rawFormat)
-            },
-            compressToZip: { [unowned self] ids in
-                compressShelfItems(ids: ids)
-            },
-            expandArchive: { [unowned self] id in
-                expandShelfArchive(id: id)
-            },
-            copyTextOCR: { [unowned self] id in
-                copyShelfItemOCR(id: id)
-            },
-            stageClipboardImage: { [unowned self] in
-                stageClipboardImageToShelf()
-            })
-    }
-
-    private func expandShelfArchive(id: UUID) {
-        guard let item = shelf.items.first(where: { $0.id == id }),
-            case .available(let url) = shelf.status(of: item)
-        else { return }
-        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ShelfExpanded")
-        let scoped = url.startAccessingSecurityScopedResource()
-        Task.detached { [weak self] in
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            guard let expanded = try? ShelfConverter.extractArchive(at: url, in: outDir) else { return }
-            await MainActor.run {
-                try? self?.shelf.add([expanded])
-                self?.feedback.play(.levelChange)
-            }
-        }
-    }
-
-    private func stageClipboardImageToShelf() {
-        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ShelfScreenshots")
-        guard let staged = try? ShelfConverter.stageClipboardImage(from: .general, in: outDir) else { return }
-        try? shelf.add([staged])
-        feedback.play(.levelChange)
-    }
-
-    private func convertShelfImage(id: UUID, rawFormat: String) {
-        guard let format = ShelfImageFormat(rawValue: rawFormat),
-            let item = shelf.items.first(where: { $0.id == id }),
-            case .available(let url) = shelf.status(of: item)
-        else { return }
-        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ShelfConverted")
-        let scoped = url.startAccessingSecurityScopedResource()
-        Task.detached { [weak self] in
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            guard let converted = try? ShelfConverter.convertImage(at: url, to: format, in: outDir) else { return }
-            await MainActor.run {
-                try? self?.shelf.add([converted])
-                self?.feedback.play(.levelChange)
-            }
-        }
-    }
-
-    private func compressShelfItems(ids: [UUID]) {
-        let urls = ids.compactMap { id -> URL? in
-            guard let item = shelf.items.first(where: { $0.id == id }),
-                case .available(let url) = shelf.status(of: item)
-            else { return nil }
-            return url
-        }
-        guard !urls.isEmpty else { return }
-        let outDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ShelfArchives")
-        let scoped = urls.filter { $0.startAccessingSecurityScopedResource() }
-        Task.detached { [weak self] in
-            defer { for url in scoped { url.stopAccessingSecurityScopedResource() } }
-            guard let archive = try? ShelfConverter.createArchive(from: urls, in: outDir) else { return }
-            await MainActor.run {
-                try? self?.shelf.add([archive])
-                self?.feedback.play(.levelChange)
-            }
-        }
-    }
-
-    private func copyShelfItemOCR(id: UUID) {
-        guard let item = shelf.items.first(where: { $0.id == id }),
-            case .available(let url) = shelf.status(of: item)
-        else { return }
-        let scoped = url.startAccessingSecurityScopedResource()
-        Task.detached { [weak self] in
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            guard let text = try? ShelfConverter.extractText(from: url) else { return }
-            await MainActor.run {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(text, forType: .string)
-                self?.feedback.play(.alignment)
-                self?.broadcast(
-                    .alertRaised(
-                        TransientAlert(
-                            id: UUID(), kind: .custom,
-                            detail: .text(
-                                title: String(localized: "alert.ocrCopied"),
-                                subtitle: String(text.prefix(42)),
-                                symbol: "text.viewfinder"),
-                            tint: .neutral, duration: 2.2, priority: .normal)))
-            }
-        }
-    }
-
-    private var quickToolsActions: QuickToolsActions {
-        makeQuickToolsActions(for: nil)
-    }
-
-    private func makeQuickToolsActions(for island: ScreenIsland?) -> QuickToolsActions {
-        QuickToolsActions(
-            isKeepAwakeActive: { [unowned self] in keepAwake.isActive },
-            toggleKeepAwake: { [unowned self] in
-                keepAwake.toggle()
-                feedback.play(.alignment)
-            },
-            activateKeepAwake: { [unowned self] duration in
-                keepAwake.activate(duration: duration)
-                feedback.play(.alignment)
-            },
-            isMicMuted: { [unowned self] in audioDevices.isInputMuted },
-            toggleMicMute: { [unowned self] in
-                let muted = audioDevices.toggleInputMute()
-                feedback.play(.alignment)
-                broadcast(
-                    .alertRaised(
-                        TransientAlert(
-                            id: UUID(), kind: .custom,
-                            detail: .text(
-                                title: String(localized: muted ? "alert.micMuted" : "alert.micUnmuted"),
-                                subtitle: nil,
-                                symbol: muted ? "mic.slash.fill" : "mic.fill"),
-                            tint: muted ? .red : .green, duration: 1.8, priority: .normal)))
-            },
-            outputDevices: { [unowned self] in
-                audioDevices.outputDevices.map {
-                    AudioOutputDeviceItem(id: $0.id, name: $0.name, isCurrent: $0.isCurrent)
-                }
-            },
-            selectOutputDevice: { [unowned self] id in
-                audioDevices.selectOutputDevice(id)
-                feedback.play(.alignment)
-            },
-            pickColor: { [unowned self] in
-                sampleScreenColor()
-            },
-            notes: { [unowned self] in quickNotes.notes },
-            addNote: { [unowned self] text in quickNotes.add(text) },
-            toggleNotePin: { [unowned self] id in quickNotes.togglePin(id) },
-            removeNote: { [unowned self] id in quickNotes.remove(id) },
-            clipboardEntries: { [unowned self] in
-                pasteboardMonitor.checkNow()
-                return clipboardStore.entries
-            },
-            toggleClipboardPin: { [unowned self] id in clipboardStore.togglePin(id) },
-            removeClipboardEntry: { [unowned self] id in clipboardStore.remove(id) },
-            clearUnpinnedClipboard: { [unowned self] in clipboardStore.clearUnpinned() },
-            snippets: { [unowned self] in clipboardStore.snippets },
-            addSnippet: { [unowned self] title, body in clipboardStore.addSnippet(title: title, body: body) },
-            removeSnippet: { [unowned self] id in clipboardStore.removeSnippet(id) },
-            teleprompterScript: { [unowned self] in teleprompter.script },
-            setTeleprompterScript: { [unowned self] script in teleprompter.script = script },
-            teleprompterSpeed: { [unowned self] in teleprompter.pointsPerSecond },
-            setTeleprompterSpeed: { [unowned self] speed in teleprompter.pointsPerSecond = speed },
-            systemStats: { [unowned self] in
-                let s = systemStats.refresh()
-                externalDrives.refreshDrives()
-                return SystemStatsItem(
-                    cpuPercent: s.cpuPercent,
-                    memoryPercent: s.memoryPercent,
-                    memoryUsedGB: s.memoryUsedGB,
-                    memoryTotalGB: s.memoryTotalGB,
-                    wirelessBatteries: s.wirelessBatteries.map {
-                        WirelessBatteryItem(id: $0.id, name: $0.name, level: $0.level)
-                    },
-                    mountedDrives: externalDrives.drives.map {
-                        MountedDriveItem(name: $0.name, url: $0.url)
-                    },
-                    downloadRateText: SystemStatsService.formatRate(s.downloadBytesPerSec),
-                    uploadRateText: SystemStatsService.formatRate(s.uploadBytesPerSec))
-            },
-            ejectDrive: { [unowned self] url in
-                externalDrives.eject(url, safeDisconnectMessage: String(localized: "alert.safeToDisconnect"))
-            },
-            openURL: { url in NSWorkspace.shared.open(url) },
-            pinnedApps: { [unowned self] in appLauncher.apps },
-            launchApp: { path in
-                NSWorkspace.shared.openApplication(
-                    at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
-            },
-            pickAndPinApp: { [unowned self] in pickAppToPin() },
-            removePinnedApp: { [unowned self] path in appLauncher.removeApp(path: path) },
-            pinnedShortcuts: { [unowned self] in appLauncher.shortcuts },
-            addShortcut: { [unowned self] name in appLauncher.addShortcut(name: name) },
-            removeShortcut: { [unowned self] id in appLauncher.removeShortcut(id) },
-            reminders: { [unowned self] in remindersStore.items },
-            addReminder: { [unowned self] title in remindersStore.add(title) },
-            toggleReminder: { [unowned self] id in remindersStore.toggle(id) },
-            removeReminder: { [unowned self] id in remindersStore.remove(id) },
-            appleRemindersState: { [unowned self] in
-                switch appleReminders.authorization {
-                case .fullAccess: .connected
-                case .notDetermined: .notConnected
-                case .denied, .restricted, .writeOnly: .denied
-                }
-            },
-            appleReminders: { [unowned self] in
-                appleReminders.items.map {
-                    AppleReminderItem(
-                        id: $0.id, title: $0.title, isCompleted: $0.isCompleted, dueDate: $0.dueDate,
-                        listTitle: $0.listTitle)
-                }
-            },
-            connectAppleReminders: { [unowned self] in Task { await appleReminders.requestAccess() } },
-            addAppleReminder: { [unowned self] title in appleReminders.add(title) },
-            toggleAppleReminder: { [unowned self] id in appleReminders.toggle(id) },
-            removeAppleReminder: { [unowned self] id in appleReminders.remove(id) },
-            stockQuotes: { [unowned self] in stocksStore.quotes },
-            refreshStocks: { [unowned self] in stocksService.refreshAll() },
-            addStockSymbol: { [unowned self] sym in stocksStore.addSymbol(sym) },
-            removeStockSymbol: { [unowned self] sym in stocksStore.removeSymbol(sym) },
-            aiProviders: { [unowned self] in aiUsageStore.providers },
-            pendingApprovals: { [unowned self] in aiUsageStore.pendingApprovals },
-            resolveApproval: { [unowned self] id, approved in
-                aiUsageStore.resolveApproval(id: id, approved: approved)
-                feedback.play(.alignment)
-                DistributedNotificationCenter.default().postNotificationName(
-                    NSNotification.Name("com.kutluhangul.lunula.agentDecision"),
-                    object: id,
-                    userInfo: ["id": id, "approved": approved],
-                    deliverImmediately: true)
-            },
-            focusStreakDays: { [unowned self] in focusHistory.streakDays(at: time.now) },
-            focusLast7Days: { [unowned self] in focusHistory.last7Days(at: time.now) },
-            timerMascot: { [unowned self] in settings.settings.timerMascot },
-            pillVerticalOffset: { [unowned self] in settings.settings.pillVerticalOffset },
-            hideNotchBar: { [unowned self] in settings.settings.hideNotchBar },
-            useGlassCards: { [unowned self] in settings.settings.useGlassCards },
-            expandedWidth: { [unowned self] in settings.settings.expandedWidth },
-            toggleDetachedPopover: { [unowned self] in
-                let view = AnyView(
-                    DetachedMenuBarHubView()
-                        .environment(\.quickTools, quickToolsActions))
-                statusItem.togglePopover(rootView: view)
-            },
-            startKeyboardCleaningLock: { [unowned self] in
-                keyboardLock.lock()
-            },
-            activeLyricLine: { [unowned self] snapshot in
-                SyncedLyricsParser.activeLine(in: lyrics.lines, at: snapshot.position(at: time.now))
-            },
-            activeLyricLines: { [unowned self] snapshot in
-                SyncedLyricsParser.activeAndNextLines(in: lyrics.lines, at: snapshot.position(at: time.now))
-            },
-            enabledQuickTools: { [unowned self] in
-                settings.settings.orderedEnabledQuickTools
-            },
-            visualStyle: { [unowned self] in settings.settings.visualStyle },
-            surfaceMaterial: { [unowned self] in settings.settings.surfaceMaterial },
-            waterDropletEffect: { [unowned self] in settings.settings.waterDropletEffect },
-            dropletTension: { [weak island] in island?.dropletTension ?? .zero },
-            compactWingLyrics: { [unowned self] in settings.settings.compactWingLyrics },
-            audioSpectrumBands: { [unowned self] in audioSpectrum.bands },
-            liveAudioSpectrumEnabled: { [unowned self] in settings.settings.liveAudioSpectrumEnabled },
-            quickAIMessages: { [unowned self] in quickAI.messages },
-            isQuickAIGenerating: { [unowned self] in quickAI.isGenerating },
-            quickAIError: { [unowned self] in quickAI.lastError },
-            askQuickAI: { [unowned self] prompt in
-                let config = settings.settings.quickAIConfig
-                Task { await quickAI.ask(prompt, config: config) }
-            },
-            clearQuickAI: { [unowned self] in quickAI.clearConversation() },
-            isMirrorAuthorized: { [unowned self] in
-                cameraMirror.refreshAuthState()
-                return cameraMirror.authState == .authorized
-            },
-            isMirrorDenied: { [unowned self] in cameraMirror.authState == .denied },
-            startMirrorPreview: { [unowned self] in await cameraMirror.startAndMakePreviewView() },
-            stopMirrorPreview: { [unowned self] in cameraMirror.stop() },
-            isScreenRecording: { [unowned self] in screenRecorder.isRecording },
-            startScreenRecording: { [unowned self] asGIF in startScreenCapture(asGIF: asGIF) },
-            stopScreenRecording: { [unowned self] in stopScreenCapture() })
-    }
-
-    private func updateDroplet(for island: ScreenIsland, localPoint: CGPoint?, velocity: CGSize) {
-        guard settings.settings.waterDropletEffect else {
-            if island.dropletTension != .zero { island.dropletTension = .zero }
-            return
-        }
-        let target: DropletTension
-        if let localPoint,
-            let hoverRect = IslandRootView.hoverRegion(
-                state: island.store.state, notch: island.notch,
-                expandedWidth: CGFloat(settings.settings.expandedWidth)
-            ).first
-        {
-            let exactRect = CGRect(
-                x: hoverRect.minX, y: hoverRect.minY + 4, width: hoverRect.width, height: hoverRect.height - 4)
-            target = DropletPhysics.compute(pointer: localPoint, islandRect: exactRect, velocity: velocity)
-        } else {
-            target = .zero
-        }
-        guard target != island.dropletTension else { return }
-        withAnimation(.spring(duration: 0.42, bounce: 0.12)) {
-            island.dropletTension = target
-        }
-    }
-
-    private func syncAudioSpectrum() {
-        let wantsSpectrum =
-            settings.settings.enabledFeatures.contains(.nowPlaying)
-            && (settings.settings.liveAudioSpectrumEnabled || settings.settings.visualStyle == .boring)
-        let isPlaying = nowPlaying.snapshot?.isPlaying == true
-        let anyVisible = islands.values.contains {
-            switch $0.store.state.phase {
-            case .compact, .peek, .expanded: true
-            case .hidden, .idle, .transient: false
-            }
-        }
-        if wantsSpectrum && isPlaying && anyVisible {
-            if audioSpectrum.isActive {
-                audioSpectrum.updatePlayback(isPlaying: true)
-            } else {
-                audioSpectrum.start(liveTapAllowed: settings.settings.liveAudioSpectrumEnabled, isPlaying: true)
-            }
-        } else if audioSpectrum.isActive {
-            audioSpectrum.stop()
-        }
-    }
-
-    private func startScreenCapture(asGIF: Bool) {
-        Task { @MainActor in
-            let started = await screenRecorder.startRecording(format: asGIF ? .gif : .mp4)
-            guard started else { return }
-            feedback.play(.alignment)
-            if case .success(let req) = CustomActivityRequest.make(
-                id: "screen-recording",
-                title: String(localized: "alert.recording.title"),
-                subtitle: asGIF ? "GIF" : "MP4",
-                symbol: "record.circle.fill",
-                accentHex: "FF453A",
-                progress: nil,
-                duration: nil)
-            {
-                custom.show(req)
-            }
-        }
-    }
-
-    private func stopScreenCapture() {
-        Task { @MainActor in
-            custom.end(id: "screen-recording")
-            guard let url = await screenRecorder.stopRecording() else { return }
-            do {
-                try shelf.add([url])
-                feedback.play(.levelChange)
-                broadcast(
-                    .alertRaised(
-                        TransientAlert(
-                            id: UUID(), kind: .custom,
-                            detail: .text(
-                                title: url.lastPathComponent,
-                                subtitle: String(localized: "alert.recording.savedToShelf"),
-                                symbol: "checkmark.circle.fill"),
-                            tint: .green, duration: 2.6, priority: .normal)))
-                activeIsland()?.store.send(.pageSelected(.shelf))
-            } catch {
-                logger.error("recording shelf save failed: \(error.localizedDescription, privacy: .public)")
-            }
-        }
-    }
-
-    private func observePrivacyCallActivity() {
-        withObservationTracking {
-            _ = deviceUsage.privacy
-        } onChange: { [weak self] in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
-                if let appName = CallActivityDetector.activeCallApp(
-                    privacy: deviceUsage.privacy, runningBundleIDs: running)
-                {
-                    if case .success(let req) = CustomActivityRequest.make(
-                        id: "active-call",
-                        title: appName,
-                        subtitle: String(localized: "alert.callActive"),
-                        symbol: "phone.wave.2.fill",
-                        accentHex: "32D74B",
-                        progress: nil,
-                        duration: nil)
-                    {
-                        custom.show(req)
-                    }
-                } else {
-                    custom.end(id: "active-call")
-                }
-                observePrivacyCallActivity()
-            }
-        }
-    }
-
-    private func pickAppToPin() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.application]
-        panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.canChooseFiles = true
-        NSApp.activate(ignoringOtherApps: true)
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        let name = FileManager.default.displayName(atPath: url.path()).replacingOccurrences(of: ".app", with: "")
-        appLauncher.addApp(name: name, path: url.path())
-    }
-
-    private func sampleScreenColor() {
-        NSColorSampler().show { [weak self] picked in
-            Task { @MainActor [weak self] in
-                guard let self, let srgb = picked?.usingColorSpace(.sRGB) else { return }
-                let rgba = RGBAColor(
-                    red: Double(srgb.redComponent), green: Double(srgb.greenComponent),
-                    blue: Double(srgb.blueComponent))
-                let hex = rgba.hexString
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(hex, forType: .string)
-                feedback.play(.alignment)
-                broadcast(
-                    .alertRaised(
-                        TransientAlert(
-                            id: UUID(), kind: .custom,
-                            detail: .text(
-                                title: hex, subtitle: String(localized: "alert.colorCopied"),
-                                symbol: "eyedropper.halffull"),
-                            tint: .accent(rgba), duration: 2.4, priority: .normal)))
-            }
-        }
-    }
-
-    private var shelfModels: [ShelfItemModel] {
-        shelf.items.map { item in
-            let status = shelf.status(of: item)
-            let icon =
-                shelfIcons[item.id]
-                ?? shelf.withAccess(to: item) { NSWorkspace.shared.icon(forFile: $0.path()) }
-                ?? NSImage(systemSymbolName: "doc", accessibilityDescription: nil)!
-            if case .available = status { shelfIcons[item.id] = icon }
-            let isReference = if case .reference = item.storage { true } else { false }
-            return ShelfItemModel(
-                id: item.id, name: item.displayName, icon: icon, isReference: isReference, isMissing: status == .missing
-            )
-        }
-    }
-
-    /// AirDrop or the share sheet for the selected files, anchored to the island panel under the mouse.
-    private func shareFiles(_ ids: [UUID], via service: NSSharingService?) {
-        let urls = ids.compactMap { id -> URL? in
-            guard let item = shelf.items.first(where: { $0.id == id }),
-                case .available(let url) = shelf.status(of: item)
-            else { return nil }
-            return url
-        }
-        guard !urls.isEmpty else { return }
-        let scoped = urls.filter { $0.startAccessingSecurityScopedResource() }
-        defer { for url in scoped { url.stopAccessingSecurityScopedResource() } }
-        if let service {
-            service.perform(withItems: urls)
-        } else if let view = activeIsland().flatMap({ windows.controller(for: $0.screen.id)?.container }) {
-            NSSharingServicePicker(items: urls).show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
-        }
-    }
-
-    private var nowPlayingActions: NowPlayingActions {
+    var nowPlayingActions: NowPlayingActions {
         NowPlayingActions(
             playPause: { [unowned self] in Task { await nowPlaying.perform(.playPause) } },
             next: { [unowned self] in Task { await nowPlaying.perform(.next) } },
@@ -946,7 +446,6 @@ final class CompositionRoot {
             requestConsent: { [unowned self] source in Task { await nowPlaying.requestConsent(for: source) } })
     }
 
-    /// Decoded once per track; image decoding of a few hundred KB stays well under a frame.
     private func artwork(for key: String) -> NSImage? {
         if let artworkImage, artworkImage.key == key { return artworkImage.image }
         guard let current = nowPlaying.artwork, current.key == key, let image = NSImage(data: current.data) else {
@@ -956,7 +455,7 @@ final class CompositionRoot {
         return image
     }
 
-    private var timerActions: TimerActions {
+    var timerActions: TimerActions {
         TimerActions(
             start: { [unowned self] in timer.start(minutes: $0, label: nil) },
             startPomodoro: { [unowned self] in timer.startPomodoro() },
@@ -965,164 +464,48 @@ final class CompositionRoot {
             cancel: { [unowned self] in timer.cancel() }, skip: { [unowned self] in timer.skip() })
     }
 
-    private func activeIsland() -> ScreenIsland? {
+    func activeIsland() -> ScreenIsland? {
         let mouse = NSEvent.mouseLocation
         return islands.values.first { $0.screen.frame.contains(mouse) }
             ?? islands.values.first { $0.screen.isMain } ?? islands.values.first
     }
 
-    private func broadcast(_ event: IslandEvent) {
+    func broadcast(_ event: IslandEvent) {
         for island in islands.values { island.store.send(event) }
     }
 
-    // MARK: - Settings
-
-    private var isMuted: Bool { (settings.settings.muteUntil ?? .distantPast) > time.now }
-
-    private func observeSettings() {
-        withObservationTracking {
-            _ = settings.settings
-        } onChange: { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.applySettings()
-                self?.observeSettings()
-            }
+    func updateDroplet(for island: ScreenIsland, localPoint: CGPoint?, velocity: CGSize) {
+        guard settings.settings.waterDropletEffect else {
+            if island.dropletTension != .zero { island.dropletTension = .zero }
+            return
         }
-    }
-
-    private var appliedSettings: IslandSettings?
-
-    private func applySettings() {
-        let current = settings.settings
-        defer { appliedSettings = current }
-        if appliedSettings?.displayMode != current.displayMode { syncWindows() }
-        if appliedSettings?.islandOptions != current.islandOptions {
-            broadcast(.optionsChanged(current.islandOptions))
-        }
-        if appliedSettings?.hideNotchBar != current.hideNotchBar {
-            for (id, island) in islands {
-                windows.controller(for: id)?.setNotchBackdropVisible(
-                    current.hideNotchBar && island.store.state.phase != .hidden)
-            }
-        }
-        statusItem.isVisible = current.showMenuBarIcon
-        if let previous = appliedSettings { applyFeatureChanges(from: previous, to: current) }
-    }
-
-    /// Starts or stops services when the user toggles a feature in Settings (spec §8: stop releases everything).
-    private func applyFeatureChanges(from old: IslandSettings, to new: IslandSettings) {
-        func turned(_ f: IslandFeature) -> Bool? {
-            let (was, now) = (old.enabledFeatures.contains(f), new.enabledFeatures.contains(f))
-            return was == now ? nil : now
-        }
-        if let on = turned(.nowPlaying) { on ? nowPlaying.start() : nowPlaying.stop() }
-        if let on = turned(.calendar) { on ? calendar.start() : calendar.stop() }
-        if let on = turned(.battery) { on ? power.start() : power.stop() }
-        let btWas = old.enabledFeatures.contains(.battery) && old.bluetoothAlertsEnabled
-        let btNow = new.enabledFeatures.contains(.battery) && new.bluetoothAlertsEnabled
-        if btWas != btNow { btNow ? audioDevices.start() : audioDevices.stop() }
-        if let on = turned(.privacyIndicator) { on ? deviceUsage.start() : deviceUsage.stop() }
-        if let on = turned(.shelf) { on ? fileDrags.start() : fileDrags.stop() }
-        if let on = turned(.customActivities) {
-            on ? competing.start() : competing.stop()
-            on ? externalDrives.start() : externalDrives.stop()
-        }
-        let capsWas = old.enabledFeatures.contains(.customActivities) || old.doubleTapOptionToToggle
-        let capsNow = new.enabledFeatures.contains(.customActivities) || new.doubleTapOptionToToggle
-        if capsWas != capsNow { capsNow ? capsLock.start() : capsLock.stop() }
-        if old.weatherLocation != new.weatherLocation, new.enabledFeatures.contains(.weather) {
-            Task { await weather.islandBecameVisible(force: true) }
-        }
-        if old.shelfRetentionDays != new.shelfRetentionDays, new.enabledFeatures.contains(.shelf) {
-            shelf.cleanUp()
-        }
-        let downloadsWas = old.enabledFeatures.contains(.downloads) && old.downloadsAlertsOptedIn
-        let downloadsNow = new.enabledFeatures.contains(.downloads) && new.downloadsAlertsOptedIn
-        if downloadsWas != downloadsNow { downloadsNow ? downloads.start() : downloads.stop() }
-        if old.liveAudioSpectrumEnabled != new.liveAudioSpectrumEnabled || old.visualStyle != new.visualStyle {
-            audioSpectrum.stop()
-            syncAudioSpectrum()
-        }
-        if !new.waterDropletEffect {
-            for island in islands.values where island.dropletTension != .zero {
-                island.dropletTension = .zero
-            }
-        }
-        if !new.floatingShelfBasket || !new.enabledFeatures.contains(.shelf) {
-            shelfBasket.update(isDragging: false, mouse: .zero, screens: screens, enabled: false)
-        }
-        hub.refresh()
-    }
-
-    private func permissionState(_ feature: IslandFeature) -> PermissionState? {
-        switch feature {
-        case .nowPlaying:
-            switch nowPlaying.permissions[.music] {
-            case .granted?: return .granted
-            case .denied?: return .denied
-            case .needsConsent?: return .notRequested
-            case .notRunning?, nil: return .unavailable
-            }
-        case .calendar:
-            switch calendar.authorization {
-            case .fullAccess: return .granted
-            case .notDetermined: return .notRequested
-            case .denied, .restricted, .writeOnly: return .denied
-            }
-        case .weather:
-            switch CLLocationManager().authorizationStatus {
-            case .authorizedAlways, .authorized: return .granted
-            case .notDetermined: return .notRequested
-            default: return .denied
-            }
-        default:
-            return nil
-        }
-    }
-
-    private func requestPermission(_ feature: IslandFeature) {
-        switch feature {
-        case .nowPlaying: Task { await nowPlaying.requestConsent(for: .music) }
-        case .calendar: Task { await calendar.requestAccess() }
-        case .weather: Task { await weather.islandBecameVisible() }
-        default: break
-        }
-    }
-
-    private func contextMenu() -> NSMenu {
-        ContextMenuBuilder.menu(
-            isMuted: isMuted,
-            actions: ContextMenuActions(
-                openSettings: { [unowned self] in showSettings() },
-                toggleMute: { [unowned self] in
-                    let muted = isMuted
-                    settings.update { $0.muteUntil = muted ? nil : time.now.addingTimeInterval(3600) }
-                },
-                quit: { NSApp.terminate(nil) }))
-    }
-
-    func showSettings() {
-        if settingsWindow == nil {
-            settingsWindow = SettingsWindowController(
-                settings: settings,
-                launchAtLogin: launchAtLogin,
-                permission: { [unowned self] in permissionState($0) },
-                request: { [unowned self] in requestPermission($0) },
-                searchWeatherCity: { [unowned self] query in
-                    let lang = Locale.current.language.languageCode?.identifier ?? "en"
-                    return await weather.search(query, language: lang)
-                },
-                hasAIKey: { [unowned self] provider in quickAI.hasAPIKey(for: provider) },
-                saveAIKey: { [unowned self] key, provider in quickAI.saveAPIKey(key, for: provider) },
-                clearAIKey: { [unowned self] provider in quickAI.clearAPIKey(for: provider) }
+        let target: DropletTension
+        if let localPoint,
+            let hoverRect = IslandRootView.hoverRegion(
+                state: island.store.state, notch: island.notch,
+                expandedWidth: CGFloat(settings.settings.expandedWidth)
+            ).first
+        {
+            let exactRect = CGRect(
+                x: hoverRect.minX, y: hoverRect.minY + 4, width: hoverRect.width, height: hoverRect.height - 4)
+            target = DropletPhysics.compute(
+                pointer: localPoint,
+                islandRect: exactRect,
+                velocity: velocity,
+                sensitivity: settings.settings.dropletSensitivity
             )
+        } else {
+            target = .zero
         }
-        settingsWindow?.show()
+        guard target != island.dropletTension else { return }
+        withAnimation(.spring(duration: 0.42, bounce: 0.12)) {
+            island.dropletTension = target
+        }
     }
 }
 
 /// Per-screen island parts. The store needs a panel before the window controller exists, hence the proxy.
-@MainActor @Observable private final class ScreenIsland {
+@MainActor @Observable final class ScreenIsland {
     @ObservationIgnored var screen: ScreenDescriptor
     @ObservationIgnored var notch: NotchMetrics
     @ObservationIgnored let store: IslandStore
@@ -1141,7 +524,7 @@ final class CompositionRoot {
     }
 }
 
-@MainActor private final class ScreenFeedback: FeedbackPlaying {
+@MainActor final class ScreenFeedback: FeedbackPlaying {
     private let base: FeedbackPlaying
     private let playsSounds: @MainActor () -> Bool
 
@@ -1154,9 +537,8 @@ final class CompositionRoot {
     func play(_ sound: SoundKind) { if playsSounds() { base.play(sound) } }
 }
 
-@MainActor private final class PanelProxy: PanelControlling {
+@MainActor final class PanelProxy: PanelControlling {
     weak var target: IslandWindowController?
-    /// Pointer speed from the router, which is created after the store.
     var speed: @MainActor () -> Double = { 0 }
     func setMouseEventsIgnored(_ ignored: Bool) { target?.setMouseEventsIgnored(ignored) }
     func makeKey(_ key: Bool) { target?.makeKey(key) }

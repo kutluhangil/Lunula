@@ -16,8 +16,15 @@ public struct SettingsWindowView: View {
     let hasAIKey: @MainActor (QuickAIProvider) -> Bool
     let saveAIKey: @MainActor (String, QuickAIProvider) -> Void
     let clearAIKey: @MainActor (QuickAIProvider) -> Void
+    let extraPermission: @MainActor (ExtraPermissionKind) -> PermissionState
+    let requestExtraPermission: @MainActor (ExtraPermissionKind) -> Void
+    let ollamaModels: @MainActor () -> [String]
+    let refreshOllamaModels: @MainActor (String) async -> [String]
+    let testAIConnection: @MainActor (QuickAIConfig) async -> (ok: Bool, message: String)
+    let resetDefaults: (@MainActor () -> Void)?
 
     @State private var selectedTab: SettingsTabID = .general
+    @State private var previewFocusOverride: SettingsPreviewFocus?
     @Namespace private var tabAnimation
 
     public init(
@@ -29,6 +36,14 @@ public struct SettingsWindowView: View {
         hasAIKey: @escaping @MainActor (QuickAIProvider) -> Bool = { _ in false },
         saveAIKey: @escaping @MainActor (String, QuickAIProvider) -> Void = { _, _ in },
         clearAIKey: @escaping @MainActor (QuickAIProvider) -> Void = { _ in },
+        extraPermission: @escaping @MainActor (ExtraPermissionKind) -> PermissionState = { _ in .notRequested },
+        requestExtraPermission: @escaping @MainActor (ExtraPermissionKind) -> Void = { _ in },
+        ollamaModels: @escaping @MainActor () -> [String] = { [] },
+        refreshOllamaModels: @escaping @MainActor (String) async -> [String] = { _ in [] },
+        testAIConnection: @escaping @MainActor (QuickAIConfig) async -> (ok: Bool, message: String) = { _ in
+            (false, "")
+        },
+        resetDefaults: (@MainActor () -> Void)? = nil,
         initialTab: SettingsTabID = .general
     ) {
         self.settings = settings
@@ -39,10 +54,35 @@ public struct SettingsWindowView: View {
         self.hasAIKey = hasAIKey
         self.saveAIKey = saveAIKey
         self.clearAIKey = clearAIKey
+        self.extraPermission = extraPermission
+        self.requestExtraPermission = requestExtraPermission
+        self.ollamaModels = ollamaModels
+        self.refreshOllamaModels = refreshOllamaModels
+        self.testAIConnection = testAIConnection
+        self.resetDefaults = resetDefaults
         self._selectedTab = State(initialValue: initialTab)
     }
 
     private var stageLabel: String {
+        if let override = previewFocusOverride {
+            switch override {
+            case .style:
+                return String(localized: "settings.preview.stage.style")
+            case .glass:
+                return String(localized: "settings.preview.stage.liquidGlass")
+            case .pill:
+                return String(localized: "settings.appearance.pillOffset")
+            case .bar:
+                return String(
+                    localized: settings.settings.hideNotchBar
+                        ? "settings.preview.stage.blackBar" : "settings.preview.stage.notched")
+            case .timer:
+                return String(
+                    localized: settings.settings.timerMascot != .none
+                        ? "settings.preview.stage.mascot" : "settings.preview.stage.halo")
+            }
+        }
+
         switch selectedTab {
         case .general:
             return String(
@@ -112,12 +152,17 @@ public struct SettingsWindowView: View {
 
             // MARK: - Live Interactive Preview Stage (656 × 88 pt)
             SettingsStagePreview(
-                focus: stageFocus,
+                focus: previewFocusOverride ?? stageFocus,
                 haloIntensity: settings.settings.haloIntensity,
                 mascot: settings.settings.timerMascot,
                 hideNotchBar: settings.settings.hideNotchBar,
                 useGlassCards: settings.settings.useGlassCards,
-                pillVerticalOffset: settings.settings.pillVerticalOffset
+                pillVerticalOffset: settings.settings.pillVerticalOffset,
+                visualStyle: settings.settings.visualStyle,
+                surfaceMaterial: settings.settings.surfaceMaterial,
+                expandedWidth: settings.settings.expandedWidth,
+                waterDropletEffect: settings.settings.waterDropletEffect,
+                dropletSensitivity: settings.settings.dropletSensitivity
             )
             .padding(.horizontal, 12)
             .padding(.bottom, 10)
@@ -128,6 +173,7 @@ public struct SettingsWindowView: View {
                     let isSelected = selectedTab == tab
                     Button {
                         withAnimation(.easeInOut(duration: 0.20)) {
+                            previewFocusOverride = nil
                             selectedTab = tab
                         }
                     } label: {
@@ -167,36 +213,69 @@ public struct SettingsWindowView: View {
             .padding(.bottom, 12)
 
             // MARK: - Tab Content Scroll Container (372 pt)
-            ScrollView(.vertical, showsIndicators: false) {
+            ScrollView(.vertical, showsIndicators: true) {
                 Group {
                     switch selectedTab {
                     case .general:
-                        GeneralSettingsView(settings: settings, launchAtLogin: launchAtLogin)
+                        GeneralSettingsView(
+                            settings: settings,
+                            launchAtLogin: launchAtLogin,
+                            onResetDefaults: resetDefaults.map { action in
+                                { MainActor.assumeIsolated { action() } }
+                            }
+                        )
                     case .appearance:
-                        AppearanceSettingsView(settings: settings)
+                        AppearanceSettingsView(
+                            settings: settings,
+                            onHaloChanged: { _ in previewFocusOverride = .timer },
+                            onPillOffsetChanged: { _ in previewFocusOverride = .pill },
+                            onGlassChanged: { _ in previewFocusOverride = .glass },
+                            onBarChanged: { _ in previewFocusOverride = .bar },
+                            onMascotChanged: { _ in previewFocusOverride = .timer },
+                            onStyleChanged: { previewFocusOverride = .style }
+                        )
                     case .activities:
                         ActivitiesSettingsView(
-                            settings: settings, permission: permission, request: request,
-                            searchWeatherCity: searchWeatherCity)
+                            settings: settings,
+                            permission: permission,
+                            request: request,
+                            searchWeatherCity: searchWeatherCity,
+                            extraPermission: extraPermission,
+                            requestExtraPermission: requestExtraPermission
+                        )
                     case .tools:
                         ToolsSettingsView(
                             settings: settings,
                             onSelectTab: { tab in
                                 withAnimation(.easeInOut(duration: 0.20)) {
+                                    previewFocusOverride = nil
                                     selectedTab = tab
                                 }
                             },
                             hasAIKey: hasAIKey,
                             saveAIKey: saveAIKey,
-                            clearAIKey: clearAIKey)
+                            clearAIKey: clearAIKey,
+                            ollamaModels: ollamaModels,
+                            refreshOllamaModels: refreshOllamaModels,
+                            testAIConnection: testAIConnection
+                        )
                     case .about:
                         AboutSettingsView()
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+                .padding(.bottom, 20)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [.clear, Palette.basalt],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 16)
+                .allowsHitTesting(false)
+            }
         }
         .frame(width: 680, height: 540)
         .background(Palette.basalt)
@@ -206,5 +285,8 @@ public struct SettingsWindowView: View {
                 .stroke(Palette.hairline, lineWidth: 0.5)
         )
         .environment(\.colorScheme, .dark)
+        .onChange(of: selectedTab) { _, _ in
+            previewFocusOverride = nil
+        }
     }
 }

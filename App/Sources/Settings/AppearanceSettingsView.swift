@@ -9,6 +9,7 @@ public struct AppearanceSettingsView: View {
     var onGlassChanged: ((Bool) -> Void)?
     var onBarChanged: ((Bool) -> Void)?
     var onMascotChanged: ((TimerMascot) -> Void)?
+    var onStyleChanged: (() -> Void)?
 
     public init(
         settings: SettingsStore,
@@ -16,7 +17,8 @@ public struct AppearanceSettingsView: View {
         onPillOffsetChanged: ((Double) -> Void)? = nil,
         onGlassChanged: ((Bool) -> Void)? = nil,
         onBarChanged: ((Bool) -> Void)? = nil,
-        onMascotChanged: ((TimerMascot) -> Void)? = nil
+        onMascotChanged: ((TimerMascot) -> Void)? = nil,
+        onStyleChanged: (() -> Void)? = nil
     ) {
         self.settings = settings
         self.onHaloChanged = onHaloChanged
@@ -24,6 +26,7 @@ public struct AppearanceSettingsView: View {
         self.onGlassChanged = onGlassChanged
         self.onBarChanged = onBarChanged
         self.onMascotChanged = onMascotChanged
+        self.onStyleChanged = onStyleChanged
     }
 
     public var body: some View {
@@ -47,7 +50,7 @@ public struct AppearanceSettingsView: View {
                         }
                         Spacer()
                         LunulaSegmentPicker(
-                            selection: binding(\.visualStyle),
+                            selection: styleBinding(\.visualStyle),
                             items: [
                                 (value: IslandVisualStyle.lunula, label: "Lunula"),
                                 (value: IslandVisualStyle.alcove, label: "Alcove"),
@@ -72,7 +75,7 @@ public struct AppearanceSettingsView: View {
                         }
                         Spacer()
                         LunulaSegmentPicker(
-                            selection: binding(\.surfaceMaterial),
+                            selection: styleBinding(\.surfaceMaterial),
                             items: [
                                 (
                                     value: IslandSurfaceMaterial.obsidian,
@@ -101,13 +104,60 @@ public struct AppearanceSettingsView: View {
                                 .foregroundColor(Palette.textSecondary)
                         }
                         Spacer()
-                        Toggle("", isOn: binding(\.waterDropletEffect))
-                            .toggleStyle(.lunulaSwitch)
-                            .fixedSize()
+                        Toggle(
+                            "",
+                            isOn: Binding(
+                                get: { settings.settings.waterDropletEffect },
+                                set: { value in
+                                    withAnimation(.smooth(duration: 0.20)) {
+                                        settings.update { $0.waterDropletEffect = value }
+                                    }
+                                    onStyleChanged?()
+                                }
+                            )
+                        )
+                        .toggleStyle(.lunulaSwitch)
+                        .fixedSize()
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(minHeight: 44)
+
+                    if settings.settings.waterDropletEffect {
+                        Divider().background(Palette.hairline)
+
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("settings.appearance.dropletSensitivity")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(Palette.textPrimary)
+                                Text("settings.appearance.dropletSensitivity.subtitle")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(Palette.textSecondary)
+                            }
+                            Spacer()
+                            LunulaSegmentPicker(
+                                selection: styleBinding(\.dropletSensitivity),
+                                items: [
+                                    (
+                                        value: DropletSensitivity.subtle,
+                                        label: String(localized: "settings.appearance.droplet.subtle")
+                                    ),
+                                    (
+                                        value: DropletSensitivity.balanced,
+                                        label: String(localized: "settings.appearance.droplet.balanced")
+                                    ),
+                                    (
+                                        value: DropletSensitivity.expressive,
+                                        label: String(localized: "settings.appearance.droplet.expressive")
+                                    ),
+                                ]
+                            )
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(minHeight: 44)
+                    }
 
                     Divider().background(Palette.hairline)
 
@@ -276,7 +326,10 @@ public struct AppearanceSettingsView: View {
                         LunulaSegmentPicker(
                             selection: Binding(
                                 get: { Int(settings.settings.expandedWidth.rounded()) },
-                                set: { v in settings.update { $0.expandedWidth = Double(v) } }
+                                set: { v in
+                                    settings.update { $0.expandedWidth = Double(v) }
+                                    onStyleChanged?()
+                                }
                             ),
                             items: [
                                 (value: 520, label: "520 pt"),
@@ -410,5 +463,15 @@ public struct AppearanceSettingsView: View {
         Binding(
             get: { settings.settings[keyPath: keyPath] },
             set: { value in settings.update { $0[keyPath: keyPath] = value } })
+    }
+
+    private func styleBinding<T>(_ keyPath: WritableKeyPath<IslandSettings, T>) -> Binding<T> {
+        Binding(
+            get: { settings.settings[keyPath: keyPath] },
+            set: { value in
+                settings.update { $0[keyPath: keyPath] = value }
+                onStyleChanged?()
+            }
+        )
     }
 }

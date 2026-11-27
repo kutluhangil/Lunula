@@ -86,6 +86,7 @@ import Testing
 
         var s = IslandSettings.default
         s.waterDropletEffect = false
+        s.dropletSensitivity = .expressive
         s.visualStyle = .boring
         s.surfaceMaterial = .liquidGlass
         s.compactWingLyrics = false
@@ -103,6 +104,7 @@ import Testing
         var expected = s
         expected.quickToolOrder = QuickToolID.normalizedOrder(s.quickToolOrder)
         #expect(decoded == expected)
+        #expect(decoded.dropletSensitivity == .expressive)
         #expect(decoded.orderedEnabledQuickTools == ["ai", "mirror", "record", "awake"])
         #expect(decoded.quickAIConfig.resolvedModel == "gemini-2.5-pro")
     }

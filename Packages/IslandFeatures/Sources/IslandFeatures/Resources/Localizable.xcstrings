@@ -528,6 +528,23 @@
         }
       }
     },
+    "calendar.today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün"
+          }
+        }
+      }
+    },
     "home.card.calendarAccess": {
       "extractionState": "manual",
       "localizations": {
@@ -1480,6 +1497,57 @@
         }
       }
     },
+    "tools.ai.chip.explain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explain Clipboard"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açıkla"
+          }
+        }
+      }
+    },
+    "tools.ai.chip.summarize": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize Clipboard"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panoyu Özetle"
+          }
+        }
+      }
+    },
+    "tools.ai.chip.translate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate Clipboard"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çevir"
+          }
+        }
+      }
+    },
     "tools.ai.clear": {
       "extractionState": "manual",
       "localizations": {
@@ -1527,6 +1595,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bir şey sor…"
+          }
+        }
+      }
+    },
+    "tools.ai.prompt.explain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explain the following text clearly:"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki metni anlaşılır biçimde açıkla:"
+          }
+        }
+      }
+    },
+    "tools.ai.prompt.summarize": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize the following text concisely:"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki metni kısaca özetle:"
+          }
+        }
+      }
+    },
+    "tools.ai.prompt.translate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate the following text:"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki metni çevir:"
           }
         }
       }
@@ -2190,6 +2309,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ekran Kaydı"
+          }
+        }
+      }
+    },
+    "tools.record.areaGIF": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record Area as GIF"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bölgeyi GIF Kaydet"
+          }
+        }
+      }
+    },
+    "tools.record.areaMP4": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record Area as MP4"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bölgeyi MP4 Kaydet"
           }
         }
       }

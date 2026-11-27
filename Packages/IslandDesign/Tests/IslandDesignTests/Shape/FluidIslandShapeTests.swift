@@ -45,6 +45,19 @@ import Testing
         #expect(deformed.contains(CGPoint(x: 300 * 0.65, y: 63.0)))
     }
 
+    @Test func expressivePullProducesValidPathWithTopEdgePinnedAtMinY() {
+        let offsetRect = CGRect(x: 24, y: 12, width: 300, height: 60)
+        let tension = DropletTension(pullX: 7.5, pullY: 6.0, focusX: 0.78, intensity: 1.0)
+        let shape = FluidIslandShape(base: .expanded, tension: tension)
+        let deformed = shape.path(in: offsetRect)
+        let bounds = deformed.boundingRect
+
+        #expect(!deformed.isEmpty)
+        #expect(abs(bounds.minY - offsetRect.minY) < 0.001)
+        #expect(abs(bounds.maxY - (offsetRect.maxY + 6.0)) < 0.25)
+        #expect(deformed.contains(CGPoint(x: offsetRect.midX, y: offsetRect.midY)))
+    }
+
     @Test func pillModeFlexesTowardTension() {
         let tension = DropletTension(pullX: -3.0, pullY: 3.5, focusX: 0.4, intensity: 1.0)
         let deformed = FluidIslandShape(base: .pill, tension: tension).path(in: rect)

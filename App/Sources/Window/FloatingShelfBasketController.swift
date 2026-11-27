@@ -44,7 +44,14 @@ import SwiftUI
         self.model = BasketViewModel(title: title, subtitle: subtitle, airDropLabel: airDropLabel)
     }
 
-    func update(isDragging: Bool, mouse: NSPoint, screens: [ScreenDescriptor], enabled: Bool) {
+    func update(
+        isDragging: Bool,
+        mouse: NSPoint,
+        screens: [ScreenDescriptor],
+        enabled: Bool,
+        surfaceMaterial: IslandSurfaceMaterial = .obsidian,
+        shelfItemCount: Int = 0
+    ) {
         guard enabled, isDragging,
             let screen = screens.first(where: { $0.frame.contains(mouse) })
                 ?? screens.first(where: \.isMain)
@@ -52,6 +59,14 @@ import SwiftUI
         else {
             hide()
             return
+        }
+
+        if model.surfaceMaterial != surfaceMaterial {
+            model.surfaceMaterial = surfaceMaterial
+        }
+        let clampedCount = max(0, shelfItemCount)
+        if model.shelfItemCount != clampedCount {
+            model.shelfItemCount = clampedCount
         }
 
         let panel = ensurePanel()
@@ -147,11 +162,21 @@ private enum BasketDropZone: Equatable {
     var subtitle: String
     var airDropLabel: String
     var hoveredZone: BasketDropZone?
+    var surfaceMaterial: IslandSurfaceMaterial
+    var shelfItemCount: Int
 
-    init(title: String, subtitle: String, airDropLabel: String) {
+    init(
+        title: String,
+        subtitle: String,
+        airDropLabel: String,
+        surfaceMaterial: IslandSurfaceMaterial = .obsidian,
+        shelfItemCount: Int = 0
+    ) {
         self.title = title
         self.subtitle = subtitle
         self.airDropLabel = airDropLabel
+        self.surfaceMaterial = surfaceMaterial
+        self.shelfItemCount = shelfItemCount
     }
 }
 
@@ -241,6 +266,11 @@ private struct FloatingShelfBasketView: View {
 
     private var isHovered: Bool { model.hoveredZone != nil }
 
+    private var useLiquidGlass: Bool {
+        model.surfaceMaterial == .liquidGlass
+            && !NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+    }
+
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
         VStack(spacing: 6) {
@@ -280,14 +310,44 @@ private struct FloatingShelfBasketView: View {
             width: FloatingShelfBasketController.panelSize.width,
             height: FloatingShelfBasketController.panelSize.height
         )
-        .background(Palette.obsidian, in: shape)
+        .background {
+            if useLiquidGlass {
+                if #available(macOS 26.0, *) {
+                    shape.fill(Color.black.opacity(0.48))
+                        .glassEffect(.regular, in: shape)
+                } else {
+                    shape.fill(Palette.obsidian)
+                }
+            } else {
+                shape.fill(Palette.obsidian)
+            }
+        }
         .overlay {
             if isHovered {
                 shape
                     .strokeBorder(Palette.amberGold, style: StrokeStyle(lineWidth: 1.75, dash: [6, 4]))
+            } else if useLiquidGlass {
+                shape
+                    .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
             } else {
                 shape
                     .strokeBorder(Palette.hairline, lineWidth: 1)
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if model.shelfItemCount > 0 {
+                Text("\(model.shelfItemCount)")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.amberGold)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Palette.inkPressed, in: Capsule())
+                    .overlay {
+                        Capsule()
+                            .strokeBorder(Palette.hairline, lineWidth: 0.5)
+                    }
+                    .padding(8)
             }
         }
     }
